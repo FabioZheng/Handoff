@@ -1,0 +1,60 @@
+﻿[slack-facts:construction] [{"condition": "k2_f0", "packs": 20, "essential_facts_k": 2, "added_filler_f": 0, "context_width": 2, "all_facts_present": true, "design": "addition"}, {"condition": "k2_f5", "packs": 20, "essential_facts_k": 2, "added_filler_f": 5, "context_width": 7, "all_facts_present": true, "design": "addition"}, {"condition": "k2_f10", "packs": 20, "essential_facts_k": 2, "added_filler_f": 10, "context_width": 12, "all_facts_present": true, "design": "addition"}, {"condition": "k5_f0", "packs": 20, "essential_facts_k": 5, "added_filler_f": 0, "context_width": 5, "all_facts_present": true, "design": "addition"}, {"condition": "k5_f5", "packs": 20, "essential_facts_k": 5, "added_filler_f": 5, "context_width": 10, "all_facts_present": true, "design": "addition"}, {"condition": "k5_f10", "packs": 20, "essential_facts_k": 5, "added_filler_f": 10, "context_width": 15, "all_facts_present": true, "design": "addition"}, {"condition": "k10_f0", "packs": 20, "essential_facts_k": 10, "added_filler_f": 0, "context_width": 10, "all_facts_present": true, "design": "addition"}, {"condition": "k10_f5", "packs": 20, "essential_facts_k": 10, "added_filler_f": 5, "context_width": 15, "all_facts_present": true, "design": "addition"}, {"condition": "k10_f10", "packs": 20, "essential_facts_k": 10, "added_filler_f": 10, "context_width": 20, "all_facts_present": true, "design": "addition"}]
+[slack-facts:handoff] k2_f0/stage1: 20 generated
+[slack-facts:handoff] k2_f0/stage2: 20 generated
+[slack-facts:handoff] k2_f0/stage3: 20 generated
+[slack-facts:handoff] k2_f0/stage4: 20 generated
+[slack-facts:handoff] k2_f0/stage5: 20 generated
+[slack-facts:handoff] k2_f5/stage1: 20 generated
+[slack-facts:handoff] k2_f5/stage2: 20 generated
+[slack-facts:handoff] k2_f5/stage3: 20 generated
+[slack-facts:handoff] k2_f5/stage4: 20 generated
+[slack-facts:handoff] k2_f5/stage5: 20 generated
+[slack-facts:handoff] k2_f10/stage1: 20 generated
+[slack-facts:handoff] k2_f10/stage2: 20 generated
+[slack-facts:handoff] k2_f10/stage3: 20 generated
+[slack-facts:handoff] k2_f10/stage4: 20 generated
+[slack-facts:handoff] k2_f10/stage5: 20 generated
+[slack-facts:handoff] k5_f0/stage1: 20 generated
+[slack-facts:handoff] k5_f0/stage2: 20 generated
+[slack-facts:handoff] k5_f0/stage3: 20 generated
+[slack-facts:handoff] k5_f0/stage4: 20 generated
+[slack-facts:handoff] k5_f0/stage5: 20 generated
+[slack-facts:handoff] k5_f5/stage1: 20 generated
+[slack-facts:handoff] k5_f5/stage2: 20 generated
+[slack-facts:handoff] k5_f5/stage3: 20 generated
+[slack-facts:handoff] k5_f5/stage4: 20 generated
+[slack-facts:handoff] k5_f5/stage5: 20 generated
+[slack-facts:handoff] k5_f10/stage1: 20 generated
+[slack-facts:handoff] k5_f10/stage2: 20 generated
+[slack-facts:handoff] k5_f10/stage3: 20 generated
+[slack-facts:handoff] k5_f10/stage4: 20 generated
+[slack-facts:handoff] k5_f10/stage5: 20 generated
+[slack-facts:handoff] k10_f0/stage1: 20 generated
+[slack-facts:handoff] k10_f0/stage2: 20 generated
+[slack-facts:handoff] k10_f0/stage3: 20 generated
+[slack-facts:handoff] k10_f0/stage4: 20 generated
+[slack-facts:handoff] k10_f0/stage5: 20 generated
+[slack-facts:handoff] k10_f5/stage1: 20 generated
+[slack-facts:handoff] k10_f5/stage2: 20 generated
+[slack-facts:handoff] k10_f5/stage3: 20 generated
+[slack-facts:handoff] k10_f5/stage4: 20 generated
+[slack-facts:handoff] k10_f5/stage5: 20 generated
+[slack-facts:handoff] k10_f10/stage1: 20 generated
+[slack-facts:handoff] k10_f10/stage2: 20 generated
+[slack-facts:handoff] k10_f10/stage3: 20 generated
+[slack-facts:handoff] k10_f10/stage4: 20 generated
+[slack-facts:handoff] k10_f10/stage5: 20 generated
+[slack-facts:answers] 720 rows; 720 calls this pass
+{
+  "calls_total": 1620,
+  "calls_live": 1458,
+  "calls_cached": 162,
+  "cache_hit_rate": 0.1,
+  "prompt_tokens": 1405129,
+  "completion_tokens": 356963,
+  "prompt_tokens_live": 1267472,
+  "completion_tokens_live": 320914,
+  "cost_usd": 0.046103,
+  "api_calls_attempted": 1562,
+  "api_call_cap": 4000
+}

@@ -1,0 +1,7 @@
+contrast,label,metric,delta,lo,hi,p_value,n
+B_freeform - A_full,headroom: free-form handoff vs full context,em,0.2,0.0,0.5,0.2327,10
+B_freeform - A_full,headroom: free-form handoff vs full context,f1,0.2642,0.01,0.5251,0.0304,10
+E_oracle - B_freeform,recovery: perfect handoff vs free-form,em,0.0,-0.3,0.3,1.0,10
+E_oracle - B_freeform,recovery: perfect handoff vs free-form,f1,-0.0084,-0.2252,0.2667,0.9013,10
+E_oracle - A_full,denoising: perfect handoff vs full context,em,0.2,-0.2,0.6,0.4339,10
+E_oracle - A_full,denoising: perfect handoff vs full context,f1,0.2559,-0.0333,0.5676,0.0927,10

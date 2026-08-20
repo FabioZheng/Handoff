@@ -1,0 +1,4 @@
+condition,questions,passages_per_query,selected_retained,selected_original,selected_recall_at_10
+good,20,10,22,22,1.0
+medium,20,10,11,22,0.5
+bad,20,10,3,22,0.1364

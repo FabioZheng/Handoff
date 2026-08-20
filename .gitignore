@@ -1,0 +1,16 @@
+.venv/
+.venv-wsl/
+__pycache__/
+*.pyc
+*.tmp
+*.part
+
+# Large + regenerable. The cache is worth keeping locally (reruns are free)
+# but not worth committing.
+cache/
+data/raw/
+
+# Committed on purpose so runs are reproducible:
+#   data/sampled_ids.json
+#   data/filtered_questions.jsonl
+.idea/

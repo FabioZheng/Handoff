@@ -1,0 +1,25 @@
+# Question-aware versus reusable-summary experiment.
+# The final answerer always receives the question.  The compression agents do
+# in the targeted condition and never do in the generic condition.
+
+dataset: musique
+source_questions: data/chain/musique/filtered.jsonl
+contexts: [full]
+depths: [0, 5]
+compression_depth: 5
+seeds: [1, 2]
+modes: [targeted, generic]
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  bertscore:
+    enabled: true
+    model_type: roberta-large
+    num_layers: 17
+    batch_size: 64
+    rescale_with_baseline: true
+
+outputs:
+  root: results/question_context
+  run_root: runs/question_context

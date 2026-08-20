@@ -1,0 +1,55 @@
+# Compressible-slack test on MS MARCO: added filler volume x filler type.
+# Every condition keeps all k selected passages; filler is ADDED on top.
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 64
+  handoff_max_tokens: 700
+
+cost:
+  cap_usd: 3.0
+  api_call_cap: 2500
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 6
+  max_retries: 4
+  backoff_base_s: 1.5
+  backoff_max_s: 30.0
+  request_timeout_s: 120
+  cache_dir: cache
+
+dataset:
+  dev_url: "https://huggingface.co/datasets/microsoft/ms_marco/resolve/refs%2Fconvert%2Fparquet/v2.1/validation/0000.parquet"
+  local_parquet: data/raw/msmarco_v2.1_validation.parquet
+  sample_seed: 20260819
+  n_questions: 20
+  # Only 443 dev queries have >= 3 selected passages; 91 have >= 4.
+  essential_k: 3
+
+filler_levels: [0, 3, 6]
+
+conditions:
+  f0:            {f: 0, type: none}
+  f3_inert:      {f: 3, type: inert}
+  f6_inert:      {f: 6, type: inert}
+  f3_near_miss:  {f: 3, type: near_miss}
+  f6_near_miss:  {f: 6, type: near_miss}
+
+depths: [0, 1, 3, 5]
+max_depth: 5
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+
+outputs:
+  data_root: data/slack_retrieval
+  run_root: runs/slack_retrieval
+  result_root: results/slack_retrieval

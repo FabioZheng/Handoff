@@ -1,0 +1,2 @@
+pairs,passages_per_pair,gold_A_present,gold_B_present,same_article_pairs,mean_question_jaccard,max_question_jaccard
+20,10,20,20,0,0.0,0.0

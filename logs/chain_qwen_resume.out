@@ -1,0 +1,41 @@
+[chain:selftest] later compressors accept SealedHandoff only
+[chain] datasets=['musique', 'hotpotqa'] contexts=['short', 'medium', 'full'] depths=[0, 1, 3, 5] n=10 candidates=40
+[chain:stage0] musique: reusing 10 filtered questions
+[chain:stage0] hotpotqa: reusing 10 filtered questions
+[chain:handoff] musique/short/seed1/stage1: 10 reused, 0 generated
+[chain:handoff] musique/short/seed1/stage2: 10 reused, 0 generated
+[chain:handoff] musique/short/seed1/stage3: 10 reused, 0 generated
+[chain:handoff] musique/short/seed1/stage4: 10 reused, 0 generated
+[chain:handoff] musique/short/seed1/stage5: 10 reused, 0 generated
+[chain:handoff] musique/medium/seed1/stage1: 10 reused, 0 generated
+[chain:handoff] musique/medium/seed1/stage2: 10 reused, 0 generated
+[chain:handoff] musique/medium/seed1/stage3: 10 reused, 0 generated
+[chain:handoff] musique/medium/seed1/stage4: 10 reused, 0 generated
+[chain:handoff] musique/medium/seed1/stage5: 10 reused, 0 generated
+[chain:handoff] musique/full/seed1/stage1: 10 reused, 0 generated
+[chain:handoff] musique/full/seed1/stage2: 10 reused, 0 generated
+[chain:handoff] musique/full/seed1/stage3: 10 reused, 0 generated
+[chain:handoff] musique/full/seed1/stage4: 10 reused, 0 generated
+[chain:handoff] musique/full/seed1/stage5: 10 reused, 0 generated
+[chain:handoff] hotpotqa/short/seed1/stage1: 10 reused, 0 generated
+[chain:handoff] hotpotqa/short/seed1/stage2: 10 reused, 0 generated
+[chain:handoff] hotpotqa/short/seed1/stage3: 0 reused, 10 generated
+[chain:handoff] hotpotqa/short/seed1/stage4: 0 reused, 10 generated
+[chain:handoff] hotpotqa/short/seed1/stage5: 0 reused, 10 generated
+[chain:handoff] hotpotqa/medium/seed1/stage1: 0 reused, 10 generated
+[chain:handoff] hotpotqa/medium/seed1/stage2: 0 reused, 10 generated
+[chain:handoff] hotpotqa/medium/seed1/stage3: 0 reused, 10 generated
+[chain:handoff] hotpotqa/medium/seed1/stage4: 0 reused, 10 generated
+[chain:handoff] hotpotqa/medium/seed1/stage5: 0 reused, 10 generated
+[chain:handoff] hotpotqa/full/seed1/stage1: 0 reused, 10 generated
+[chain:handoff] hotpotqa/full/seed1/stage2: 0 reused, 10 generated
+[chain:handoff] hotpotqa/full/seed1/stage3: 0 reused, 10 generated
+[chain:handoff] hotpotqa/full/seed1/stage4: 0 reused, 10 generated
+[chain:handoff] hotpotqa/full/seed1/stage5: 0 reused, 10 generated
+[chain:answers] 240 selected answers (240 generated)
+calculating scores...
+computing bert embedding.
+computing greedy matching.
+done in 31.08 seconds, 10.04 sentences/sec
+[chain:bertscore] computed 240 semantic scores
+[chain:analysis] wrote C:\path\to\handoff\results\chain_qwen\report.md and degradation.png

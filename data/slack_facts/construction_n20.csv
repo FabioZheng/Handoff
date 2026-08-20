@@ -1,0 +1,10 @@
+condition,packs,essential_facts_k,added_filler_f,context_width,all_facts_present,design
+k2_f0,20,2,0,2,True,addition
+k2_f5,20,2,5,7,True,addition
+k2_f10,20,2,10,12,True,addition
+k5_f0,20,5,0,5,True,addition
+k5_f5,20,5,5,10,True,addition
+k5_f10,20,5,10,15,True,addition
+k10_f0,20,10,0,10,True,addition
+k10_f5,20,10,5,15,True,addition
+k10_f10,20,10,10,20,True,addition

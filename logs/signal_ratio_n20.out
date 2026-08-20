@@ -1,0 +1,35 @@
+[signal-ratio:construction] [{"condition": "signal_1_0", "packs": 20, "passages_per_pack": 10, "relevant_passages": 10, "distractors": 0, "signal_ratio": 1.0}, {"condition": "signal_0_5", "packs": 20, "passages_per_pack": 10, "relevant_passages": 5, "distractors": 5, "signal_ratio": 0.5}, {"condition": "signal_0_1", "packs": 20, "passages_per_pack": 10, "relevant_passages": 1, "distractors": 9, "signal_ratio": 0.1}]
+[signal-ratio:handoff] signal_1_0/stage1: 20 generated
+[signal-ratio:handoff] signal_1_0/stage2: 20 generated
+[signal-ratio:handoff] signal_1_0/stage3: 20 generated
+[signal-ratio:handoff] signal_1_0/stage4: 20 generated
+[signal-ratio:handoff] signal_1_0/stage5: 20 generated
+[signal-ratio:handoff] signal_0_5/stage1: 20 generated
+[signal-ratio:handoff] signal_0_5/stage2: 20 generated
+[signal-ratio:handoff] signal_0_5/stage3: 20 generated
+[signal-ratio:handoff] signal_0_5/stage4: 20 generated
+[signal-ratio:handoff] signal_0_5/stage5: 20 generated
+[signal-ratio:handoff] signal_0_1/stage1: 20 generated
+[signal-ratio:handoff] signal_0_1/stage2: 20 generated
+[signal-ratio:handoff] signal_0_1/stage3: 20 generated
+[signal-ratio:handoff] signal_0_1/stage4: 20 generated
+[signal-ratio:handoff] signal_0_1/stage5: 20 generated
+calculating scores...
+computing bert embedding.
+computing greedy matching.
+done in 195.44 seconds, 20.75 sentences/sec
+[chain:bertscore] computed 2400 semantic scores
+[signal-ratio:answers] 240 rows; 240 calls this pass
+{
+  "calls_total": 540,
+  "calls_live": 485,
+  "calls_cached": 55,
+  "cache_hit_rate": 0.10185185185185185,
+  "prompt_tokens": 526038,
+  "completion_tokens": 144644,
+  "prompt_tokens_live": 471289,
+  "completion_tokens_live": 128943,
+  "cost_usd": 0.016828,
+  "api_calls_attempted": 485,
+  "api_call_cap": 650
+}

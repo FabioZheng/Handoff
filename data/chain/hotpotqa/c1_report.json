@@ -1,0 +1,3214 @@
+{
+  "candidates_run": 100,
+  "leaked_excluded": 41,
+  "survived": 59,
+  "survival_rate": 0.59,
+  "leak_rate": 0.41,
+  "n_target": 30,
+  "kept": 30,
+  "target_met": true,
+  "closed_book_mean_em": 0.25,
+  "closed_book_mean_f1": 0.34754630554630556,
+  "attempts": {
+    "5a7c221f554299683c1c62d2": [
+      {
+        "sample": 0,
+        "pred": "Jaffrey",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 101,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Jaffrey",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jaffrey",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 101,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5add8ec55542997545bbbd7e": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ae0850055429945ae959396": [
+      {
+        "sample": 0,
+        "pred": "James Taylor",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 54,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "James Taylor",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "I don't have information on an Andrew Preston to compare with James Taylor",
+        "em": 0.0,
+        "f1": 0.2857142857142857,
+        "known": false,
+        "prompt_tokens": 54,
+        "completion_tokens": 16,
+        "cached": false
+      }
+    ],
+    "5a8781b65542993e715abf8f": [
+      {
+        "sample": 0,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 78,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 78,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8bcad45542995e66a47512": [
+      {
+        "sample": 0,
+        "pred": "Qin",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 74,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Nanyue",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 74,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yue",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 93,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ac1b95655429963665198fd": [
+      {
+        "sample": 0,
+        "pred": "Fat Man",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Fat Man",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Fat Man",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a8aee2c55429970aeb70338": [
+      {
+        "sample": 0,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 76,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8268215542995ce29dccfb": [
+      {
+        "sample": 0,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a90503755429916514e7470": [
+      {
+        "sample": 0,
+        "pred": "Serjeant Painter",
+        "em": 0.0,
+        "f1": 0.4,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Engraver to the King",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Engraver to the King",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 7,
+        "cached": false
+      }
+    ],
+    "5a8a44c65542996c9b8d5e85": [
+      {
+        "sample": 0,
+        "pred": "Martin Degville",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Martin Degville",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Martin Degville",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5ab2383155429970612095c1": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 55,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 55,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 55,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ab2c5e255429916697740ba": [
+      {
+        "sample": 0,
+        "pred": "Defenseman",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Defenseman",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Defenseman",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5adf32ee5542995534e8c767": [
+      {
+        "sample": 0,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 72,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 72,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 91,
+        "completion_tokens": 9,
+        "cached": false
+      }
+    ],
+    "5a8d12ca5542994ba4e3dbe2": [
+      {
+        "sample": 0,
+        "pred": "Dar es Salaam",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Dar es Salaam",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Dar es Salaam",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 87,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5ae5e852554299546bf82fb8": [
+      {
+        "sample": 0,
+        "pred": "20th",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "20th",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "20th",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 86,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a7a749d5542994f819ef1e0": [
+      {
+        "sample": 0,
+        "pred": "Quarterly",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 72,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Quarterly",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 91,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Quarterly",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 72,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5add750c5542990dbb2f7e53": [
+      {
+        "sample": 0,
+        "pred": "Most hours spent watching television",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Most hamburgers eaten in one sitting",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Most hamburgers eaten in one sitting",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 91,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5a7125165542994082a3e5d0": [
+      {
+        "sample": 0,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 70,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 89,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 70,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "5ae657d55542995703ce8b5b": [
+      {
+        "sample": 0,
+        "pred": "50,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 93,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "50,093",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 74,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "50,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 74,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5ab82fe155429919ba4e225a": [
+      {
+        "sample": 0,
+        "pred": "Trieste",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Trieste",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 94,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Trieste",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ac2bbd0554299218029db09": [
+      {
+        "sample": 0,
+        "pred": "Irish",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Canadian",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Irish",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ac1bff05542994ab5c67dfc": [
+      {
+        "sample": 0,
+        "pred": "Arturo Guzmán Loera",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Rafael Caro Quintero",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Rafael Caro",
+        "em": 0.0,
+        "f1": 0.3333333333333333,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "5a8f157e554299458435d54d": [
+      {
+        "sample": 0,
+        "pred": "Milwaukee",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Grand Rapids",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 105,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Grand Rapids",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a74cfed5542993748c896ea": [
+      {
+        "sample": 0,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 78,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 78,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ae641f65542992ae0d162a3": [
+      {
+        "sample": 0,
+        "pred": "Regine",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Charice",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Regine",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a8510a25542994c784ddaf0": [
+      {
+        "sample": 0,
+        "pred": "Professor",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Professor",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Professor",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a7d2afd5542995f4f402221": [
+      {
+        "sample": 0,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 78,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "5ac0cfb45542997d64295a58": [
+      {
+        "sample": 0,
+        "pred": "Orlando-Kissimmee-Sanford, FL Metropolitan Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 14,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Orlando-Kissimmee-Sanford, FL Metropolitan Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 14,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Orlando-Kissimmee-Sanford, FL Metropolitan Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 14,
+        "cached": false
+      }
+    ],
+    "5a72429355429971e9dc9375": [
+      {
+        "sample": 0,
+        "pred": "Boltzmann machine",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Slot machine",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Heat pump",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a7b116a554299042af8f6c4": [
+      {
+        "sample": 0,
+        "pred": "1668",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 84,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1669",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 84,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "1668",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 84,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a7782b95542995d8318117f": [
+      {
+        "sample": 0,
+        "pred": "Pinty's",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "TSN and Pinty's",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "TSN and Casino Rama (but formerly, The Sports Network (TSN) and one of the main sponsors was, Casino Rama and also, the",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 32,
+        "cached": false
+      }
+    ],
+    "5a8f7a135542992414482adc": [
+      {
+        "sample": 0,
+        "pred": "Mantua",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 83,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Mantua",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Mantua",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5abcff225542993a06baf9ea": [
+      {
+        "sample": 0,
+        "pred": "Los Angeles Clippers",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 93,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Los Angeles Clippers",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 93,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Los Angeles Clippers",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 74,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5ab21c3b554299722f9b4cb4": [
+      {
+        "sample": 0,
+        "pred": "Sharyn McCrumb",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Sharyn McCrumb",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Sharyn McCrumb",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 7,
+        "cached": false
+      }
+    ],
+    "5adbfb6855429944faac23e4": [
+      {
+        "sample": 0,
+        "pred": "1994",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Tatiana Kestner",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Tatiana Kestner and then Nikolai's main teachers were Tatiana Kestner, until her death in 1992, and Sergei Dore",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 86,
+        "completion_tokens": 32,
+        "cached": false
+      }
+    ],
+    "5a712fca5542994082a3e641": [
+      {
+        "sample": 0,
+        "pred": "Tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 82,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 82,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ab5627b5542992aa134a2ff": [
+      {
+        "sample": 0,
+        "pred": "UMWA had 35,000 members",
+        "em": 0.0,
+        "f1": 0.4,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "25,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "UMWA, 35,000",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 80,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5ae7313c5542991e8301cbbc": [
+      {
+        "sample": 0,
+        "pred": "Bundaberg",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 93,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Narromine",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 93,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Murray Bridge, closest to Adelaide",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 93,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5ade61fd554299728e26c704": [
+      {
+        "sample": 0,
+        "pred": "Punk",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Disco",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 66,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Punk",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ac557975542993e66e8231c": [
+      {
+        "sample": 0,
+        "pred": "Oregon",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 87,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Ohio State",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Oregon",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5addd5795542990dbb2f7e9d": [
+      {
+        "sample": 0,
+        "pred": "Equal Vision Records",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "RCA Records",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 84,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "RCA",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a84e4bc5542997b5ce3ff81": [
+      {
+        "sample": 0,
+        "pred": "French",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "French",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 82,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "France",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8c8828554299653c1aa0ae": [
+      {
+        "sample": 0,
+        "pred": "Miles Fitzalan-Howard, 17th Duke of Norfolk",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 14,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Miles Fitzalan-Howard, 17th Duke of Norfolk",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 14,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Miles Fitzalan-Howard, 17th Duke of Norfolk",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 14,
+        "cached": false
+      }
+    ],
+    "5a8313a755429954d2e2ec06": [
+      {
+        "sample": 0,
+        "pred": "M. Night Shyamalan",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "M. Night Shyamalan",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jane Campion",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a8bbb8c5542995d1e6f142e": [
+      {
+        "sample": 0,
+        "pred": "Pakistan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Pakistan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Pakistan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 79,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ae5feaf5542996de7b71ac6": [
+      {
+        "sample": 0,
+        "pred": "Leofric",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 90,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Leofric",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 90,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Leofric",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 90,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a81d69055429903bc27b9de": [
+      {
+        "sample": 0,
+        "pred": "2003",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "The Lost Symbol (2009)",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "2003",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a83155c55429954d2e2ec0e": [
+      {
+        "sample": 0,
+        "pred": "Country",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Christian",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Country",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8d08ee55429941ae14df70": [
+      {
+        "sample": 0,
+        "pred": "Land-grant universities",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Research universities",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Research universities",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5add65355542995b365fab27": [
+      {
+        "sample": 0,
+        "pred": "Prop",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Impressionist",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Deadpan",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a8b7dab5542997f31a41d4c": [
+      {
+        "sample": 0,
+        "pred": "Arrowhead Stadium, Kauffman Stadium",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 95,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Arrowhead Stadium, Kauffman Stadium",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 95,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Arrowhead Stadium, Kauffman Stadium",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 95,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5a712af15542994082a3e614": [
+      {
+        "sample": 0,
+        "pred": "Bizarre Foods America",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Baggage",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Baggage",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ae074aa5542993d6555eb54": [
+      {
+        "sample": 0,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ab2979c554299449642c919": [
+      {
+        "sample": 0,
+        "pred": "Gold & Silver Pawn Shop, Las Vegas",
+        "em": 0.0,
+        "f1": 0.923076923076923,
+        "known": true,
+        "prompt_tokens": 79,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Gold & Silver Pawn Shop, Las Vegas",
+        "em": 0.0,
+        "f1": 0.923076923076923,
+        "known": true,
+        "prompt_tokens": 79,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Gold & Silver Pawn Shop, Las Vegas",
+        "em": 0.0,
+        "f1": 0.923076923076923,
+        "known": true,
+        "prompt_tokens": 79,
+        "completion_tokens": 9,
+        "cached": false
+      }
+    ],
+    "5ae056c755429945ae959319": [
+      {
+        "sample": 0,
+        "pred": "Nicholas Sparks",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Nick Cassavetes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Nicholas Sparks, directed by Nick Cassavetes",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 79,
+        "completion_tokens": 11,
+        "cached": false
+      }
+    ],
+    "5a90b2175542990a984936ae": [
+      {
+        "sample": 0,
+        "pred": "Mariaan de Swardt",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Mariaan de Swardt",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 84,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Mariaan de Swardt",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 84,
+        "completion_tokens": 7,
+        "cached": false
+      }
+    ],
+    "5adfd56655429925eb1afaac": [
+      {
+        "sample": 0,
+        "pred": "Simon Dee",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 99,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Emperor Rosko",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 99,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Tony Blackburn",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 99,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5add67915542992200553af8": [
+      {
+        "sample": 0,
+        "pred": "Bobby \"The Bull\" or \"Ice Man\" or \"Bobby Ha Ha\"",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 79,
+        "completion_tokens": 19,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Baby Face Nelson",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Richard Kuklinski, \"The Iceman\"",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 13,
+        "cached": false
+      }
+    ],
+    "5a8be8215542995e66a47518": [
+      {
+        "sample": 0,
+        "pred": "Swatch Group",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Swatch Group",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 85,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Swatch Group",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 85,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5ade1f1c55429939a52fe82d": [
+      {
+        "sample": 0,
+        "pred": "John McClane",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 91,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "John McClane",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 91,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "John McClane",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 91,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a808f96554299485f598655": [
+      {
+        "sample": 0,
+        "pred": "The Russian Revolution of 1905",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 81,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "The First Russian Revolution",
+        "em": 0.0,
+        "f1": 0.16666666666666666,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "The First Russian Revolution",
+        "em": 0.0,
+        "f1": 0.16666666666666666,
+        "known": false,
+        "prompt_tokens": 81,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5a8f186055429918e830d186": [
+      {
+        "sample": 0,
+        "pred": "Castles & Crusades",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "OSRIC",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "OSRIC",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 84,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5adc46665542994650320cc8": [
+      {
+        "sample": 0,
+        "pred": "2007",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 57,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1899",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 76,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "2007",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 57,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ae33fa95542990afbd1e0f2": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 87,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 87,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a9084e75542990a98493667": [
+      {
+        "sample": 0,
+        "pred": "Mirage Resorts",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Mirage Resorts",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "MGM Mirage",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a7a03225542996c55b2dcd5": [
+      {
+        "sample": 0,
+        "pred": "Union Pacific",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Union Pacific",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Union Pacific",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a74c85055429916b0164218": [
+      {
+        "sample": 0,
+        "pred": "Valentin Falin",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 98,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Alan Bean",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Alan Bean",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a84be095542992a431d1a97": [
+      {
+        "sample": 0,
+        "pred": "Diamond v. Chakrabarty",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 86,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Diamond v. Chakrabarty",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Diamond v. Chakrabarty",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 67,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5ae0132d55429925eb1afc00": [
+      {
+        "sample": 0,
+        "pred": "Long Island Rail Road",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "The Long Island Rail Road",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Long Island Rail Road",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5abe54585542991f66106148": [
+      {
+        "sample": 0,
+        "pred": "Abraham Lincoln",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 83,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Abraham Lincoln",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 83,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Abraham Lincoln",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a716f575542994082a3e82f": [
+      {
+        "sample": 0,
+        "pred": "Joseph Campbell",
+        "em": 0.0,
+        "f1": 0.8,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Joseph Campbell",
+        "em": 0.0,
+        "f1": 0.8,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Joseph Campbell",
+        "em": 0.0,
+        "f1": 0.8,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5abece075542997ec76fd36d": [
+      {
+        "sample": 0,
+        "pred": "Stephen Ward",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Diana, Princess of Wales",
+        "em": 0.0,
+        "f1": 0.2,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Stephen Ward",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a80799b5542992bc0c4a72e": [
+      {
+        "sample": 0,
+        "pred": "Panzer Corps",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 101,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Panzer Corps",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "XIX Corps",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5adfe6c455429906c02daa85": [
+      {
+        "sample": 0,
+        "pred": "Godiva",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Godiva",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Godiva",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a7b5aff55429931da12ca6d": [
+      {
+        "sample": 0,
+        "pred": "Bangalore University",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Bangalore University",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Bangalore University",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a7264ed5542990c210a411a": [
+      {
+        "sample": 0,
+        "pred": "Drang nach Osten",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 97,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Drang nach Osten",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Drang nach Osten",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "5a8b8a745542995d1e6f13e4": [
+      {
+        "sample": 0,
+        "pred": "Fenari Isa",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Fenar",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Fatih",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ae3dc205542992f92d823a1": [
+      {
+        "sample": 0,
+        "pred": "Basilica",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 69,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "minor basilica",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 69,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Minor basilica",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 69,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a7458ff55429979e2882918": [
+      {
+        "sample": 0,
+        "pred": "Disney movies",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Disney movies",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Disney movies",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5add5f395542990dbb2f7e50": [
+      {
+        "sample": 0,
+        "pred": "No",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "No",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Psychological horror, thriller",
+        "em": 0.0,
+        "f1": 0.4444444444444444,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "5adc54085542994650320cce": [
+      {
+        "sample": 0,
+        "pred": "The London Gazette",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 92,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "The London Gazette, 1665",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "The London Gazette, 1665",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 92,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5a74bdce55429929fddd84e1": [
+      {
+        "sample": 0,
+        "pred": "Vladimir Arnold",
+        "em": 0.0,
+        "f1": 0.8,
+        "known": true,
+        "prompt_tokens": 54,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Vladimir Arnold",
+        "em": 0.0,
+        "f1": 0.8,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Vladimir Arnold",
+        "em": 0.0,
+        "f1": 0.8,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5a8a203c55429970aeb7026d": [
+      {
+        "sample": 0,
+        "pred": "Dutch Shepherd",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Dutch Shepherd",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Dutch Shepherd",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 84,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a771d6155429966f1a36c6d": [
+      {
+        "sample": 0,
+        "pred": "Nathan Bedford Forrest",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Nathan Bedford Forrest",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Nathan Bedford Forrest",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 75,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5abd69ce5542993062266c7f": [
+      {
+        "sample": 0,
+        "pred": "Kids",
+        "em": 0.0,
+        "f1": 0.18181818181818182,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Kids",
+        "em": 0.0,
+        "f1": 0.18181818181818182,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Kids",
+        "em": 0.0,
+        "f1": 0.18181818181818182,
+        "known": false,
+        "prompt_tokens": 80,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ae277575542996483e649b2": [
+      {
+        "sample": 0,
+        "pred": "Golden Harvest",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 76,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Golden Harvest",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 76,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Golden Harvest",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 76,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a871a5e5542996432c5721e": [
+      {
+        "sample": 0,
+        "pred": "Jett Rink in Giant",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Jett Rink",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jett Rink",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 84,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5a8756aa5542994846c1cd69": [
+      {
+        "sample": 0,
+        "pred": "1543",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1520",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 57,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "1520",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a7fb23f5542994857a767be": [
+      {
+        "sample": 0,
+        "pred": "Pectin",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Pectin",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Pectin",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5ab9753055429970cfb8eb0b": [
+      {
+        "sample": 0,
+        "pred": "Horror",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 79,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Horror",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 79,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Horror",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a904b0c5542995651fb510e": [
+      {
+        "sample": 0,
+        "pred": "Courtney Love",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Courtney Love",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Courtney Love",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5ade8802554299728e26c72d": [
+      {
+        "sample": 0,
+        "pred": "Emmy",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Emmy, Nestle",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Emmy Noether and the company is AT&T, but more specifically, the company is:  AT&T's Bell Labs scientist, however the company is more",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 32,
+        "cached": false
+      }
+    ],
+    "5ab56ed0554299637185c597": [
+      {
+        "sample": 0,
+        "pred": "Southampton",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 81,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Southampton",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 81,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Southampton",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a7271525542997f827839d0": [
+      {
+        "sample": 0,
+        "pred": "Red, white, and green",
+        "em": 0.0,
+        "f1": 0.6,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Red, White, and Green",
+        "em": 0.0,
+        "f1": 0.6,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Red, white, and green",
+        "em": 0.0,
+        "f1": 0.6,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 7,
+        "cached": false
+      }
+    ],
+    "5a7bcd68554299294a54aaf0": [
+      {
+        "sample": 0,
+        "pred": "Mark Steven Johnson",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 76,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Mark Steven Johnson",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 56,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Mark Steven Johnson",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 57,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5ab85a1155429934fafe6d7c": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a85441f5542997175ce1faa": [
+      {
+        "sample": 0,
+        "pred": "Australia",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 75,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Australia",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 56,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Africa",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ab928c255429934fafe6e6e": [
+      {
+        "sample": 0,
+        "pred": "Der Rosenkavalier, Salome, Elektra",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 84,
+        "completion_tokens": 13,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Der Rosenkavalier, Salome, Elektra",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 84,
+        "completion_tokens": 13,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Der Rosenkavalier, Salome, Elektra",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 13,
+        "cached": false
+      }
+    ],
+    "5adf9b415542995ec70e904c": [
+      {
+        "sample": 0,
+        "pred": "Newfoundland and Labrador",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Labrador and Newfoundland",
+        "em": 0.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Newfoundland and Labrador",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 79,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5ac3959855429939154137f0": [
+      {
+        "sample": 0,
+        "pred": "Jas",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Mildred Hubble",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jas",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 86,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ]
+  }
+}

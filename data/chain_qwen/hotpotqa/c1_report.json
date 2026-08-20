@@ -1,0 +1,1294 @@
+{
+  "candidates_run": 40,
+  "leaked_excluded": 13,
+  "survived": 27,
+  "survival_rate": 0.675,
+  "leak_rate": 0.325,
+  "n_target": 10,
+  "kept": 10,
+  "target_met": true,
+  "closed_book_mean_em": 0.26666666666666666,
+  "closed_book_mean_f1": 0.3062962962962963,
+  "attempts": {
+    "5a7c221f554299683c1c62d2": [
+      {
+        "sample": 0,
+        "pred": "Boscawen",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 87,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Croydon",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 87,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Croydon",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 87,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5add8ec55542997545bbbd7e": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 58,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 58,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 58,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5ae0850055429945ae959396": [
+      {
+        "sample": 0,
+        "pred": "Andrew Preston",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 55,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Andrew Preston was older than James Taylor",
+        "em": 0.0,
+        "f1": 0.4444444444444445,
+        "known": false,
+        "prompt_tokens": 55,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Andrew Preston was older than James Taylor",
+        "em": 0.0,
+        "f1": 0.4444444444444445,
+        "known": false,
+        "prompt_tokens": 55,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5a8781b65542993e715abf8f": [
+      {
+        "sample": 0,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8bcad45542995e66a47512": [
+      {
+        "sample": 0,
+        "pred": "Chu",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Chu",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Chu",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ac1b95655429963665198fd": [
+      {
+        "sample": 0,
+        "pred": "Little Boy",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 69,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Trinity",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Little Boy",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 69,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8aee2c55429970aeb70338": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 58,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8268215542995ce29dccfb": [
+      {
+        "sample": 0,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 68,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 68,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 68,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5a90503755429916514e7470": [
+      {
+        "sample": 0,
+        "pred": "Lady of the Garter",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Lady of the Garter",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Knight of the Order of the Bath",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 7,
+        "cached": false
+      }
+    ],
+    "5a8a44c65542996c9b8d5e85": [
+      {
+        "sample": 0,
+        "pred": "Michael Crafter",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Michael Crafter",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Michael Crafter",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5ab2383155429970612095c1": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 56,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5ab2c5e255429916697740ba": [
+      {
+        "sample": 0,
+        "pred": "Forward",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Forward",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Forward",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5adf32ee5542995534e8c767": [
+      {
+        "sample": 0,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 75,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 75,
+        "completion_tokens": 8,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 75,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5a8d12ca5542994ba4e3dbe2": [
+      {
+        "sample": 0,
+        "pred": "London",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "London",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "London",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5ae5e852554299546bf82fb8": [
+      {
+        "sample": 0,
+        "pred": "19th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "19th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "19th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a7a749d5542994f819ef1e0": [
+      {
+        "sample": 0,
+        "pred": "Quarterly",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Quarterly",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Quarterly",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5add750c5542990dbb2f7e53": [
+      {
+        "sample": 0,
+        "pred": "Most Popular TV Show in the World",
+        "em": 0.0,
+        "f1": 0.2,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Most expensive TV advertising campaign for a single episode",
+        "em": 0.0,
+        "f1": 0.16666666666666666,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Most Visited Film Set in the World",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 8,
+        "cached": false
+      }
+    ],
+    "5a7125165542994082a3e5d0": [
+      {
+        "sample": 0,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5ae657d55542995703ce8b5b": [
+      {
+        "sample": 0,
+        "pred": "52,600",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "53,200",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "67,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 77,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "5ab82fe155429919ba4e225a": [
+      {
+        "sample": 0,
+        "pred": "Francesco Morosini",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Fregata San Giorgio",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 7,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Fregata San Giorgio",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 7,
+        "cached": false
+      }
+    ],
+    "5ac2bbd0554299218029db09": [
+      {
+        "sample": 0,
+        "pred": "American",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "American",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "American",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 59,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5ac1bff05542994ab5c67dfc": [
+      {
+        "sample": 0,
+        "pred": "Joaquín \"El Chapo\" Guzmán's eldest brother was Ismael \"El Líder\" Guzmán",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 29,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Joaquín Guzmán Loera",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Joaquín \"El Chapo\" Guzmán's eldest brother was Ismael \"El Líder\" Guzmán",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 29,
+        "cached": false
+      }
+    ],
+    "5a8f157e554299458435d54d": [
+      {
+        "sample": 0,
+        "pred": "Birmingham, Alabama",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Atlanta",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Atlanta",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5a74cfed5542993748c896ea": [
+      {
+        "sample": 0,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Modern Baseball",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ae641f65542992ae0d162a3": [
+      {
+        "sample": 0,
+        "pred": "Bambolai",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yeng RCC",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jaya",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8510a25542994c784ddaf0": [
+      {
+        "sample": 0,
+        "pred": "Both are writers",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Both are writers",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Writer",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "5a7d2afd5542995f4f402221": [
+      {
+        "sample": 0,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5ac0cfb45542997d64295a58": [
+      {
+        "sample": 0,
+        "pred": "Orlando-Sanford, FL Combined Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Orlando-Sanford-Melbourne, FL Combined Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 12,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Coral Springs",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "5a72429355429971e9dc9375": [
+      {
+        "sample": 0,
+        "pred": "Boltzmann's Brain",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Heat engine",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Maxwell's demon",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a7b116a554299042af8f6c4": [
+      {
+        "sample": 0,
+        "pred": "1796",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1790",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "1790",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a7782b95542995d8318117f": [
+      {
+        "sample": 0,
+        "pred": "State Farm",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "State Farm",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "State Farm",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5a8f7a135542992414482adc": [
+      {
+        "sample": 0,
+        "pred": "Latium",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Albula",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Urbs Salvia",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 65,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5abcff225542993a06baf9ea": [
+      {
+        "sample": 0,
+        "pred": "Philadelphia 76ers",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "New York Knicks",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Philadelphia 76ers",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "5ab21c3b554299722f9b4cb4": [
+      {
+        "sample": 0,
+        "pred": "Bram Stoker",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Terry Gilliam",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "J.G. Ballard",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5adbfb6855429944faac23e4": [
+      {
+        "sample": 0,
+        "pred": "1996",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1941",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "1980",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "5a712fca5542994082a3e641": [
+      {
+        "sample": 0,
+        "pred": "Tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 65,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ab5627b5542992aa134a2ff": [
+      {
+        "sample": 0,
+        "pred": "12,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Approximately 25,000 members",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 11,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "23,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "5ae7313c5542991e8301cbbc": [
+      {
+        "sample": 0,
+        "pred": "Brisbane",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 75,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Perth",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 75,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Perth",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 75,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ade61fd554299728e26c704": [
+      {
+        "sample": 0,
+        "pred": "Soul jazz",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Funk",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Funk",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "5ac557975542993e66e8231c": [
+      {
+        "sample": 0,
+        "pred": "University of Kentucky Wildcats",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "University of Kentucky Wildcats",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "University of Kentucky Wildcats",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,55 @@
+# Low-cost MS MARCO v2.1 retrieval-quality handoff pilot.
+model:
+  # Confirmed on OpenRouter 2026-08-15 at $0.05/M input, $0.08/M output.
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  handoff_max_tokens: 320
+
+cost:
+  # A successful 20-question pilot is expected to be well below this.
+  cap_usd: 0.35
+  api_call_cap: 650
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 2
+  max_retries: 4
+  backoff_base_s: 1.5
+  backoff_max_s: 30.0
+  request_timeout_s: 120
+  cache_dir: cache
+
+dataset:
+  # Microsoft’s original blob endpoint presently blocks anonymous downloads;
+  # this is Hugging Face's public parquet mirror of the official v2.1 dev set.
+  dev_url: "https://huggingface.co/datasets/microsoft/ms_marco/resolve/refs%2Fconvert%2Fparquet/v2.1/validation/0000.parquet"
+  local_parquet: data/raw/msmarco_v2.1_validation.parquet
+  sample_seed: 20260815
+  n_questions: 20
+  smoke_questions: 2
+
+conditions: [good, medium, bad]
+depths: [0, 1, 3, 5]
+max_depth: 5
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  bertscore:
+    enabled: true
+    model_type: roberta-large
+    num_layers: 17
+    batch_size: 64
+    rescale_with_baseline: true
+
+outputs:
+  data_root: data/retrieval_quality
+  run_root: runs/retrieval_quality
+  result_root: results/retrieval_quality

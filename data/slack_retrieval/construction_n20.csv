@@ -1,0 +1,6 @@
+condition,queries,essential_k,added_filler_f,filler_type,context_width,design
+f0,20,3,0,none,3,addition
+f3_inert,20,3,3,inert,6,addition
+f6_inert,20,3,6,inert,9,addition
+f3_near_miss,20,3,3,near_miss,6,addition
+f6_near_miss,20,3,6,near_miss,9,addition

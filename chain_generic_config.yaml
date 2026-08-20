@@ -1,0 +1,46 @@
+# Matched replication of the repeated-handoff experiment with generic summaries.
+# The question is withheld from every compressor, including the source-to-summary
+# call. The final answerer still receives it through the sealed handoff.
+question_conditioned: false
+
+datasets:
+  musique:
+    local_parquet: data/raw/musique_validation.parquet
+    parquet_url: https://huggingface.co/datasets/dgslibisey/MuSiQue/resolve/refs%2Fconvert%2Fparquet/default/validation/0000.parquet
+    answerable_only: true
+  hotpotqa:
+    local_parquet: data/raw/hotpotqa_validation.parquet
+    parquet_url: https://huggingface.co/datasets/hotpotqa/hotpot_qa/resolve/refs%2Fconvert%2Fparquet/distractor/validation/0000.parquet
+
+sampling:
+  seed: 20260811
+  n_target_per_dataset: 30
+  n_candidates_per_dataset: 100
+
+contexts:
+  short:
+    max_documents: gold
+  medium:
+    max_documents: 5
+  full:
+    max_documents: all
+
+depths: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+seeds: [1, 2]
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  primary_metric: f1
+  bertscore:
+    enabled: true
+    model_type: roberta-large
+    num_layers: 17
+    batch_size: 64
+    rescale_with_baseline: true
+
+outputs:
+  root: results/chain_generic
+  run_root: runs/chain_generic
+  # Reuse the identical C1-filtered question sample, but never original handoffs.
+  data_root: data/chain

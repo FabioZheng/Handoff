@@ -1,0 +1,4 @@
+condition,questions,passages_per_query,answer_sufficient_gold_passages,distractors,signal_ratio,same_question_for_all_gold_passages,source_paragraph_present_in_every_gold_passage
+signal_1_0,2,10,10,0,1.0,True,True
+signal_0_5,2,10,5,5,0.5,True,True
+signal_0_1,2,10,1,9,0.1,True,True

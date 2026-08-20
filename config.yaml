@@ -1,0 +1,83 @@
+# Agent Handoff Information-Loss Probe — configuration
+#
+# Everything model-specific lives here so the pipeline stays model-agnostic
+# and can be re-run with a second model as a robustness check.
+
+model:
+  # Mid-capability instruct model, deliberately NOT frontier (see README §Model choice).
+  # Verified present on OpenRouter's /api/v1/models on 2026-08-11.
+  id: "meta-llama/llama-3.3-70b-instruct"
+  # Optional OpenRouter provider routing. null = let OpenRouter route freely.
+  # Pin an order (e.g. ["deepinfra", "together"]) to reduce cross-provider variance.
+  provider_order: null
+  # Only route to providers that honour every parameter we send (incl. seed).
+  # Narrows availability; off by default because seed is a nice-to-have, not a
+  # correctness requirement (the on-disk cache is what makes reruns exact).
+  require_parameters: false
+
+dataset:
+  name: "musique"                       # "musique" | "hotpotqa"
+  split: "validation"
+  parquet_url: "https://huggingface.co/datasets/dgslibisey/MuSiQue/resolve/refs%2Fconvert%2Fparquet/default/validation/0000.parquet"
+  local_parquet: "data/raw/musique_validation.parquet"
+  answerable_only: true
+
+sampling:
+  seed: 20260811          # fixes both the candidate sample and paragraph shuffling
+  n_target: 150           # questions that must survive the C1 filter
+  n_candidates: 500       # sampled before filtering; expect to discard a large fraction
+  id_list: "data/sampled_ids.json"   # committed so runs are reproducible
+
+# C1 — parametric leakage filter
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  # A closed-book attempt counts as "the model already knows this" if it is an
+  # exact match OR scores at least this token-F1. Questions are KEPT only when
+  # all `samples` attempts fail both tests.
+  f1_known_threshold: 0.6
+
+decoding:
+  top_p: 1.0
+  # C6: orchestrator (and the A_full single agent) answer deterministically.
+  orchestrator_temperature: 0.0
+  answer_max_tokens: 64
+  # C2: same model, same top_p, same everything except the temperature that C6
+  # explicitly requires to differ. Seed-to-seed variation must come from here.
+  subagent_temperature: 0.7
+  handoff_max_tokens: 700
+
+# Seeds only affect LLM-generated handoffs (B/C/D). A_full and E_oracle are
+# deterministic at temperature 0, so they are generated once per question.
+seeds: [1, 2]
+
+conditions:
+  mechanisms: ["A_full", "B_freeform", "C_structured", "D_extractive", "E_oracle"]
+  # Build order §10: the pilot runs only these three.
+  pilot_mechanisms: ["A_full", "B_freeform", "E_oracle"]
+
+cost:
+  cap_usd: 15.0           # hard cap; the run aborts when exceeded
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 4          # keep low by default
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  request_timeout_s: 180
+  cache_dir: "cache"
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+
+# LLM judge: answer-correctness vs the gold answer, as a semantic complement to
+# EM/F1 (which remain primary). Deliberately a different model family from the
+# systems under test, so a model is never grading its own family's outputs.
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0

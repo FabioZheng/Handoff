@@ -1,0 +1,1294 @@
+{
+  "candidates_run": 40,
+  "leaked_excluded": 2,
+  "survived": 38,
+  "survival_rate": 0.95,
+  "leak_rate": 0.05,
+  "n_target": 10,
+  "kept": 10,
+  "target_met": true,
+  "closed_book_mean_em": 0.025,
+  "closed_book_mean_f1": 0.1310142500051222,
+  "attempts": {
+    "3hop2__127483_76623_10557": [
+      {
+        "sample": 0,
+        "pred": "Latin",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Latin",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Latin",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "known": true,
+        "prompt_tokens": 73,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "3hop1__639955_834494_33939": [
+      {
+        "sample": 0,
+        "pred": "1,060,323",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1,482,543",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "23,294",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 68,
+        "completion_tokens": 6,
+        "cached": false
+      }
+    ],
+    "3hop1__604991_339990_15538": [
+      {
+        "sample": 0,
+        "pred": "2011",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "2011",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "2011",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "3hop2__222979_132957_40768": [
+      {
+        "sample": 0,
+        "pred": "1986, 1993, 1984",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 16,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1987, 1996, 1984",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 16,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "1986, 1990, 1984",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 16,
+        "cached": false
+      }
+    ],
+    "3hop1__158848_66089_86107": [
+      {
+        "sample": 0,
+        "pred": "The main port of Axum was Adulis",
+        "em": 0.0,
+        "f1": 0.2857142857142857,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 10,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Theodoric was trying to gain access to the Adriatic Sea, and the main port of Axum was Adulis",
+        "em": 0.0,
+        "f1": 0.11764705882352941,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 25,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Theodoric was trying to gain access to the Adriatic Sea, and the main port of Axum was Adulis",
+        "em": 0.0,
+        "f1": 0.11764705882352941,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 25,
+        "cached": false
+      }
+    ],
+    "4hop1__777217_32392_823060_610794": [
+      {
+        "sample": 0,
+        "pred": "Bergen County",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Jefferson County",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jefferson County",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "2hop__748615_123956": [
+      {
+        "sample": 0,
+        "pred": "April 16, 1948",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 10,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "April 18, 1946",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 10,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "April 21, 1945",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 10,
+        "cached": false
+      }
+    ],
+    "3hop1__765565_326948_78782": [
+      {
+        "sample": 0,
+        "pred": "Field Marshal Bernard Montgomery",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Napoleon Bonaparte",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Arthur Wellesley",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "2hop__640262_122868": [
+      {
+        "sample": 0,
+        "pred": "University of California, Berkeley",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 5,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "University of Chicago",
+        "em": 0.0,
+        "f1": 0.5714285714285715,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "University of Chicago",
+        "em": 0.0,
+        "f1": 0.5714285714285715,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "3hop1__768500_730460_70315": [
+      {
+        "sample": 0,
+        "pred": "New Orleans",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "New Orleans",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "New Orleans",
+        "em": 1.0,
+        "f1": 1.0,
+        "known": true,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "4hop3__524186_219173_638950_72134": [
+      {
+        "sample": 0,
+        "pred": "1849",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "1849",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "1849",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "2hop__39063_212301": [
+      {
+        "sample": 0,
+        "pred": "Robert Peel",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Robert Peel",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Robert Peel",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "4hop1__58323_375563_161848_28750": [
+      {
+        "sample": 0,
+        "pred": "Australia",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Australia",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Vienna",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "2hop__73615_16848": [
+      {
+        "sample": 0,
+        "pred": "The assets were seized by the Indian government",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "The assets were transferred to the Government of India",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 10,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "The assets were transferred to the Government of India",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 71,
+        "completion_tokens": 10,
+        "cached": false
+      }
+    ],
+    "2hop__575797_91104": [
+      {
+        "sample": 0,
+        "pred": "Telstar 1",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 70,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Telstar 1",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 70,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Telstar 1",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 70,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "2hop__2299_38663": [
+      {
+        "sample": 0,
+        "pred": "38%",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "30%",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "30%",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "3hop1__273571_834494_34099": [
+      {
+        "sample": 0,
+        "pred": "Three years",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Three years",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Three years",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "2hop__567588_67465": [
+      {
+        "sample": 0,
+        "pred": "2016",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "2012",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "2008",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "3hop1__791757_15840_36002": [
+      {
+        "sample": 0,
+        "pred": "The Genesis had a more powerful processor, better graphics, and a more advanced operating system compared to the system used in Knight Rider",
+        "em": 0.0,
+        "f1": 0.13793103448275862,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 26,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "The Genesis had a more advanced graphics processor, better sound capabilities, and support for 3D gaming, which gave it an edge over the system Knight Rider came",
+        "em": 0.0,
+        "f1": 0.18181818181818182,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 32,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Genesis offered better graphics, more advanced technology, and superior performance compared to the system Knight Rider came out on",
+        "em": 0.0,
+        "f1": 0.2857142857142857,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 22,
+        "cached": false
+      }
+    ],
+    "3hop2__72083_92991_76291": [
+      {
+        "sample": 0,
+        "pred": "January 1947",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 79,
+        "completion_tokens": 6,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "January 3, 1947",
+        "em": 0.0,
+        "f1": 0.4,
+        "known": false,
+        "prompt_tokens": 79,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "January 3, 1947",
+        "em": 0.0,
+        "f1": 0.4,
+        "known": false,
+        "prompt_tokens": 79,
+        "completion_tokens": 9,
+        "cached": false
+      }
+    ],
+    "2hop__10114_599630": [
+      {
+        "sample": 0,
+        "pred": "Hangzhou",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Hangzhou",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Hangzhou",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 60,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "4hop1__130480_53706_795904_580996": [
+      {
+        "sample": 0,
+        "pred": "Nevada",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Nevada",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "California",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "2hop__497191_129669": [
+      {
+        "sample": 0,
+        "pred": "Buenos Aires",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 54,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Alhandra was born in the district of Bairro da Cidade Nova",
+        "em": 0.0,
+        "f1": 0.16666666666666669,
+        "known": false,
+        "prompt_tokens": 54,
+        "completion_tokens": 16,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Alhandra was born in the district of São Paulo",
+        "em": 0.0,
+        "f1": 0.2,
+        "known": false,
+        "prompt_tokens": 54,
+        "completion_tokens": 12,
+        "cached": false
+      }
+    ],
+    "2hop__268084_78303": [
+      {
+        "sample": 0,
+        "pred": "James Garner",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Steve McQueen",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Steve McQueen",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "4hop2__161602_474028_88460_21062": [
+      {
+        "sample": 0,
+        "pred": "No",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "No",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "No",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 78,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "2hop__41158_22946": [
+      {
+        "sample": 0,
+        "pred": "Charles Lyell",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Charles Lyell",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Charles Lyell",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 69,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "3hop1__127837_157828_239539": [
+      {
+        "sample": 0,
+        "pred": "Budapest",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 75,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Belgrade",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 75,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Belgrade",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 75,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "3hop2__67618_30587_44003": [
+      {
+        "sample": 0,
+        "pred": "Gulf of Mexico",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Gulf of Mexico",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Gulf of Mexico",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "4hop2__161602_426860_88460_126088": [
+      {
+        "sample": 0,
+        "pred": "Nigeria",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Nigeria",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "South Africa",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 73,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "2hop__54651_169233": [
+      {
+        "sample": 0,
+        "pred": "Grammy Award for Best Male Pop Vocal Performance",
+        "em": 0.0,
+        "f1": 0.42857142857142855,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Grammy Award for Best Female Pop Vocal Performance",
+        "em": 0.0,
+        "f1": 0.42857142857142855,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 9,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Grammy Award for Best Male Pop Vocal Performance",
+        "em": 0.0,
+        "f1": 0.42857142857142855,
+        "known": false,
+        "prompt_tokens": 62,
+        "completion_tokens": 9,
+        "cached": false
+      }
+    ],
+    "2hop__335899_124498": [
+      {
+        "sample": 0,
+        "pred": "Louis Armstrong",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Louis Armstrong",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jean-Louis Murieron",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 5,
+        "cached": false
+      }
+    ],
+    "3hop1__390489_502967_84283": [
+      {
+        "sample": 0,
+        "pred": "Live Nation Entertainment",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Live Nation Entertainment",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jorge Pardo",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "2hop__197470_271394": [
+      {
+        "sample": 0,
+        "pred": "Oxford University",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 55,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Oxford University",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 55,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Oxford University",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 55,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "2hop__215896_460425": [
+      {
+        "sample": 0,
+        "pred": "New York City",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "New York City",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "New York City",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 59,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "2hop__40485_40501": [
+      {
+        "sample": 0,
+        "pred": "France",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "France",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "France",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 67,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "2hop__656411_345851": [
+      {
+        "sample": 0,
+        "pred": "Jive Records",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Universal Music Group",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jive Records",
+        "em": 0.0,
+        "f1": 0.5,
+        "known": false,
+        "prompt_tokens": 61,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ],
+    "2hop__88149_807969": [
+      {
+        "sample": 0,
+        "pred": "Manchester United",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Manchester United",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 2,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Manchester United",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 64,
+        "completion_tokens": 2,
+        "cached": false
+      }
+    ],
+    "4hop1__151650_5274_458768_33632": [
+      {
+        "sample": 0,
+        "pred": "April 16",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "April 12",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 4,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "April 23",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 72,
+        "completion_tokens": 4,
+        "cached": false
+      }
+    ],
+    "2hop__763380_74735": [
+      {
+        "sample": 0,
+        "pred": "Yesterday",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yesterday",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 1,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yesterday",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 1,
+        "cached": false
+      }
+    ],
+    "3hop1__823336_228453_86925": [
+      {
+        "sample": 0,
+        "pred": "Saints symbol is a silver cross with a crown",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 11,
+        "cached": false
+      },
+      {
+        "sample": 1,
+        "pred": "Saints symbol is a cross with a crown of thorns",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 13,
+        "cached": false
+      },
+      {
+        "sample": 2,
+        "pred": "Saints Symbol",
+        "em": 0.0,
+        "f1": 0.0,
+        "known": false,
+        "prompt_tokens": 63,
+        "completion_tokens": 3,
+        "cached": false
+      }
+    ]
+  }
+}
