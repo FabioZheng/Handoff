@@ -212,6 +212,20 @@ def build_question(row, rng_seed: int) -> Question:
 def sample_candidates(cfg: dict, repo_root: Path) -> list[Question]:
     import pandas as pd
 
+    if cfg["dataset"].get("source") == "generated_wikipedia":
+        path = repo_root / cfg["dataset"]["local_jsonl"]
+        if not path.exists():
+            raise FileNotFoundError(
+                f"Generated dataset is missing: {path}. Build it first with "
+                "python src/build_wikipedia_dataset.py"
+            )
+        with open(path, "r", encoding="utf-8") as fh:
+            rows = [json.loads(line) for line in fh if line.strip()]
+        loaded = [Question.from_json(row) for row in rows if "qid" in row]
+        n_cand = min(cfg["sampling"]["n_candidates"], len(loaded))
+        print(f"[data] loaded {n_cand}/{len(loaded)} generated Wikipedia questions")
+        return loaded[:n_cand]
+
     path = ensure_parquet(cfg, repo_root)
     df = pd.read_parquet(path)
     if cfg["dataset"]["answerable_only"]:

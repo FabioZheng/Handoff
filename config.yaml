@@ -16,16 +16,14 @@ model:
   require_parameters: false
 
 dataset:
-  name: "musique"                       # "musique" | "hotpotqa"
-  split: "validation"
-  parquet_url: "https://huggingface.co/datasets/dgslibisey/MuSiQue/resolve/refs%2Fconvert%2Fparquet/default/validation/0000.parquet"
-  local_parquet: "data/raw/musique_validation.parquet"
-  answerable_only: true
+  name: "wikipedia_random"
+  source: "generated_wikipedia"
+  local_jsonl: "data/wikipedia_random/questions.jsonl"
 
 sampling:
   seed: 20260811          # fixes both the candidate sample and paragraph shuffling
-  n_target: 150           # questions that must survive the C1 filter
-  n_candidates: 500       # sampled before filtering; expect to discard a large fraction
+  n_target: 20            # questions that must survive the C1 filter
+  n_candidates: 20        # two questions from each of ten random pages
   id_list: "data/sampled_ids.json"   # committed so runs are reproducible
 
 # C1 — parametric leakage filter

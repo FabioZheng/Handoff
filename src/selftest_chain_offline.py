@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 from pathlib import Path
@@ -46,18 +47,9 @@ def fixture_question():
 print("=== evidence-length variants ===")
 cfg = load_config(ROOT / "chain_config.yaml")
 q = fixture_question()
-short = chain_data.select_paragraphs(q, "short", cfg["contexts"])
-medium = chain_data.select_paragraphs(q, "medium", cfg["contexts"])
 full = chain_data.select_paragraphs(q, "full", cfg["contexts"])
-check("short is gold-only", len(short) == 2 and all(p.is_supporting for p in short))
-check("medium has five documents", len(medium) == 5, str([p.pid for p in medium]))
 check("full has every document", len(full) == 6)
-check("all variants retain every gold document",
-      all({1, 3}.issubset({p.pid for p in variant}) for variant in (short, medium, full)))
-check("context lengths are nested",
-      len(chain_data.render_context(q, "short", cfg["contexts"]))
-      < len(chain_data.render_context(q, "medium", cfg["contexts"]))
-      < len(chain_data.render_context(q, "full", cfg["contexts"])))
+check("full retains every gold document", {1, 3}.issubset({p.pid for p in full}))
 
 print("\n=== chain isolation ===")
 try:
@@ -76,24 +68,23 @@ with tempfile.TemporaryDirectory() as tmp:
     check("mismatched manifest refuses stale data",
           chain_data.read_questions(path, {"dataset": "other", "model": "m"}) is None)
 
-print("\n=== real HotpotQA adapter (when parquet is present) ===")
-hotpot_path = ROOT / cfg["datasets"]["hotpotqa"]["local_parquet"]
-if hotpot_path.exists():
+print("\n=== generated Wikipedia adapter ===")
+with tempfile.TemporaryDirectory() as tmp:
+    root = Path(tmp)
+    dataset_path = root / "questions.jsonl"
+    question = fixture_question()
+    dataset_path.write_text(json.dumps({"_manifest": {}}) + "\n" + json.dumps(question.to_json()) + "\n", encoding="utf-8")
     questions = chain_data.sample_candidates(
-        "hotpotqa", cfg["datasets"]["hotpotqa"], ROOT, cfg["sampling"]["seed"], 5
+        "wikipedia_random", {"source": "generated_wikipedia", "local_jsonl": "questions.jsonl"},
+        root, cfg["sampling"]["seed"], 5,
     )
-    check("Hotpot questions have ten documents", all(len(x.paragraphs) == 10 for x in questions))
-    check("Hotpot questions have gold documents", all(x.gold_pids for x in questions))
-    check("Hotpot supporting sentences are verbatim",
-          all(gs.text in next(p.text for p in x.paragraphs if p.pid == gs.pid)
-              for x in questions for gs in x.gold_sentences))
-else:
-    print("SKIP  Hotpot parquet has not been downloaded")
+    check("generated Wikipedia questions load", len(questions) == 1 and questions[0].qid == "fixture")
+    check("generated Wikipedia source is preserved", questions[0].paragraphs[0].text == "Alpha links to beta.")
 
 print("\n=== plot generation ===")
 fake_metrics = []
-for dataset in ("musique", "hotpotqa"):
-    for variant in ("short", "medium", "full"):
+for dataset in ("wikipedia_random",):
+    for variant in ("full",):
         for depth in (0, 1, 2, 3, 5):
             fake_metrics.append({
                 "dataset": dataset, "context_variant": variant, "depth": depth,
@@ -103,8 +94,8 @@ for dataset in ("musique", "hotpotqa"):
 with tempfile.TemporaryDirectory() as tmp:
     destination = Path(tmp) / "plot.png"
     class Args:
-        datasets = ["musique", "hotpotqa"]
-        contexts = ["short", "medium", "full"]
+        datasets = ["wikipedia_random"]
+        contexts = ["full"]
         depths = [0, 1, 2, 3, 5]
     run_chain.make_plot(fake_metrics, Args(), destination)
     check("degradation plot is produced", destination.exists() and destination.stat().st_size > 1000)

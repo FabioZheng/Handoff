@@ -2,25 +2,30 @@
 # Model/runtime settings continue to come from config.yaml.
 
 datasets:
-  musique:
-    local_parquet: data/raw/musique_validation.parquet
-    parquet_url: https://huggingface.co/datasets/dgslibisey/MuSiQue/resolve/refs%2Fconvert%2Fparquet/default/validation/0000.parquet
-    answerable_only: true
-  hotpotqa:
-    local_parquet: data/raw/hotpotqa_validation.parquet
-    parquet_url: https://huggingface.co/datasets/hotpotqa/hotpot_qa/resolve/refs%2Fconvert%2Fparquet/distractor/validation/0000.parquet
+  wikipedia_random:
+    source: generated_wikipedia
+    local_jsonl: data/wikipedia_random/questions.jsonl
+    source_pages_jsonl: data/wikipedia_random/source_pages.jsonl
+    # The builder retains every character of each selected plaintext page; it
+    # rejects pages outside this size range instead of truncating them.
+    pages: 10
+    min_page_characters: 4000
+    max_page_characters: 40000
+    max_page_attempts: 20
+    # Kept independently from the mid-capability model being measured.
+    model_id: openai/gpt-5.2
+    reasoning: {effort: high}
+    cost_cap_usd: 12.0
 
 sampling:
   seed: 20260811
-  n_target_per_dataset: 30
-  n_candidates_per_dataset: 100
+  n_target_per_dataset: 20
+  n_candidates_per_dataset: 20
 
 # All variants retain every gold document. Only distractor load changes.
 contexts:
-  short:
-    max_documents: gold
-  medium:
-    max_documents: 5
+  # Each item retains one complete randomly selected Wikipedia page. There are
+  # no benchmark distractor documents left in this replacement dataset.
   full:
     max_documents: all
 

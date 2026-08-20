@@ -66,7 +66,7 @@ handoff-probe/
   PROMPTS.md                every prompt string used anywhere, grouped by experiment
   results/HANDOFF_EXPERIMENTS_REPORT.md   the synthesized findings across all experiments
   src/
-    data.py                MuSiQue load, C1 leakage filter, sample, gold-sentence derivation
+    data.py                dataset load, C1 leakage filter, sample, gold-sentence derivation
     llm.py                 OpenRouter client: retries, cache, token accounting, cost cap
     handoffs.py            single-handoff mechanisms (Experiment 1) + sealed orchestrator boundary
     judge.py                shared LLM-judge answer-correctness scoring
@@ -159,14 +159,18 @@ answering call, and it uses a separate function that never touches the sealed pa
 
 ## Data
 
-**MuSiQue-Answerable dev**, 2417 questions, via the HuggingFace parquet mirror
-(`dgslibisey/MuSiQue`, validation split). Each question ships 20 paragraphs, 2–4 of them gold,
-plus the gold decomposition.
+The active dataset is a small, revision-pinned collection of **10 random English Wikipedia
+pages, with exactly two unrelated questions per page**. `src/build_wikipedia_dataset.py` saves
+each full plaintext page, its URL and revision metadata, and emits 20 `Question` records at
+`data/wikipedia_random/questions.jsonl`. The runner never needs MuSiQue or HotpotQA once this
+file exists.
 
-The subagent's context is the gold paragraphs **plus all distractors**, in a fixed shuffled
-order seeded by `sampling.seed` and the question id. Presentation ids (`P1`…`P20`) are assigned
-*after* shuffling, so the ids the model cites are stable across runs and the gold/distractor
-split is not guessable from the id.
+The builder rejects pages outside the configured 4,000–40,000-character range rather than
+truncating them. A strong reasoning model (`openai/gpt-5.2`, high reasoning effort by default)
+first writes two source-grounded questions with verbatim evidence excerpts; a second independent
+reasoning pass writes the canonical gold answer and genuine aliases. The exact source page text
+is retained in `data/wikipedia_random/source_pages.jsonl`, so construction is auditable and a
+later experiment has no dependence on a changing live page.
 
 **Retrieval is not modelled.** The subagent is handed the evidence. This is intentional: it is
 what makes any measured drop attributable to the handoff rather than to search quality.
@@ -174,25 +178,8 @@ what makes any measured drop attributable to the handoff rather than to search q
 The surviving question ids are written to `data/sampled_ids.json` and the full records to
 `data/filtered_questions.jsonl`; both are committed so runs are reproducible.
 
-### One deviation from the spec, and why
-
-The spec asks for gold supporting *sentences* "if available". **MuSiQue annotates supporting
-paragraphs, not sentences**, so they are not available directly. Rather than fall back to
-HotpotQA or coarsen `E_oracle` to whole paragraphs (which would make it nearly a copy of
-`A_full` and destroy the compression contrast), gold sentences are derived **deterministically
-from the gold decomposition**: for each hop, within that hop's supporting paragraph, keep the
-sentences containing that hop's gold answer string. No LLM is involved and no model opinion
-enters — criticality still comes from the dataset's gold annotations.
-
-Verified on the first 40 candidates (`src/selftest_offline.py`): every question yields gold
-sentences, every question retains a final-hop sentence, all derived sentences are verbatim
-substrings of their source paragraph, the sentence set spans every gold paragraph, and 40/40
-contain the gold answer string. A typical oracle handoff is ~470 characters against ~12,000
-for the full context.
-
-This also gives `inj_drop_claim` a principled target: the final-hop sentence is flagged
-`is_final_hop`, so "the claim required for the answer" is identified from gold annotations
-rather than guessed.
+The builder makes `E_oracle` auditable without an external annotation set: it retains the
+verbatim excerpts supplied during question construction and maps them back to page sentences.
 
 ## Model choice
 
@@ -226,11 +213,10 @@ its own `stage0` (delete `data/filtered_questions.jsonl` or pass `--force`).
   failure modes may not be the same ones.
 - **One model family, one dataset, small n.** This is a probe, not a benchmark. Treat effect
   sizes as directional and check the CIs before believing any ranking.
-- **The C1 filter selects for questions the model finds hard**, which skews the sample toward
-  the difficult tail of MuSiQue. The measured headroom is therefore not the headroom on a
-  representative question mix.
-- **Gold sentences are derived, not annotated** (see above). The derivation is deterministic and
-  verified, but it is a heuristic over MuSiQue's paragraph-level labels.
+- **The C1 filter selects for questions the model finds hard**, so it can remove one member of a
+  page's question pair and the resulting evaluation set need not represent ordinary Wikipedia QA.
+- **Gold answers are model-authored, then audited against stored evidence**, rather than drawn
+  from a human-labelled benchmark. Review sampled records before treating results as a benchmark.
 - **Provider variance.** OpenRouter may route to different backends across runs. Seeds are sent
   but not required (`model.require_parameters` defaults to false); the on-disk cache, not the
   seed, is what makes a rerun exactly reproducible. Pin `model.provider_order` to reduce this.
@@ -252,33 +238,31 @@ The extension crosses three independent variables:
 
 | Axis | Conditions | Interpretation |
 |---|---|---|
-| Dataset | MuSiQue, HotpotQA | Longer 2-4-hop chains versus sentence-labelled two-document QA |
-| Evidence length | `short`, `medium`, `full` | Gold documents only; gold plus distractors up to 5 documents; every dataset document |
+| Dataset | Random Wikipedia pages | Two unrelated, source-grounded questions from each retained full page |
+| Evidence length | `full` | The complete plaintext page, with no truncation or benchmark distractors |
 | Compression depth | 0, 1, 2, 3, 5 | Direct answer or that many consecutive free-form handoffs |
 
-All evidence-length variants retain every gold document. Differences across
-`short`/`medium`/`full` therefore measure distractor and context-length effects,
-not retrieval recall. The first compression agent sees the selected documents.
+The first compression agent sees the complete selected page.
 Every subsequent agent receives only a frozen `SealedHandoff` made from the
 preceding summary, so lost details cannot leak back into the chain.
 
-Run a small two-dataset pilot:
+Build the dataset (requires `OPENROUTER_API_KEY`; it is read from the environment only):
 
 ```bash
-python src/run_chain.py --n 10 --candidates 40
+.venv/Scripts/python src/build_wikipedia_dataset.py
 ```
 
-Run the configured experiment (30 filtered questions per dataset):
+Run the configured 20-question experiment:
 
 ```bash
-python src/run_chain.py
+.venv/Scripts/python src/run_chain.py
 ```
 
 Narrow runs are composable and resumable:
 
 ```bash
-python src/run_chain.py --datasets musique --contexts short,full --depths 0,1,3,5
-python src/run_chain.py --plot-only
+.venv/Scripts/python src/run_chain.py --datasets wikipedia_random --contexts full --depths 0,1,3,5
+.venv/Scripts/python src/run_chain.py --plot-only
 ```
 
 Configuration lives in `chain_config.yaml`. Outputs are written to:
@@ -297,8 +281,8 @@ Configuration lives in `chain_config.yaml`. Outputs are written to:
   bootstrap intervals;
 - `results/chain/report.md`: human-readable results table.
 
-Offline verification, including the real HotpotQA schema and plot generation:
+Offline verification of the generated-dataset adapter and plot generation:
 
 ```bash
-python src/selftest_chain_offline.py
+.venv/Scripts/python src/selftest_chain_offline.py
 ```

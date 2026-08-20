@@ -32,6 +32,8 @@ The current synthesis is:
 
 ## 1. Single-handoff mechanism pilot
 
+> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable (validation) · **Prompts:** [PROMPTS.md § Experiment 1](PROMPTS.md#experiment-1) — `ANSWER_SYSTEM`, `SUBAGENT_SYSTEM`, `FREEFORM_INSTRUCTION`, `STRUCTURED_INSTRUCTION`, `EXTRACTIVE_INSTRUCTION` (`src/handoffs.py`)
+
 ### Design
 
 The original probe isolates what happens when evidence is summarized once before a final answerer sees it. Retrieval is held constant. Five mechanisms are implemented:
@@ -57,6 +59,8 @@ The paired `B_freeform − A_full` F1 contrast was +0.264 with a 95% bootstrap i
 Reported API cost: **$0.0151**.
 
 ## 2. Repeated handoff degradation
+
+> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable + HotpotQA (distractor, validation) · **Prompts:** [PROMPTS.md § Experiment 2](PROMPTS.md#experiment-2) — `QUESTION_CONDITIONED_SYSTEM`/`_INITIAL_INSTRUCTION`/`_RECOMPRESS_INSTRUCTION` + shared `ANSWER_SYSTEM` (`src/run_chain.py`)
 
 ### Design
 
@@ -99,6 +103,8 @@ The confirmed incremental cost reported for extending the chains through depths 
 
 ### Low-cost Qwen replication
 
+> **Model:** `qwen/qwen3-8b` (non-thinking, `reasoning.effort: none`) · **Dataset:** same as above, 10 questions/dataset · **Prompts:** identical to Experiment 2 above — same `run_chain.py` constants, different model config (`qwen_chain_config.yaml` + `qwen_chain_experiment.yaml`)
+
 ![Qwen3 8B repeated-handoff replication](chain_qwen/degradation.png)
 
 The same dataset and evidence-variant design was rerun with Qwen3 8B in non-thinking mode, but with 10 questions per dataset, one seed, and depths 0/1/3/5. It broadly reproduces the dataset split in the original probe: at depth 5, HotpotQA loses F1 in every context (short −0.110, medium −0.086, full −0.108), while MuSiQue is stable-to-improved (short +0.127, medium +0.077, full +0.117). None of the depth-5 intervals exclude zero at this small sample size, so this is directional replication evidence rather than a conclusive cross-model comparison.
@@ -106,6 +112,8 @@ The same dataset and evidence-variant design was rerun with Qwen3 8B in non-thin
 Reconciled cost was **$0.0443** across Qwen-specific leakage filtering, 300 summary calls, 240 answer calls, and a compatibility smoke call. The raw outputs and full table are in [`chain_qwen/report.md`](chain_qwen/report.md).
 
 ### Matched question-omission replication
+
+> **Model:** `meta-llama/llama-3.3-70b-instruct` (same as above) · **Dataset:** same as above, same 30-question sample · **Prompts:** [PROMPTS.md § Experiment 2](PROMPTS.md#experiment-2), question-conditioned prompt set with the question block deleted — see `initial_compress()`/`recompress()` in `src/run_chain.py`
 
 ![Question-conditioned vs question-omitted, matched chains](chain_generic/conditioning_comparison.png)
 
@@ -129,6 +137,8 @@ Every condition is worse without the question, and the gap widens with more dist
 Cost: **$0.9564** (7,000 live calls, 20 cached).
 
 ## 3. Retrieval quality through repeated handoffs
+
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** MS MARCO QA v2.1 (validation, via Hugging Face parquet mirror) · **Prompts:** [PROMPTS.md § Experiment 3](PROMPTS.md#experiment-3) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_retrieval_quality.py`)
 
 ### Design
 
@@ -163,6 +173,8 @@ Smoke plus pilot cost: approximately **$0.0152**.
 
 ## 4. Fixed-context redundant-evidence signal ratio
 
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD (validation) · **Prompts:** [PROMPTS.md § Experiment 4](PROMPTS.md#experiment-4) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_redundant_signal_ratio.py`)
+
 ### Design
 
 This corrected experiment holds the task fixed: every relevant passage independently contains the full answer-bearing SQuAD paragraph for the *same* question. The ten relevant documents differ through a real additional paragraph from the same Wikipedia article. Replaced documents are real cross-article SQuAD distractors filtered not to contain an answer alias. Thus 10/5/1 changes the quantity of redundant answer-supporting evidence, not the number of facts required for a correct answer.
@@ -184,6 +196,8 @@ The high-signal condition begins 10.9 F1 points above the low-signal condition (
 Corrected smoke plus pilot cost: **$0.013299**.
 
 ## 5. Question conditioning and cross-question generalization
+
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD (validation), two low-overlap questions paired per context · **Prompts:** [PROMPTS.md § Experiment 5](PROMPTS.md#experiment-5) — defines no new text, reuses Experiment 2's question-conditioned `CHAIN_SYSTEM`/`INITIAL_INSTRUCTION`/`RECOMPRESS_INSTRUCTION` verbatim, imported from `src/run_chain.py`
 
 ### Corrected v2 design
 

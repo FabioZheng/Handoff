@@ -13,6 +13,22 @@ import requests
 from data import GoldSentence, Paragraph, Question, build_question
 
 
+def read_generated_questions(spec: dict, root: Path) -> list[Question]:
+    """Load the revision-pinned Wikipedia JSONL produced by the dataset builder."""
+    path = root / spec["local_jsonl"]
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Generated dataset is missing: {path}. Build it first with "
+            "python src/build_wikipedia_dataset.py"
+        )
+    with open(path, "r", encoding="utf-8") as fh:
+        rows = [json.loads(line) for line in fh if line.strip()]
+    questions = [Question.from_json(row) for row in rows if "qid" in row]
+    if not questions:
+        raise ValueError(f"Generated dataset {path} contains no Question records")
+    return questions
+
+
 def ensure_parquet(spec: dict, root: Path) -> Path:
     dst = root / spec["local_parquet"]
     if dst.exists() and dst.stat().st_size > 0:
@@ -91,6 +107,12 @@ def build_hotpot_question(row, rng_seed: int) -> Question:
 
 
 def sample_candidates(dataset: str, spec: dict, root: Path, seed: int, n: int) -> list[Question]:
+    if spec.get("source") == "generated_wikipedia":
+        questions = read_generated_questions(spec, root)
+        # Keep paired questions from the same page adjacent, rather than randomly
+        # separating them. The builder's stored order is the reproducible sample.
+        print(f"[chain:data] {dataset}: loaded {min(n, len(questions))}/{len(questions)} generated questions")
+        return questions[: min(n, len(questions))]
     path = ensure_parquet(spec, root)
     frame = pd.read_parquet(path)
     if dataset == "musique" and spec.get("answerable_only", True):
