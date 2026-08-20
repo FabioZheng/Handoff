@@ -270,7 +270,7 @@ def main() -> int:
     manifest = {
         "dataset": "wikipedia_random", "pages": len(pages), "questions": len(questions),
         "question_model": wiki_cfg["model_id"], "page_attempts": attempts,
-        "selection": "Wikipedia API generator=random, namespace=0; exact plaintext stored below",
+        "selection": "Wikipedia REST random-summary endpoint, namespace=0; exact plaintext stored below",
     }
     write_jsonl(sources_output, [{"_manifest": manifest}] + pages)
     write_jsonl(output, [{"_manifest": manifest}] + [q.to_json() for q in questions])
