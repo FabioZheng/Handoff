@@ -1,4 +1,0 @@
-condition,packs,passages_per_pack,relevant_passages,distractors,signal_ratio
-signal_1_0,2,10,10,0,1.0
-signal_0_5,2,10,5,5,0.5
-signal_0_1,2,10,1,9,0.1

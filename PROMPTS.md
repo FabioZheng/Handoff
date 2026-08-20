@@ -76,11 +76,13 @@ answerer used different wording, a measured accuracy difference could be a
 prompt artefact instead of a handoff effect.
 
 **Used by:** `src/handoffs.py` (`A_full`, `orchestrator_answer`), and directly
-or via `hm.ANSWER_SYSTEM` in `src/run_chain.py`, `src/run_question_context.py`,
-`src/run_redundant_signal_ratio.py`, `src/run_retrieval_quality.py`,
-`src/run_summary_generalization.py`. (`src/run_signal_ratio.py` and
-`src/run_slack_facts.py` define their own near-identical local copy instead of
-importing this one — see [Wording inconsistency](#wording-inconsistency).)
+or via `hm.ANSWER_SYSTEM` in `src/run_chain.py`, `src/run_redundant_signal_ratio.py`,
+`src/run_retrieval_quality.py`, `src/run_summary_generalization.py`, and
+`src/run_slack_retrieval.py`. `src/run_slack_facts.py` (`ANSWER_SYSTEM`,
+`run_slack_facts.py:41`) defines a genuinely different one instead — its task
+asks for multiple labelled facts per question (`L1: answer`, `L2: answer`, …),
+which the shared single-span persona above can't express, so this is a
+legitimate task-shape difference, not an accidental duplicate.
 
 ### LLM judge — answer correctness vs. gold
 

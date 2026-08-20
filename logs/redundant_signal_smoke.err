@@ -1,20 +1,0 @@
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/389 [00:00<?, ?it/s]Loading weights:  12%|#2        | 48/389 [00:00<00:00, 437.45it/s]Loading weights:  25%|##5       | 99/389 [00:00<00:00, 449.18it/s]Loading weights:  52%|#####1    | 201/389 [00:00<00:00, 662.22it/s]Loading weights:  69%|######8   | 268/389 [00:00<00:00, 618.50it/s]Loading weights:  93%|#########2| 360/389 [00:00<00:00, 717.35it/s]Loading weights: 100%|##########| 389/389 [00:00<00:00, 674.64it/s]
-[transformers] [1mRobertaModel LOAD REPORT[0m from: roberta-large
-Key                       | Status     | 
---------------------------+------------+-
-lm_head.layer_norm.weight | UNEXPECTED | 
-lm_head.layer_norm.bias   | UNEXPECTED | 
-lm_head.dense.bias        | UNEXPECTED | 
-lm_head.dense.weight      | UNEXPECTED | 
-lm_head.bias              | UNEXPECTED | 
-pooler.dense.bias         | MISSING    | 
-pooler.dense.weight       | MISSING    | 
-
-Notes:
-- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
-- MISSING:	those params were newly initialized because missing from the checkpoint. Consider training on your downstream task.
-  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:02<00:00,  2.56s/it]100%|##########| 1/1 [00:02<00:00,  2.56s/it]
-  0%|          | 0/1 [00:00<?, ?it/s]100%|##########| 1/1 [00:00<00:00, 61.75it/s]
-C:\path\to\handoff\.venv\Lib\site-packages\bert_score\score.py:149: UserWarning: The given NumPy array is not writable, and PyTorch does not support non-writable tensors. This means writing to this tensor will result in undefined behavior. You may want to copy the array to protect its data or make it writable before converting it to a tensor. This type of warning will be suppressed for the rest of this program. (Triggered internally at C:\actions-runner\_work\pytorch\pytorch\torch\csrc\utils\tensor_numpy.cpp:219.)
-  baselines = torch.from_numpy(

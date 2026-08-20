@@ -63,16 +63,41 @@ Re-analysis is free by design — the analysis is meant to be iterated on.
 ```
 handoff-probe/
   config.yaml              model, dataset, sample size, seeds, cost cap
+  PROMPTS.md                every prompt string used anywhere, grouped by experiment
+  results/HANDOFF_EXPERIMENTS_REPORT.md   the synthesized findings across all experiments
   src/
-    data.py                load, C1 leakage filter, sample, gold-sentence derivation
+    data.py                MuSiQue load, C1 leakage filter, sample, gold-sentence derivation
     llm.py                 OpenRouter client: retries, cache, token accounting, cost cap
-    handoffs.py            the five mechanisms + the sealed orchestrator boundary
-    inject.py              the six corruptions            [NOT BUILT YET]
-    run.py                 stage orchestration, resumable
-    score.py               EM/F1, bootstrap CIs
-    selftest_offline.py    checks that need no API key
+    handoffs.py            single-handoff mechanisms (Experiment 1) + sealed orchestrator boundary
+    judge.py                shared LLM-judge answer-correctness scoring
+    score.py                EM/F1, bootstrap CIs
+    run.py                  Experiment 1 -- single-handoff mechanism pilot
+    chain_data.py            dataset adapters shared by the chain experiment
+    run_chain.py             Experiment 2 -- repeated handoff degradation
+                              (also drives the Qwen replication and the
+                              question-conditioned/generic replication --
+                              see chain_config.yaml, qwen_chain_config.yaml,
+                              chain_generic_config.yaml)
+    run_retrieval_quality.py Experiment 3 -- retrieval quality through repeated handoffs
+    run_redundant_signal_ratio.py  Experiment 4 -- fixed-context redundant-evidence signal ratio
+    run_summary_generalization.py  Experiment 5 -- question conditioning and
+                                    cross-question generalization
+    run_slack_facts.py       unwritten follow-up correcting Exp. 3/4's signal/filler confound
+    run_slack_retrieval.py   unwritten follow-up correcting Exp. 3's retention-pooling defect
+    plot_conditioning_comparison.py   analysis-only plot for the chain_generic replication
+    selftest_offline.py      checks that need no API key
+    selftest_chain_offline.py  chain-experiment checks, incl. the isolation guarantee
   data/  runs/  cache/  results/
+  research/                 a separate personal research-notes / knowledge-graph
+                             layer built on top of this project's findings (not
+                             part of the experiment pipeline) -- profile.md,
+                             schema.md, tools/graph_to_obsidian.py; rendered
+                             into the obsidian/ vault at the repo root
 ```
+
+See [PROMPTS.md](PROMPTS.md) for the exact text of every prompt used above, and
+[results/HANDOFF_EXPERIMENTS_REPORT.md](results/HANDOFF_EXPERIMENTS_REPORT.md)
+for the synthesized cross-experiment findings.
 
 ## Conditions
 
