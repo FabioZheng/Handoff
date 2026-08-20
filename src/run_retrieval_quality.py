@@ -1,10 +1,15 @@
 """MS MARCO v2.1 retrieval-quality propagation pilot.
 
 This intentionally changes only passage relevance: every condition has exactly
-ten real MS MARCO passages.  Selected passages removed from a query are filled
-with non-selected passages sampled from other MS MARCO dev queries.  All
-compressors receive the original question at every stage; later stages receive
-only the preceding summary and question.
+ten real MS MARCO passages.  A self-contained BM25 index does the retrieval:
+"good" passages are a query's own MS MARCO-labelled-relevant passages that
+BM25 also actually surfaces for that query (top retrieved AND relevant, not
+relevance in isolation).  Passages removed to build the medium/bad conditions
+are backfilled with real BM25 hard negatives for that query -- passages BM25
+ranks highly (lexically on-topic) but MS MARCO's `is_selected` label marks
+irrelevant, rather than an unrelated passage sampled from a different query.
+All compressors receive the original question at every stage; later stages
+receive only the preceding summary and question.
 """
 from __future__ import annotations
 
@@ -20,6 +25,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import handoffs as hm  # noqa
 from llm import LLMClient, load_config  # noqa
+from retrieval import BM25Index, content_fingerprint  # noqa
 from score import bootstrap_ci, extract_short_answer, paired_bootstrap_delta, score_against_golds  # noqa
 from run_chain import add_bertscore  # noqa
 
@@ -28,6 +34,36 @@ SYSTEM = ("You are a research handoff agent. Preserve every fact needed to answe
           "information is lost. Do not answer the question directly.")
 INITIAL = "Write concise research notes from the passages. Preserve answer-relevant facts, qualifiers, numbers, dates, and relationships."
 REWRITE = "Rewrite the prior notes concisely. Preserve every fact needed to answer the question, including qualifiers, numbers, dates, and relationships."
+
+# ---------------------------------------------------------------- BM25 retrieval
+# BM25Index/content_fingerprint are shared with run_redundant_signal_ratio.py
+# (src/retrieval.py) -- both experiments need "retrieved but not relevant"
+# hard negatives instead of a uniformly random unrelated passage.
+
+
+def build_bm25_pool(raw: dict, cfg: dict, required_qids: list[str]) -> tuple[BM25Index, dict[str, dict]]:
+    """Index a bounded, deterministic pool of queries' passages.
+
+    ``required_qids`` (the queries actually used in the experiment) are always
+    included so their own passages are retrievable. The remainder of the pool
+    is filled with a large deterministic sample of other queries, so BM25 hard
+    negatives can come from genuinely different topics, not just the same
+    query's own passages.
+    """
+    pool_size = cfg["dataset"]["bm25_pool_queries"]
+    all_ids = list(raw["query"].keys())
+    rng = random.Random(f"{cfg['dataset']['sample_seed']}:bm25_pool")
+    rng.shuffle(all_ids)
+    pool_ids = list(dict.fromkeys(required_qids + all_ids))[:max(pool_size, len(required_qids))]
+    docs: list[tuple[str, str]] = []
+    doc_lookup: dict[str, dict] = {}
+    for qid in pool_ids:
+        for i, p in enumerate(passages(raw, qid)):
+            doc_id = f"{qid}:{i}"
+            docs.append((doc_id, p["text"]))
+            doc_lookup[doc_id] = {**p, "qid": qid, "index": i}
+    return BM25Index(docs), doc_lookup
+
 
 def read_jsonl(path):
     return [] if not path.exists() else [json.loads(x) for x in path.read_text(encoding='utf-8').splitlines() if x]
@@ -66,7 +102,15 @@ def passages(raw, qid):
 
 def make_packs(raw,cfg,n):
     ids=list(raw['query'].keys()); rng=random.Random(cfg['dataset']['sample_seed']); rng.shuffle(ids)
-    chosen=[]
+    top_k=cfg['dataset']['bm25_top_k']
+    # First pass: cheap structural eligibility only (answers exist, exactly
+    # ten passages, at least one MS MARCO-labelled relevant). This over-collects
+    # a larger candidate pool than n, because the BM25 pass below will reject
+    # some of these for not being retriever-findable or lacking enough hard
+    # negatives, same as the old code's implicit assumption that eligibility
+    # could be checked with a single pass -- it can't once retrieval is real.
+    structural_cap=max(n*25,500)
+    structural=[]
     for qid in ids:
         ans=[str(x).strip() for x in raw['answers'].get(qid,[]) if str(x).strip()]
         ps=passages(raw,qid)
@@ -75,31 +119,62 @@ def make_packs(raw,cfg,n):
         # pilot is sampled normally, preserving the dataset's natural mix.
         needs_multi = n <= cfg['dataset']['smoke_questions']
         if ans and len(ps)==10 and any(x['selected'] for x in ps) and (not needs_multi or sum(x['selected'] for x in ps) >= 4):
-            chosen.append({'qid':str(qid),'question':str(raw['query'][qid]),'golds':ans,'passages':ps})
-        if len(chosen)==n: break
-    if len(chosen)<n: raise RuntimeError(f'only found {len(chosen)} eligible examples')
-    # A deterministic global pool, excluding a pack's own passages at draw time.
-    pool=[]
-    for qid in ids:
-        for p in passages(raw,qid):
-            if not p['selected']: pool.append((str(qid),p))
-    return chosen,pool
+            structural.append({'qid':str(qid),'question':str(raw['query'][qid]),'golds':ans,'passages':ps})
+        if len(structural)==structural_cap: break
+    if not structural: raise RuntimeError('no structurally eligible examples found')
 
-def condition_packs(packs,pool,condition,seed):
-    selected=[(q['qid'],i) for q in packs for i,p in enumerate(q['passages']) if p['selected']]
-    target={'good':len(selected),'medium':round(len(selected)*.5),'bad':max(1,round(len(selected)*.15))}[condition]
-    order=selected[:]; random.Random(f'{seed}:{condition}:selected').shuffle(order); keep=set(order[:target])
-    rng=random.Random(f'{seed}:{condition}:distractors'); out=[]
+    bm25,doc_lookup=build_bm25_pool(raw,cfg,[q['qid'] for q in structural])
+
+    chosen=[]
+    for q in structural:
+        retrieved=bm25.top_k(q['question'],top_k)
+        retrieved_ids={doc_id for doc_id,_ in retrieved}
+        own_relevant_ids={f"{q['qid']}:{i}" for i,p in enumerate(q['passages']) if p['selected']}
+        # "Top retrieved AND relevant" -- MS MARCO's label alone is not enough;
+        # BM25 must actually surface it for this query's own text.
+        usable_gold=[doc_id for doc_id in own_relevant_ids if doc_id in retrieved_ids]
+        # Hard negatives: BM25-ranked highly for this query, but not a usable
+        # gold passage -- either this query's own non-relevant passages, or
+        # another query's passage that happens to be lexically on-topic.
+        # BM25 rank order is preserved so condition_packs draws the hardest
+        # (highest-scoring) negatives first.
+        usable_gold_set=set(usable_gold)
+        hard_negatives=[doc_id for doc_id,_ in retrieved if doc_id not in usable_gold_set]
+        if usable_gold and len(hard_negatives)>=9:
+            chosen.append({**q,'usable_gold_ids':usable_gold,'hard_negative_ids':hard_negatives})
+        if len(chosen)==n: break
+    if len(chosen)<n:
+        raise RuntimeError(f'only found {len(chosen)}/{n} examples with BM25-retrievable gold and >=9 hard negatives '
+                            f'(from {len(structural)} structurally eligible); raise structural_cap or bm25_pool_queries')
+    return chosen,doc_lookup
+
+def condition_packs(packs,doc_lookup,condition,seed):
+    # Recall target is a GLOBAL knob over every usable-gold passage pooled
+    # across all queries, exactly like the pre-BM25 design -- not a per-query
+    # fraction. Per-query fractions break down (e.g. round(1*.5)==0 by
+    # banker's rounding while bad's max(1,...) floor stays at 1, inverting
+    # good>medium>bad) whenever a query has only one BM25-findable gold
+    # passage, which is the common case here.
+    all_gold=[(q['qid'],doc_id) for q in packs for doc_id in q['usable_gold_ids']]
+    target={'good':len(all_gold),'medium':round(len(all_gold)*.5),'bad':max(1,round(len(all_gold)*.15))}[condition]
+    order=all_gold[:]; random.Random(f'{seed}:{condition}:gold').shuffle(order)
+    keep=set(order[:target])
+    out=[]
     for q in packs:
+        keep_ids=[doc_id for doc_id in q['usable_gold_ids'] if (q['qid'],doc_id) in keep]
+        fill_n=10-len(keep_ids)
+        neg_order=q['hard_negative_ids'][:]; random.Random(f'{seed}:{condition}:{q["qid"]}:negatives').shuffle(neg_order)
+        fill_ids=neg_order[:fill_n]
+        assert len(fill_ids)==fill_n, f'not enough hard negatives for {q["qid"]}/{condition}: need {fill_n}, have {len(neg_order)}'
+        chosen_ids=keep_ids+fill_ids
+        rng=random.Random(f'{seed}:{condition}:{q["qid"]}:order'); rng.shuffle(chosen_ids)
         ps=[]
-        for i,p in enumerate(q['passages']):
-            if not p['selected'] or (q['qid'],i) in keep: ps.append({**p})
-        removed=10-len(ps)
-        candidates=[p for source,p in pool if source!=q['qid']]
-        ps.extend({**p,'selected':0} for p in rng.sample(candidates,removed))
-        rng.shuffle(ps)
-        assert len(ps)==10 and all(not x['selected'] or x in q['passages'] for x in ps)
-        out.append({**q,'passages':ps})
+        for doc_id in chosen_ids:
+            src=doc_lookup[doc_id]
+            ps.append({'text':src['text'],'url':src['url'],'source_qid':src['qid'],
+                       'selected':int(doc_id in keep_ids)})
+        assert len(ps)==10 and sum(p['selected'] for p in ps)==len(keep_ids)
+        out.append({'qid':q['qid'],'question':q['question'],'golds':q['golds'],'passages':ps})
     return out
 
 def context(q): return '\n\n'.join(f"[P{i+1}] {p['text']}" for i,p in enumerate(q['passages']))
@@ -121,13 +196,20 @@ def answer(client,q,material,cfg,tag):
     return {'pred':pred,'raw':r.text,'golds':q['golds'],'em':em,'f1':f1,'cached':r.cached}
 
 def construct(cfg,n,write=True):
-    raw=ensure_data(cfg); packs,pool=make_packs(raw,cfg,n); data_root=ROOT/cfg['outputs']['data_root']; rows=[]; summary=[]
+    raw=ensure_data(cfg); packs,doc_lookup=make_packs(raw,cfg,n); data_root=ROOT/cfg['outputs']['data_root']; rows=[]; summary=[]
+    # How much of MS MARCO's own relevance judgment BM25 actually surfaces --
+    # a diagnostic of the retriever, independent of the good/medium/bad knob.
+    labelled=sum(p['selected'] for q in packs for p in q['passages'])
+    bm25_findable=sum(len(q['usable_gold_ids']) for q in packs)
     for condition in cfg['conditions']:
-        built=condition_packs(packs,pool,condition,cfg['dataset']['sample_seed'])
-        retained=sum(p['selected'] for q in built for p in q['passages']); original=sum(p['selected'] for q in packs for p in q['passages'])
-        summary.append({'condition':condition,'questions':len(built),'passages_per_query':10,'selected_retained':retained,'selected_original':original,'selected_recall_at_10':round(retained/original,4)})
+        built=condition_packs(packs,doc_lookup,condition,cfg['dataset']['sample_seed'])
+        retained=sum(p['selected'] for q in built for p in q['passages'])
+        summary.append({'condition':condition,'questions':len(built),'passages_per_query':10,
+                        'gold_retained':retained,'gold_bm25_findable':bm25_findable,
+                        'gold_labelled_by_msmarco':labelled,
+                        'gold_recall_at_10':round(retained/bm25_findable,4)})
         for q in built: rows.append({'condition':condition,**q})
-    recalls=[x['selected_recall_at_10'] for x in summary]
+    recalls=[x['gold_recall_at_10'] for x in summary]
     if not (recalls[0]>recalls[1]>recalls[2]): raise AssertionError(f'recall separation failed: {summary}')
     if write:
         write_jsonl(data_root/f'packs_n{n}.jsonl',rows); write_csv(data_root/f'construction_n{n}.csv',summary)
@@ -169,25 +251,28 @@ def main():
     cfg=load_config(args.config); n=args.n or cfg['dataset']['n_questions']; data_root=ROOT/cfg['outputs']['data_root']; run_root=ROOT/cfg['outputs']['run_root']/f'n{n}'; result_root=ROOT/cfg['outputs']['result_root']/f'n{n}'; result_root.mkdir(parents=True,exist_ok=True)
     packs,summary=construct(cfg,n,write=not args.dry_run)
     if args.construct_only: return 0
+    for q in packs: q['fp']=content_fingerprint([p['text'] for p in q['passages']])
     by={(r['condition'],r['qid']):r for r in packs}; client=LLMClient(cfg,dry_run=args.dry_run)
-    hp=run_root/'handoffs.jsonl'; handoffs={(r['condition'],r['qid'],int(r['stage'])):r['text'] for r in read_jsonl(hp)}
+    hp=run_root/'handoffs.jsonl'
+    handoffs={(r['condition'],r['qid'],r.get('fp'),int(r['stage'])):r['text'] for r in read_jsonl(hp)}
     for condition in cfg['conditions']:
         qs=[by[(condition,qid)] for qid in sorted(qid for c,qid in by if c==condition)]
         for stage in range(1,cfg['max_depth']+1):
-            todo=[q for q in qs if (condition,q['qid'],stage) not in handoffs]
+            todo=[q for q in qs if (condition,q['qid'],q['fp'],stage) not in handoffs]
             with ThreadPoolExecutor(max_workers=cfg['runtime']['concurrency']) as pool:
-                fs={pool.submit(compress_first if stage==1 else compress_next,client,q,cfg,condition) if stage==1 else pool.submit(compress_next,client,q,handoffs[(condition,q['qid'],stage-1)],cfg,condition,stage):q for q in todo}
-                for f,q in fs.items(): handoffs[(condition,q['qid'],stage)]=f.result()
-            if not args.dry_run: write_jsonl(hp,[{'condition':c,'qid':qid,'stage':st,'text':text} for (c,qid,st),text in sorted(handoffs.items())])
+                fs={pool.submit(compress_first if stage==1 else compress_next,client,q,cfg,condition) if stage==1 else pool.submit(compress_next,client,q,handoffs[(condition,q['qid'],q['fp'],stage-1)],cfg,condition,stage):q for q in todo}
+                for f,q in fs.items(): handoffs[(condition,q['qid'],q['fp'],stage)]=f.result()
+            if not args.dry_run: write_jsonl(hp,[{'condition':c,'qid':qid,'fp':fp,'stage':st,'text':text} for (c,qid,fp,st),text in sorted(handoffs.items())])
             print(f'[retrieval:handoff] {condition} stage{stage}: {len(todo)} generated')
-    apath=run_root/'answers.jsonl'; existing={(r['condition'],int(r['depth']),r['qid']):r for r in read_jsonl(apath)}; jobs=[]
+    apath=run_root/'answers.jsonl'
+    existing={(r['condition'],int(r['depth']),r['qid'],r.get('fp')):r for r in read_jsonl(apath)}; jobs=[]
     for (condition,qid),q in by.items():
         for depth in cfg['depths']:
-            key=(condition,depth,qid)
-            if key not in existing: jobs.append((key,q,context(q) if depth==0 else handoffs[(condition,qid,depth)]))
+            key=(condition,depth,qid,q['fp'])
+            if key not in existing: jobs.append((key,q,context(q) if depth==0 else handoffs[(condition,qid,q['fp'],depth)]))
     with ThreadPoolExecutor(max_workers=cfg['runtime']['concurrency']) as pool:
-        fs={pool.submit(answer,client,q,mat,cfg,f'retrieval_{c}_answer_d{d}'):(c,d,qid) for (c,d,qid),q,mat in jobs}
-        for f,key in fs.items(): c,d,qid=key; existing[key]={'condition':c,'depth':d,'qid':qid,**f.result()}
+        fs={pool.submit(answer,client,q,mat,cfg,f'retrieval_{c}_answer_d{d}'):(c,d,qid,fp) for (c,d,qid,fp),q,mat in jobs}
+        for f,key in fs.items(): c,d,qid,fp=key; existing[key]={'condition':c,'depth':d,'qid':qid,'fp':fp,**f.result()}
     rows=sorted(existing.values(),key=lambda r:(r['condition'],r['depth'],r['qid']))
     if not args.dry_run:
         write_jsonl(apath,rows); add_bertscore(rows,cfg); write_jsonl(apath,rows); analyse(rows,cfg,result_root)

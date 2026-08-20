@@ -570,6 +570,21 @@ def make_plot(metrics: list[dict], args, path: Path, oracle_metrics: dict[str, d
         sharex=True, squeeze=False,
     )
     colors = {"short": "#1b9e77", "medium": "#d95f02", "full": "#7570b3"}
+    # Marker area proportional to the mean size (characters) of whatever text
+    # actually fed the answerer at that point -- the full context at depth 0,
+    # the final handoff's text at depth >=1 -- so shrinkage across repeated
+    # compression is visible directly on the accuracy curve, not just in a
+    # separate table. One scale factor for the whole figure (not per subplot)
+    # so marker area is comparable across datasets/variants/metric rows.
+    all_chars = [r["handoff_characters_mean"] for r in metrics if "handoff_characters_mean" in r]
+    max_chars = max(all_chars) if all_chars else 1.0
+    max_area, min_area = 900.0, 15.0
+    size_scale = max_area / max_chars
+
+    def marker_area(record):
+        chars = record.get("handoff_characters_mean")
+        return max_area if chars is None else max(min_area, size_scale * chars)
+
     for row_idx, (metric, label) in enumerate(plot_metrics):
         for col_idx, dataset in enumerate(datasets):
             axis = axes[row_idx][col_idx]
@@ -585,8 +600,10 @@ def make_plot(metrics: list[dict], args, path: Path, oracle_metrics: dict[str, d
                 y = [r[metric] for r in subset]
                 lower = [r[metric] - r[f"{metric}_lo"] for r in subset]
                 upper = [r[f"{metric}_hi"] - r[metric] for r in subset]
-                axis.errorbar(x, y, yerr=[lower, upper], marker="o", linewidth=2,
-                              capsize=3, label=variant, color=colors.get(variant))
+                axis.errorbar(x, y, yerr=[lower, upper], marker="", linewidth=2,
+                              capsize=3, label=variant, color=colors.get(variant), zorder=2)
+                axis.scatter(x, [r[metric] for r in subset], s=[marker_area(r) for r in subset],
+                             color=colors.get(variant), edgecolors="white", linewidths=0.6, zorder=3)
             # A_full equivalent: this run's own depth-0/full-context point (no
             # handoff), drawn flat so it is comparable to every depth, not just x=0.
             full_depth0 = next(
@@ -615,7 +632,12 @@ def make_plot(metrics: list[dict], args, path: Path, oracle_metrics: dict[str, d
             axis.grid(alpha=0.25)
     axes[0][-1].legend(title="Evidence length")
     fig.suptitle("Answer accuracy across repeated handoffs")
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.text(0.5, 0.005,
+              f"Marker area ∝ mean characters in the answerer's input at that point "
+              f"(full context at depth 0, else the handoff text) — smallest marker "
+              f"{min_area:.0f}pt² floor, largest ≈{max_chars:,.0f} characters.",
+              ha="center", fontsize=8, color="#555555")
     fig.savefig(path, dpi=180, bbox_inches="tight")
     plt.close(fig)
 

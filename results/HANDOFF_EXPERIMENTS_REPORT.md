@@ -142,34 +142,37 @@ Cost: **$0.9564** (7,000 live calls, 20 cached).
 
 ### Design
 
-MS MARCO QA v2.1 provides ten retrieved passages per query and `is_selected` labels. Twenty questions were used with one seed and depths 0, 1, 3, and 5. Removed selected passages were replaced with real non-selected MS MARCO distractors, keeping ten passages in every condition.
+**Revised 2026-08-20: retrieval is now real, not assumed.** MS MARCO QA v2.1 provides ten passages per query with `is_selected` relevance labels, but the original pilot treated any non-selected passage — from any query — as a valid "bad" distractor, which meant the bad condition's filler was often lexically unrelated to the question entirely (an "easy" negative). This run replaces that with a self-contained Okapi BM25 index (`src/retrieval.py`, no external dependency) built over a 4,000-query pool:
 
-Empirical selected-passage Recall@10 was:
+- **Gold** = a passage MS MARCO's own `is_selected` label marks relevant **and** that this code's own BM25 ranking actually retrieves for that query ("top retrieved and relevant," not relevance judged in isolation — 22/22 originally-labelled passages turned out to be BM25-findable in this sample, i.e. `gold_bm25_findable == gold_labelled_by_msmarco`).
+- **Hard negative** = a passage BM25 ranks in that same query's top-50 but that is *not* gold — either the query's own non-relevant passages, or another query's passage lexically on-topic enough to rank highly. These replace the previous random-unrelated-query filler.
 
-| Retrieval condition | Selected passages retained | Recall@10 |
+The good/medium/bad recall knob keeps the original global-pool mechanic (one seeded shuffle-and-slice over every gold passage pooled across all 20 queries, not a per-query fraction — a per-query fraction breaks down when a query has only one findable gold passage, since `round(1 × 0.5) == 0` under Python's banker's rounding while `bad`'s floor keeps it at 1, inverting the intended ordering). Twenty questions, one seed, depths 0, 1, 3, and 5. Question text was passed at every handoff.
+
+Empirical recall-at-10 against BM25-findable gold:
+
+| Retrieval condition | Gold passages retained | Recall@10 |
 |---|---:|---:|
 | Good | 22/22 | 1.000 |
 | Medium | 11/22 | 0.500 |
 | Bad | 3/22 | 0.136 |
 
-Question text was passed at every handoff.
-
 ### Results
 
 ![Retrieval quality propagation](retrieval_quality/n20/retrieval_quality.png)
 
-| Depth | Good F1 | Medium F1 | Bad F1 | Good − bad |
-|---:|---:|---:|---:|---:|
-| 0 | 0.406 | 0.324 | 0.320 | +0.086 |
-| 1 | 0.354 | 0.376 | 0.319 | +0.035 |
-| 3 | 0.283 | 0.346 | 0.280 | +0.003 |
-| 5 | 0.303 | 0.350 | 0.291 | +0.012 |
+| Depth | Good F1 | Medium F1 | Bad F1 |
+|---:|---:|---:|---:|
+| 0 | 0.492 | 0.382 | 0.291 |
+| 1 | 0.423 | 0.392 | 0.258 |
+| 3 | 0.417 | 0.290 | 0.303 |
+| 5 | 0.433 | 0.336 | 0.325 |
 
-The good condition’s depth-5 degradation was −0.103 F1 (95% interval −0.184 to −0.029). Medium and bad changed much less. Consequently, the good–bad gap was distinguishable at depth 0 (+0.086; interval +0.011 to +0.171) but not at later depths.
+Under BM25 hard negatives, the good–bad gap is larger and more persistent than the original random-distractor design found: **+0.201 F1 at depth 0** (95% interval +0.093 to +0.326, p = 0.002) and still **+0.107 at depth 5** (interval −0.014 to +0.243, p = 0.103 — directionally consistent but no longer excluding zero at n = 20). The good condition still degrades most in absolute terms (depth-5 change −0.059 F1, interval −0.125 to +0.006), while bad is statistically flat across depth (all `depth_minus_depth0` intervals for bad span zero).
 
-This pilot suggests that handoff compression can erase the advantage of better retrieval: a richer initial context has more useful information available to lose. The medium condition’s apparent improvement is not distinguishable at this sample size.
+This is a materially different picture from the random-distractor version: with genuinely confusable hard negatives, the retrieval-quality advantage is bigger to start with (real distractors are harder to filter than easy ones) and does not visibly close by depth 5, though the interval no longer rules out zero. Read together with §4 below — where the same BM25 hard-negative swap produced the opposite ordering shift — this suggests hard negatives change results in ways that depend on task structure, not a uniform "harder distractors always widen the gap."
 
-Smoke plus pilot cost: approximately **$0.0152**.
+Pilot cost: **$0.006587** (480 live calls, 60 cached).
 
 ## 4. Fixed-context redundant-evidence signal ratio
 
@@ -177,23 +180,25 @@ Smoke plus pilot cost: approximately **$0.0152**.
 
 ### Design
 
-This corrected experiment holds the task fixed: every relevant passage independently contains the full answer-bearing SQuAD paragraph for the *same* question. The ten relevant documents differ through a real additional paragraph from the same Wikipedia article. Replaced documents are real cross-article SQuAD distractors filtered not to contain an answer alias. Thus 10/5/1 changes the quantity of redundant answer-supporting evidence, not the number of facts required for a correct answer.
+This experiment holds the task fixed: every relevant passage independently contains the full answer-bearing SQuAD paragraph for the *same* question. The ten relevant documents differ through a real additional paragraph from the same Wikipedia article. Thus 10/5/1 changes the quantity of redundant answer-supporting evidence, not the number of facts required for a correct answer.
+
+**Revised 2026-08-20:** the replaced (non-gold) documents now come from the same BM25 hard-negative mechanism introduced for §3, reusing `src/retrieval.py`. Previously, removed gold passages were replaced with a uniformly random cross-article SQuAD paragraph, filtered only to not contain an answer alias — with no requirement that it be topically related to the question at all. Now each base question's distractor pool is its own BM25 top-60 retrieval over all ~2,000 unique SQuAD paragraphs, excluding same-article and answer-alias-containing paragraphs — passages a real retriever would plausibly have surfaced for this question, not an arbitrary unrelated one. The signal-ratio manipulation (10/5/1 gold passages kept) is otherwise unchanged.
 
 ### Results
 
 ![Corrected answer-sufficient signal ratio through handoffs](redundant_signal_ratio/n20/redundant_signal_ratio.png)
 
-| Signal ratio | F1 depth 0 | F1 depth 5 | Depth-5 retention | 10-gold − 1-gold F1 gap |
+| Signal ratio | F1 depth 0 | F1 depth 5 | Judge depth 0 | Judge depth 5 |
 |---|---:|---:|---:|---:|
-| 10 answer-sufficient / 0 distractor | 0.896 | 0.801 | 0.894 | +0.083 |
-| 5 answer-sufficient / 5 distractor | 0.900 | 0.840 | 0.933 | — |
-| 1 answer-sufficient / 9 distractor | 0.787 | 0.718 | 0.913 | reference |
+| 10 answer-sufficient / 0 distractor | 0.896 | 0.801 | 1.000 | 0.850 |
+| 5 answer-sufficient / 5 distractor | 0.896 | 0.885 | 1.000 | 1.000 |
+| 1 answer-sufficient / 9 distractor | 0.734 | 0.773 | 0.850 | 0.900 |
 
-The third panel of the figure adds LLM-judge answer correctness. It tells a flatter story than F1: the 10-gold condition runs 1.000 → 0.950 → 0.900 → 0.900 across depths 0/1/3/5, and the 1-gold condition 0.900 → 0.900 → 0.900 → 0.850. The initial retrieval advantage is therefore ~10 points at depth 0 under both metrics, but under the judge the low-signal condition loses only 5 points across five handoffs where token F1 records 6.9. With 20 questions the judge intervals are wide (roughly ±0.15), so this is consistent with, but does not independently establish, the F1 reading below.
+With hard negatives, the depth-0 gap between 10-gold and 1-gold widens relative to the earlier random-distractor pilot: **+0.163 F1** (95% interval +0.044 to +0.306, p = 0.014) and **+0.150 judge points** (interval 0.0 to +0.30, p = 0.108 — directional, does not exclude zero at n = 20). That gap is *not* preserved at depth 5 — it is numerically near zero on both metrics (F1 +0.028, interval −0.119 to +0.165, p = 0.69; judge −0.05, interval −0.20 to +0.10, p = 0.76), and the 10-gold condition's own within-condition degradation is now the largest of the three (F1 depth-5 change −0.095, interval −0.214 to −0.008, p = 0.064; judge change −0.15, interval −0.30 to 0.0, p = 0.107), while 1-gold is flat-to-improving on both metrics at every depth.
 
-The high-signal condition begins 10.9 F1 points above the low-signal condition (95% bootstrap interval +0.009 to +0.235) and remains 8.3 points higher at depth 5 (interval −0.039 to +0.244). The initial retrieval advantage is therefore directionally preserved but not distinguishable at this small sample after repeated handoffs. Handoff degradation itself is not monotonic in signal ratio: depth-5 changes are −0.095 (10 gold), −0.060 (5 gold), and −0.069 (1 gold). This is the appropriate conclusion for the corrected pilot—more signal helps direct QA, while the evidence for a signal-ratio-specific compression effect remains inconclusive.
+This is close to a **reversal** of the previous (random-distractor) reading, not just a magnitude change: before, the high-signal condition's advantage was reported as "directionally preserved" through depth 5. With genuine hard negatives, the redundant (10-gold) condition starts further ahead but degrades enough under repeated compression that its lead is gone by depth 5, while the single-gold condition — now facing distractors that are harder to rule out, not easier — holds steady or improves. One plausible reading: 10 redundant restatements of the same fact give a compressor more opportunities to *drop* the fact somewhere in the chain and still look locally reasonable, whereas 1 gold passage among genuinely confusable hard negatives forces every compression stage to make the same forced choice consistently. This is a single n=20 pilot and should be treated as a hypothesis to replicate, not a settled result — but it is a materially different conclusion from the random-distractor version, which is itself informative: distractor hardness is not a nuisance parameter, it changes which conditions look robust.
 
-Corrected smoke plus pilot cost: **$0.013299**.
+Pilot cost: **$0.009382** (357 live calls, 183 cached).
 
 ## 5. Question conditioning and cross-question generalization
 

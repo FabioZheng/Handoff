@@ -34,6 +34,11 @@ dataset:
   sample_seed: 20260815
   n_questions: 20
   smoke_questions: 2
+  # BM25 retrieval pool: bounded for a fast pure-Python inverted index, but
+  # large enough that hard negatives can come from genuinely different
+  # queries, not just the target query's own 10 candidate passages.
+  bm25_pool_queries: 4000
+  bm25_top_k: 50
 
 conditions: [good, medium, bad]
 depths: [0, 1, 3, 5]

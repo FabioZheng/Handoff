@@ -1,10 +1,11 @@
 """Fixed-ten-passage handoff test with redundant, answer-sufficient evidence.
 
-Unlike ``run_signal_ratio.py`` (a multi-fact information-load experiment), each
-gold passage here independently contains the source paragraph for one ordinary
-SQuAD question.  It is paired with a distinct real same-article paragraph to
-avoid verbatim document duplication.  Removed gold passages are replaced with
-real cross-article SQuAD distractors that do not contain an answer alias.
+Each gold passage independently contains the source paragraph for one ordinary
+SQuAD question, paired with a distinct real same-article paragraph to avoid
+verbatim document duplication. Removed gold passages are replaced with real
+cross-article SQuAD distractors that a BM25 index (src/retrieval.py) ranks
+highly for the question -- lexically on-topic hard negatives, not a uniformly
+random unrelated paragraph -- filtered to not contain an answer alias.
 """
 from __future__ import annotations
 
@@ -26,6 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import handoffs as hm  # noqa: E402
 from judge import add_judge  # noqa: E402
 from llm import LLMClient, load_config  # noqa: E402
+from retrieval import BM25Index, content_fingerprint  # noqa: E402
 from score import bootstrap_ci, extract_short_answer, paired_bootstrap_delta, score_against_golds  # noqa: E402
 
 SYSTEM = ("You are a research handoff agent. Preserve every fact needed to answer the question. "
@@ -89,11 +91,29 @@ def source_rows(cfg: dict) -> list[dict]:
     return rows
 
 
-def make_base_packs(cfg: dict, n: int, write: bool) -> tuple[list[dict], list[dict]]:
+def build_paragraph_index(source: list[dict]) -> tuple[BM25Index, dict[str, dict]]:
+    """BM25 over every unique SQuAD paragraph (title, context), deduplicated.
+
+    Only ~2,000 unique paragraphs in the SQuAD validation split, so the whole
+    corpus is indexed -- no bounded pool needed, unlike MS MARCO in
+    run_retrieval_quality.py.
+    """
+    seen: dict[str, dict] = {}
+    for row in source:
+        if row["context"] not in seen:
+            seen[row["context"]] = {"title": row["title"], "context": row["context"]}
+    docs = [(f"para:{i}", para["context"]) for i, para in enumerate(seen.values())]
+    doc_lookup = {f"para:{i}": para for i, para in enumerate(seen.values())}
+    return BM25Index(docs), doc_lookup
+
+
+def make_base_packs(cfg: dict, n: int, write: bool) -> tuple[list[dict], BM25Index, dict[str, dict]]:
     source = source_rows(cfg)
     by_title: dict[str, list[dict]] = {}
     for row in source:
         by_title.setdefault(row["title"], []).append(row)
+    bm25, doc_lookup = build_paragraph_index(source)
+    top_k = cfg["dataset"]["bm25_top_k"]
     # One source paragraph is the answer-bearing core; each of the ten gold
     # documents also needs a different same-article extension.
     candidates = [row for row in source if len({x["context"] for x in by_title[row["title"]]}) >= cfg["dataset"]["passages_per_query"] + 1]
@@ -108,6 +128,17 @@ def make_base_packs(cfg: dict, n: int, write: bool) -> tuple[list[dict], list[di
         extensions = list(dict.fromkeys(extensions))
         if len(extensions) < width:
             continue
+        # BM25 hard negatives: paragraphs the retriever ranks highly for this
+        # question (lexically on-topic) but that are cross-article and don't
+        # contain an answer alias -- a real "retrieved but not relevant"
+        # distractor, not a uniformly random unrelated paragraph.
+        answer_strings = [a.casefold() for a in item["golds"] if len(a.strip()) > 1]
+        retrieved = bm25.top_k(item["question"], top_k)
+        hard_negatives = [doc_id for doc_id, _ in retrieved
+                          if doc_lookup[doc_id]["title"] != item["title"]
+                          and not any(a in doc_lookup[doc_id]["context"].casefold() for a in answer_strings)]
+        if len(hard_negatives) < width - 1:
+            continue
         rng.shuffle(extensions)
         docs = []
         for number, extension in enumerate(extensions[:width], start=1):
@@ -118,36 +149,38 @@ def make_base_packs(cfg: dict, n: int, write: bool) -> tuple[list[dict], list[di
                          "is_relevant": True, "source_title": item["title"]})
         assert len(docs) == width and all(item["context"] in doc["text"] for doc in docs)
         chosen.append({"qid": item["qid"], "question": item["question"], "golds": item["golds"],
-                       "title": item["title"], "gold_passages": docs})
+                       "title": item["title"], "gold_passages": docs, "hard_negative_ids": hard_negatives})
         used_qids.add(item["qid"])
         if len(chosen) == n:
             break
     if len(chosen) < n:
-        raise RuntimeError(f"only built {len(chosen)}/{n} redundant-evidence packs")
+        raise RuntimeError(f"only built {len(chosen)}/{n} redundant-evidence packs with >= {width - 1} BM25 hard negatives "
+                            f"(raise bm25_top_k if this is short)")
     if write:
         write_jsonl(ROOT / cfg["outputs"]["data_root"] / f"base_packs_n{n}.jsonl", chosen)
-    return chosen, source
+    return chosen, bm25, doc_lookup
 
 
-def condition_pack(base: dict, source: list[dict], condition: str, relevant: int, cfg: dict) -> dict:
+def condition_pack(base: dict, doc_lookup: dict[str, dict], condition: str, relevant: int, cfg: dict) -> dict:
     width = cfg["dataset"]["passages_per_query"]
     rng = random.Random(f"{cfg['dataset']['sample_seed']}:{base['qid']}:{condition}")
     indices = list(range(width))
     rng.shuffle(indices)
     keep = set(indices[:relevant])
-    answer_strings = [answer.casefold() for answer in base["golds"] if len(answer.strip()) > 1]
-    pool = [row for row in source if row["title"] != base["title"]
-            and not any(answer in row["context"].casefold() for answer in answer_strings)]
-    if len(pool) < width - relevant:
-        raise RuntimeError(f"insufficient answer-free distractors for {base['qid']}")
-    distractors = rng.sample(pool, width - relevant)
+    neg_order = base["hard_negative_ids"][:]
+    random.Random(f"{cfg['dataset']['sample_seed']}:{base['qid']}:{condition}:negatives").shuffle(neg_order)
+    fill_n = width - relevant
+    if len(neg_order) < fill_n:
+        raise RuntimeError(f"insufficient BM25 hard negatives for {base['qid']}")
+    distractors = neg_order[:fill_n]
     docs = []
     for index in range(width):
         if index in keep:
             docs.append(dict(base["gold_passages"][index]))
         else:
-            row = distractors.pop()
-            docs.append({"text": row["context"], "is_relevant": False, "source_title": row["title"]})
+            doc_id = distractors.pop()
+            para = doc_lookup[doc_id]
+            docs.append({"text": para["context"], "is_relevant": False, "source_title": para["title"]})
     rng.shuffle(docs)
     assert len(docs) == width and sum(doc["is_relevant"] for doc in docs) == relevant
     assert all(not doc["is_relevant"] or base["gold_passages"][0]["text"].split("\n\n", 1)[0] in doc["text"] for doc in docs)
@@ -156,11 +189,11 @@ def condition_pack(base: dict, source: list[dict], condition: str, relevant: int
 
 
 def construct(cfg: dict, n: int, write: bool) -> tuple[list[dict], list[dict]]:
-    base, source = make_base_packs(cfg, n, write)
+    base, bm25, doc_lookup = make_base_packs(cfg, n, write)
     packs, report = [], []
     width = cfg["dataset"]["passages_per_query"]
     for condition, count in cfg["conditions"].items():
-        packs.extend(condition_pack(row, source, condition, count, cfg) for row in base)
+        packs.extend(condition_pack(row, doc_lookup, condition, count, cfg) for row in base)
         report.append({"condition": condition, "questions": n, "passages_per_query": width,
                        "answer_sufficient_gold_passages": count, "distractors": width - count,
                        "signal_ratio": count / width, "same_question_for_all_gold_passages": True,
@@ -280,31 +313,38 @@ def main() -> int:
     run_root = ROOT / cfg["outputs"]["run_root"] / f"n{n}"
     result_root = ROOT / cfg["outputs"]["result_root"] / f"n{n}"
     result_root.mkdir(parents=True, exist_ok=True)
+    # Fingerprint every pack by its actual passage content, not just (condition,
+    # qid): the same qid can carry different passages across construction runs
+    # (BM25 top-k changes, a different seed, a code fix), and keying the cache
+    # on qid alone let a stale cached handoff for an old passage set silently
+    # answer a new, unrelated one -- see run_retrieval_quality.py's history.
+    for pack in packs:
+        pack["fp"] = content_fingerprint([p["text"] for p in pack["passages"]])
     handoff_path = run_root / "handoffs.jsonl"
-    handoffs = {(r["condition"], r["qid"], int(r["stage"])): r["text"] for r in read_jsonl(handoff_path)}
+    handoffs = {(r["condition"], r["qid"], r.get("fp"), int(r["stage"])): r["text"] for r in read_jsonl(handoff_path)}
     for condition in cfg["conditions"]:
         subset = [p for p in packs if p["condition"] == condition]
         for stage in range(1, cfg["max_depth"] + 1):
-            todo = [p for p in subset if (condition, p["qid"], stage) not in handoffs]
+            todo = [p for p in subset if (condition, p["qid"], p["fp"], stage) not in handoffs]
             with ThreadPoolExecutor(max_workers=cfg["runtime"]["concurrency"]) as pool:
-                futures = {pool.submit(compress, client, p, None if stage == 1 else handoffs[(condition, p["qid"], stage - 1)], cfg, stage): p for p in todo}
+                futures = {pool.submit(compress, client, p, None if stage == 1 else handoffs[(condition, p["qid"], p["fp"], stage - 1)], cfg, stage): p for p in todo}
                 for future, pack in futures.items():
-                    handoffs[(condition, pack["qid"], stage)] = future.result()
+                    handoffs[(condition, pack["qid"], pack["fp"], stage)] = future.result()
             if not args.dry_run:
-                write_jsonl(handoff_path, [{"condition": c, "qid": qid, "stage": stage, "text": text} for (c, qid, stage), text in sorted(handoffs.items())])
+                write_jsonl(handoff_path, [{"condition": c, "qid": qid, "fp": fp, "stage": stage, "text": text} for (c, qid, fp, stage), text in sorted(handoffs.items())])
             print(f"[redundant-signal:handoff] {condition}/stage{stage}: {len(todo)} generated")
     answer_path = run_root / "answers.jsonl"
-    existing = {(r["condition"], int(r["depth"]), r["qid"]): r for r in read_jsonl(answer_path)}
+    existing = {(r["condition"], int(r["depth"]), r["qid"], r.get("fp")): r for r in read_jsonl(answer_path)}
     jobs = []
     for pack in packs:
         for depth in cfg["depths"]:
-            key = (pack["condition"], depth, pack["qid"])
+            key = (pack["condition"], depth, pack["qid"], pack["fp"])
             if key not in existing:
-                jobs.append((key, pack, context(pack) if depth == 0 else handoffs[(pack["condition"], pack["qid"], depth)]))
+                jobs.append((key, pack, context(pack) if depth == 0 else handoffs[(pack["condition"], pack["qid"], pack["fp"], depth)]))
     with ThreadPoolExecutor(max_workers=cfg["runtime"]["concurrency"]) as pool:
         futures = {pool.submit(answer, client, pack, material, cfg, f"redundant_signal_{key[0]}_answer_d{key[1]}"): key for key, pack, material in jobs}
         for future, key in futures.items():
-            existing[key] = {"condition": key[0], "depth": key[1], "qid": key[2], **future.result()}
+            existing[key] = {"condition": key[0], "depth": key[1], "qid": key[2], "fp": key[3], **future.result()}
     rows = sorted(existing.values(), key=lambda r: (r["condition"], int(r["depth"]), r["qid"]))
     # Rows written before the judge existed carry no question text.
     questions = {p["qid"]: p["question"] for p in packs}

@@ -33,6 +33,10 @@ dataset:
   n_questions: 20
   smoke_questions: 2
   passages_per_query: 10
+  # BM25 hard negatives: cross-article paragraphs the retriever ranks highly
+  # for the question (lexically on-topic) but that don't contain an answer
+  # alias, replacing a uniformly random unrelated paragraph as the distractor.
+  bm25_top_k: 60
 
 conditions:
   signal_1_0: 10

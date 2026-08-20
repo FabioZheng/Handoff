@@ -291,7 +291,7 @@ different `question_conditioned` flag and model config.
 
 ## Experiment 3 — retrieval quality through repeated handoffs<a id="experiment-3"></a>
 
-**File:** [`src/run_retrieval_quality.py:26-30`](src/run_retrieval_quality.py#L26)
+**File:** [`src/run_retrieval_quality.py:32-36`](src/run_retrieval_quality.py#L32)
 
 ```
 System: You are a research handoff agent. Preserve every fact needed to answer the
@@ -305,11 +305,33 @@ Stage ≥2:  Rewrite the prior notes concisely. Preserve every fact needed to an
            the question, including qualifiers, numbers, dates, and relationships.
 ```
 
-**Role:** MS MARCO QA v2.1, good/medium/bad selected-passage recall. Same
-compression shape as Experiment 2 (system + stage-1 + stage-≥2 instruction)
-but reimplemented locally rather than importing `run_chain.py`'s constants —
-see [Wording inconsistency](#wording-inconsistency). Final answer reuses the
-shared `ANSWER_SYSTEM` via `hm.ANSWER_SYSTEM`.
+**Role:** MS MARCO QA v2.1, good/medium/bad passage-recall through repeated
+compression. Same compression shape as Experiment 2 (system + stage-1 +
+stage-≥2 instruction) but reimplemented locally rather than importing
+`run_chain.py`'s constants — see [Wording inconsistency](#wording-inconsistency).
+Final answer reuses the shared `ANSWER_SYSTEM` via `hm.ANSWER_SYSTEM`.
+
+**Construction (2026-08-20 revision, no prompt text changed):** retrieval is
+now real, not assumed. A self-contained Okapi BM25 index
+(`BM25Index`, [`src/retrieval.py`](src/retrieval.py) — shared with Experiment 4)
+is built over a bounded pool of MS MARCO passages. For each query:
+- **usable gold** = passages MS MARCO's own `is_selected` label marks
+  relevant **and** that this code's own BM25 ranking actually retrieves for
+  that query in its own top-k — "top retrieved and relevant," not relevance
+  judged in isolation.
+- **hard negatives** = passages BM25 ranks in that same query's top-k but
+  that are *not* usable gold — either the query's own non-relevant passages,
+  or another query's passage that is lexically on-topic enough to rank
+  highly. These replace the previous design's distractors, which were a
+  passage sampled at random from an unrelated query (an "easy" negative with
+  no lexical relationship to the query at all).
+
+The good/medium/bad recall knob keeps the previous global-pool mechanic (a
+single seeded shuffle-and-slice over every usable-gold passage pooled across
+all queries, not a per-query fraction — a per-query fraction breaks down when
+a query has only one findable gold passage, since `round(1 * 0.5) == 0` by
+Python's banker's rounding while `bad`'s `max(1, ...)` floor stays at 1,
+inverting the intended `good > medium > bad` ordering).
 
 ---
 
@@ -333,6 +355,27 @@ Stage ≥2:  Rewrite the prior notes concisely. Preserve every fact needed to an
 in substance to Experiment 3's prompts, again a separate local copy rather
 than a shared import — see [Wording inconsistency](#wording-inconsistency).
 Final answer reuses shared `ANSWER_SYSTEM`.
+
+**Construction (2026-08-20 revision, no prompt text changed):** the
+non-relevant passages (10/5/1 → 0/5/9 distractor slots) now come from the
+same BM25 hard-negative mechanism as Experiment 3, reusing `src/retrieval.py`.
+An index is built once over every unique SQuAD paragraph (~2,000 in the
+validation split — small enough to index whole, unlike Experiment 3's bounded
+MS MARCO pool). For each base question, `hard_negative_ids` is that
+question's own BM25 top-60, excluding same-article paragraphs and paragraphs
+containing an answer alias — a real "retrieved but not relevant" negative,
+replacing the previous design's passage sampled uniformly at random from any
+unrelated article. Every pack is also fingerprinted by its actual passage
+content (`content_fingerprint()`, order-independent hash) and the fingerprint
+is included in the on-disk handoff/answer cache keys — the same qid can
+otherwise carry different passages across construction runs (a BM25 top-k
+change, a different seed, a code fix), and a cache keyed on qid alone let a
+stale cached handoff for an old passage set silently answer a new, unrelated
+passage set sharing the same qid. This is not hypothetical: it happened on
+the first post-BM25 rerun of Experiment 3 before the fingerprint fix was
+added — a cached "good"-condition handoff about Susan Rice answered a
+freshly-constructed pack about gross rental income, both keyed under the same
+qid from an earlier run. Both experiments fingerprint every pack now.
 
 ---
 
