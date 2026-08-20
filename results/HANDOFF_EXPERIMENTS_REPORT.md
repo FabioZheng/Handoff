@@ -119,22 +119,22 @@ Reconciled cost was **$0.0443** across Qwen-specific leakage filtering, 300 summ
 
 This is the minimal counterpart to the main serial chain: same Llama 3.3 70B model, fixed filtered question sample, all three evidence variants, depths 0–10, two seeds, system prompt, and handoff instructions. The sole difference is prompt visibility — neither the initial compressor nor any later compressor receives the final-question block; the fresh answerer still receives the question. An automated equivalence check (`prompt_difference_selftest` in the code) verifies that removing that block makes the two compressor prompts byte-identical, so the only variable is question visibility.
 
-Depth-10 Token F1 change from direct depth 0, question-conditioned vs question-omitted:
+Depth-10 change from direct depth 0, question-conditioned vs question-omitted:
 
-| Dataset | Context | Conditioned | Question-omitted |
-|---|---|---:|---:|
-| MuSiQue | Short | −0.027 | −0.035 |
-| MuSiQue | Medium | −0.025 | −0.127 |
-| MuSiQue | Full | **+0.080** | **−0.272** |
-| HotpotQA | Short | −0.107 | −0.247 |
-| HotpotQA | Medium | −0.035 | −0.218 |
-| HotpotQA | Full | +0.014 | **−0.326** |
+| Dataset | Context | Conditioned F1 | Omitted F1 | Conditioned judge | Omitted judge |
+|---|---|---:|---:|---:|---:|
+| MuSiQue | Short | −0.027 | −0.035 | +0.017 | −0.033 |
+| MuSiQue | Medium | −0.025 | −0.127 | −0.033 | −0.183 |
+| MuSiQue | Full | **+0.080** | **−0.272** | −0.017 | **−0.467** |
+| HotpotQA | Short | −0.107 | −0.247 | +0.000 | −0.117 |
+| HotpotQA | Medium | −0.035 | −0.218 | −0.050 | −0.250 |
+| HotpotQA | Full | +0.014 | **−0.326** | −0.033 | **−0.400** |
 
-Every condition is worse without the question, and the gap widens with more distractors: full-context degradation goes from mildly positive to the worst result in either chain. This is consistent with the denoising story in §2 — a compressor can only filter distractors *toward* a task it knows, and full-context evidence has the most distractor mass to filter. It also complements §5's finding below: §5 shows conditioning narrows a summary toward one task at the cost of others; this replication shows the opposite failure mode — a compressor with no task at all keeps too much noise and too little signal for any task.
+Every condition is worse without the question, and the gap widens with more distractors: full-context degradation goes from mildly positive (conditioned) to the worst result in either chain (omitted). This is consistent with the denoising story in §2 — a compressor can only filter distractors *toward* a task it knows, and full-context evidence has the most distractor mass to filter. It also complements §5's finding below: §5 shows conditioning narrows a summary toward one task at the cost of others; this replication shows the opposite failure mode — a compressor with no task at all keeps too much noise and too little signal for any task.
 
-**Metric caveat:** this replication predates the 2026-08-20 LLM-judge addition (§2) and is scored on token F1 and BERTScore only. Given §2's finding that token F1 can substantially overstate degradation relative to judged answer correctness, treat the magnitudes above as directional rather than final; a judge rerun would be needed before quoting exact point estimates.
+**Judge update, 2026-08-20:** this replication now has real LLM-judge scores (added as a side effect of regenerating its plot with the new size-encoding — see §2 above). Unlike the main serial-degradation result, where the judge flattened the token-F1 signal almost to zero, **here the judge corroborates F1 rather than contradicting it**: question-omitted is worse than conditioned by the judge at every single dataset/context pair, matching F1's direction throughout, and often by a larger margin (MuSiQue full: −0.017 conditioned vs **−0.467** omitted; HotpotQA full: −0.033 vs **−0.400**). This is the same asymmetry noted for §5's judge update below — some findings in this report survive judged-correctness scrutiny and some don't, and this one does.
 
-Cost: **$0.9564** (7,000 live calls, 20 cached).
+Cost: **$0.9564** (7,000 live calls, 20 cached) for the original chain, plus **$0.0105** (341 live, 3,439 cached) for the judge pass.
 
 ## 3. Retrieval quality through repeated handoffs
 
