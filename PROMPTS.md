@@ -390,7 +390,7 @@ the main chain experiment.
 
 ### What this experiment actually varies
 
-`compression_user_prompt()`, [`run_summary_generalization.py:160`](src/run_summary_generalization.py#L160):
+`compression_user_prompt()`, [`run_summary_generalization.py:253`](src/run_summary_generalization.py#L253):
 only whether a question block is spliced into the user message.
 
 ```
@@ -406,15 +406,31 @@ generic:     {material}
 ```
 
 A runtime self-test (`prompt_difference_selftest()`,
-[`run_summary_generalization.py:176`](src/run_summary_generalization.py#L176))
+[`run_summary_generalization.py:269`](src/run_summary_generalization.py#L269))
 asserts that stripping that one block out of the conditioned prompt produces a
 byte-identical string to the generic prompt.
 
 ### Final answer
 
-`answer()`, [`run_summary_generalization.py:212`](src/run_summary_generalization.py#L212),
+`answer()`, [`run_summary_generalization.py:306`](src/run_summary_generalization.py#L306),
 reuses shared `ANSWER_SYSTEM`. User message:
 `Research material:\n{material}\n\nQuestion:\n{question}\nAnswer:`
+
+### Dataset variants
+
+Two pair-construction functions build the `pairs` list these prompts run
+over, selected by `dataset.source` in the config — the prompts above are
+identical either way:
+
+- `construct_pairs()` (SQuAD, default): question A and B come from two
+  *different* articles glued into one shared context, plus real SQuAD
+  distractors.
+- `construct_pairs_wikipedia()` (`dataset.source: generated_wikipedia`,
+  [`run_summary_generalization.py:167`](src/run_summary_generalization.py#L167)):
+  reuses the two questions the self-generated Wikipedia dataset already
+  writes per page against its *one* shared passage, so A and B are genuinely
+  about the same source; the other nine built pages fill out the context as
+  distractors.
 
 ---
 

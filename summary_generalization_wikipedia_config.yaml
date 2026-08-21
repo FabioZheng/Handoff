@@ -1,0 +1,65 @@
+# Question-conditioning versus summary generalization, rerun on the
+# self-generated Wikipedia dataset instead of paired SQuAD questions.
+#
+# Each of the ten Wikipedia source pages already carries two independently
+# written questions about its one full-article passage (see
+# data/wikipedia_random/questions.jsonl, built by src/build_wikipedia_dataset.py).
+# One of the two is chosen (per-pair, seeded) to condition on; the other is
+# the held-out probe. Unlike the SQuAD version, A and B share their *one*
+# gold passage rather than being glued from two different articles -- see
+# construct_pairs_wikipedia() in src/run_summary_generalization.py.
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  # Match the earlier repeated-handoff experiment's summary allowance.
+  handoff_max_tokens: 700
+
+cost:
+  cap_usd: 1.0
+  api_call_cap: 2000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 8
+  max_retries: 4
+  backoff_base_s: 1.5
+  backoff_max_s: 30.0
+  request_timeout_s: 120
+  cache_dir: cache
+
+dataset:
+  source: "generated_wikipedia"
+  local_jsonl: "data/wikipedia_random/questions.jsonl"
+  sample_seed: 20260821
+  n_pairs: 10        # one pair per source page -- all ten pages used
+  smoke_pairs: 2
+  context_passages: 10   # 1 shared gold passage + 9 distractor pages
+
+modes: [conditioned, generic]
+depths: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+max_depth: 10
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+
+outputs:
+  data_root: data/summary_generalization_wikipedia
+  run_root: runs/summary_generalization_wikipedia
+  result_root: results/summary_generalization_wikipedia
+
+# LLM judge: answer-correctness vs the gold answer, as a semantic complement to
+# EM/F1 (which remain primary). Deliberately a different model family from the
+# systems under test, so a model is never grading its own family's outputs.
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0

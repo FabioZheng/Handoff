@@ -1,6 +1,6 @@
 # Agent handoff information-loss experiments
 
-**Status:** pilot-scale evidence through 20 August 2026  
+**Status:** pilot-scale evidence through 21 August 2026
 **Primary metrics:** exact match (EM) and SQuAD-style token F1  
 **Secondary metric:** LLM-judge answer correctness (`openai/gpt-4o-mini`, temperature 0, binary vs gold; a different model family from the systems under test)  
 **Judging:** deterministic string metrics remain primary; an LLM judge is reported alongside them, never in place of them
@@ -13,7 +13,7 @@ The current synthesis is:
 
 1. **Compression can help the immediate task when it removes noise.** In the initial MuSiQue pilot, a free-form handoff beat direct full-context answering by 26.4 F1 points. In the longer chains, noisy full contexts often improved after early summaries, whereas compact HotpotQA gold-only evidence showed the clearest serial loss (−10.7 F1 by depth 10).
    **Metric caveat added 20 August 2026:** that −10.7 F1 result is **0.000** under an LLM judge scoring answer correctness against the gold (0.900 at both depth 0 and depth 10). Token F1 penalises correct-but-reworded answers, which repeated compression reliably produces. Read as "the asserted fact survives ten handoffs, but its surface form drifts from the gold string." No serial-loss claim in this report should now be made on token F1 alone.
-2. **Repeated handoffs can erase an initial retrieval advantage, but the pilot evidence is mixed.** The MS MARCO experiment began with an 8.6-point good–bad F1 gap that was only 1.2 points at depth 5. The corrected fixed-ten-passage experiment similarly favored 10 redundant answer-sufficient passages over one at depth 0 (+10.9 F1) and depth 5 (+8.3), but its 20-question intervals are too wide to establish a signal-ratio-specific degradation law.
+2. **Distractor difficulty is a treatment, not a nuisance variable.** In matched reruns, BM25-bottom easy negatives widened the MS MARCO good–bad F1 gap (0.342 at depth 0 and 0.310 at depth 5) relative to BM25-top hard negatives (0.201 and 0.107). In the fixed-ten-passage SQuAD experiment, hard versus easy made no difference when all ten passages were answer-sufficient, but the 5-gold/5-distractor hard arm retained substantially more judged correctness by depths 3–5. The direction changes with retained signal, so neither negative class can stand in for “irrelevant evidence” generally.
 3. **Question conditioning is a short-horizon specialization tool, not a reusable-handoff default.** It improved its target by +29.5 F1 at the first handoff and +21.8 at the second, but that advantage was no longer distinguishable from zero from depth 3 onward; at depth 10 it was numerically −7.6 F1 (interval spans zero). Meanwhile, it damaged an unrelated but answerable question at every depth, including −49.7 F1 at depth 10. Unlike the serial-degradation result above, **the LLM judge strengthens this finding** (+40.0 / +35.0 points on the target at depths 1–2; −40 to −45 points on the held-out question at every depth, all p < 0.001), so it does not rest on a token-overlap artefact. For five or more handoffs with a potentially changing downstream task, generic notes are the safer current default; for one or two fixed-task handoffs, conditioning remains useful.
 4. **Withholding the question from every compressor is far more damaging than repeated compression itself.** The matched question-omission replication (same model, questions, contexts, depths, seeds, system prompt, and handoff instructions as the main serial chain — the sole difference is that no compressor ever sees the question) degrades at every depth, in every evidence condition, including full context — the one condition that *improved* under question-conditioned compression. MuSiQue full context goes from +0.080 F1 at depth 10 (conditioned) to **−0.272 F1** (question omitted) on the identical question set.
 5. **These are directional pilots, not final effect sizes.** The Llama 3.3 70B and Qwen3 8B chain runs agree that dataset and context composition matter, but most low-cost experiments use 20 questions and one seed. The strongest next step is replication at larger sample sizes with independently sourced redundant evidence.
@@ -26,9 +26,10 @@ The current synthesis is:
 | Serial handoff degradation | MuSiQue + HotpotQA | 30 per dataset | Llama 3.3 70B Instruct | 0–10 | Gold-only, five-document, and full contexts |
 | Serial handoff degradation, question omitted | MuSiQue + HotpotQA | 30 per dataset | Llama 3.3 70B Instruct | 0–10 | Same chain; only the compressor question block is omitted |
 | Serial handoff degradation (replication) | MuSiQue + HotpotQA | 10 per dataset | Qwen3 8B, non-thinking | 0/1/3/5 | Same evidence variants, low-cost one-seed replication |
-| Retrieval-quality propagation | MS MARCO QA v2.1 | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | Good, medium, and bad selected-passage recall |
-| Redundant-evidence signal-ratio propagation | SQuAD same-article packs | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | Exactly 10/10, 5/10, or 1/10 individually answer-sufficient passages |
+| Retrieval-quality propagation | MS MARCO QA v2.1 | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | Good, medium, and bad selected-passage recall × BM25-top hard vs bottom easy negatives |
+| Redundant-evidence signal-ratio propagation | SQuAD same-article packs | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | Exactly 10/10, 5/10, or 1/10 answer-sufficient passages × BM25-top hard vs bottom easy negatives |
 | Cross-question generalization v2, depth-10 extension | SQuAD | 20 paired contexts | Llama 3.1 8B Instruct | 0–10 | Question A present vs absent; evaluate A and unrelated B at every depth |
+| Cross-question generalization, Wikipedia same-passage rerun | Self-generated Wikipedia | 10 paired contexts (1/page) | Llama 3.1 8B Instruct | 0–10 | Question A present vs absent; both A and B genuinely drawn from the same shared gold passage |
 
 ## 1. Single-handoff mechanism pilot
 
@@ -149,6 +150,8 @@ Cost: **$0.9564** (7,000 live calls, 20 cached) for the original chain, plus **$
 
 The good/medium/bad recall knob keeps the original global-pool mechanic (one seeded shuffle-and-slice over every gold passage pooled across all 20 queries, not a per-query fraction — a per-query fraction breaks down when a query has only one findable gold passage, since `round(1 × 0.5) == 0` under Python's banker's rounding while `bad`'s floor keeps it at 1, inverting the intended ordering). Twenty questions, one seed, depths 0, 1, 3, and 5. Question text was passed at every handoff.
 
+**Easy-negative matched rerun, 2026-08-21.** Each hard arm is now paired with an easy arm that keeps the same questions, gold passages, global recall target, ten-passage width, gold/distractor positions, prompts, depths, and model. The sole change is filler selection: hard fillers are eligible BM25 top-50 passages, while easy fillers are eligible passages drawn from that query's BM25 bottom-1,000 (including zero-overlap passages). `hard − easy` is bootstrapped over the same 20 question ids at each condition/depth.
+
 Empirical recall-at-10 against BM25-findable gold:
 
 | Retrieval condition | Gold passages retained | Recall@10 |
@@ -168,6 +171,18 @@ Empirical recall-at-10 against BM25-findable gold:
 | 3 | 0.417 | 0.290 | 0.303 |
 | 5 | 0.433 | 0.336 | 0.325 |
 
+The updated plot shows solid hard-negative and dashed easy-negative trajectories:
+
+![Retrieval quality: hard vs easy negatives](retrieval_quality/n20/retrieval_quality.png)
+
+| Retrieval arm | Hard F1 d0 | Easy F1 d0 | Hard F1 d5 | Easy F1 d5 |
+|---|---:|---:|---:|---:|
+| Good | 0.492 | 0.547 | 0.433 | 0.460 |
+| Medium | 0.382 | 0.321 | 0.336 | 0.283 |
+| Bad | 0.291 | 0.204 | 0.325 | 0.150 |
+
+Bottom-ranked “easy” distractors do **not** uniformly improve QA. They make the low-recall bad arm substantially worse: hard minus easy is +0.153 F1 at depth 3 (95% interval +0.022 to +0.308) and +0.176 at depth 5 (+0.042 to +0.331). Conversely, the good arm favors easy negatives at depth 1 (hard minus easy −0.173, −0.308 to −0.056). The resulting good-minus-bad gap is larger and remains distinguishable under easy negatives (+0.342 at depth 0; +0.310 at depth 5), while the hard-negative gap is +0.201 and +0.107 respectively. This suggests lexical hard negatives can preserve question-adjacent information that partly rescues a weak-retrieval context; they are not interchangeable with empty noise.
+
 Under BM25 hard negatives, the good–bad gap is larger and more persistent than the original random-distractor design found: **+0.201 F1 at depth 0** (95% interval +0.093 to +0.326, p = 0.002) and still **+0.107 at depth 5** (interval −0.014 to +0.243, p = 0.103 — directionally consistent but no longer excluding zero at n = 20). The good condition still degrades most in absolute terms (depth-5 change −0.059 F1, interval −0.125 to +0.006), while bad is statistically flat across depth (all `depth_minus_depth0` intervals for bad span zero).
 
 This is a materially different picture from the random-distractor version: with genuinely confusable hard negatives, the retrieval-quality advantage is bigger to start with (real distractors are harder to filter than easy ones) and does not visibly close by depth 5, though the interval no longer rules out zero. Read together with §4 below — where the same BM25 hard-negative swap produced the opposite ordering shift — this suggests hard negatives change results in ways that depend on task structure, not a uniform "harder distractors always widen the gap."
@@ -184,6 +199,8 @@ This experiment holds the task fixed: every relevant passage independently conta
 
 **Revised 2026-08-20:** the replaced (non-gold) documents now come from the same BM25 hard-negative mechanism introduced for §3, reusing `src/retrieval.py`. Previously, removed gold passages were replaced with a uniformly random cross-article SQuAD paragraph, filtered only to not contain an answer alias — with no requirement that it be topically related to the question at all. Now each base question's distractor pool is its own BM25 top-60 retrieval over all ~2,000 unique SQuAD paragraphs, excluding same-article and answer-alias-containing paragraphs — passages a real retriever would plausibly have surfaced for this question, not an arbitrary unrelated one. The signal-ratio manipulation (10/5/1 gold passages kept) is otherwise unchanged.
 
+**Easy-negative matched rerun, 2026-08-21.** Each nontrivial signal ratio now has a companion arm that replaces hard top-60 filler with eligible paragraphs from the question's BM25 bottom-1,000. Same question, gold-document subset, count, positions, prompts, depth, model, and scoring are retained. The 10-gold/0-distractor control is identical by construction in both labels.
+
 ### Results
 
 ![Corrected answer-sufficient signal ratio through handoffs](redundant_signal_ratio/n20/redundant_signal_ratio.png)
@@ -193,6 +210,18 @@ This experiment holds the task fixed: every relevant passage independently conta
 | 10 answer-sufficient / 0 distractor | 0.896 | 0.801 | 1.000 | 0.850 |
 | 5 answer-sufficient / 5 distractor | 0.896 | 0.885 | 1.000 | 1.000 |
 | 1 answer-sufficient / 9 distractor | 0.734 | 0.773 | 0.850 | 0.900 |
+
+The plot now overlays hard (solid) and easy (dashed) negative arms:
+
+![Redundant signal: hard vs easy negatives](redundant_signal_ratio/n20/redundant_signal_ratio.png)
+
+| Signal ratio | Hard F1 d0 | Easy F1 d0 | Hard F1 d5 | Easy F1 d5 |
+|---|---:|---:|---:|---:|
+| 10 answer-sufficient / 0 distractor | 0.896 | 0.896 | 0.801 | 0.801 |
+| 5 answer-sufficient / 5 distractor | 0.896 | 0.892 | 0.885 | 0.763 |
+| 1 answer-sufficient / 9 distractor | 0.734 | 0.819 | 0.773 | 0.645 |
+
+The key matched effect is at 5 answer-sufficient passages: hard minus easy judged correctness is +0.20 at both depths 3 and 5 (95% interval +0.05 to +0.40). Token F1 points in the same direction at depth 5 (+0.123, +0.002 to +0.268), though this 20-pack pilot remains too small for a precise F1 estimate. At 1 answer-sufficient passage, easy negatives begin numerically higher but lose more by depth 5; neither hard-minus-easy F1 contrast excludes zero. Thus the easy/hard choice mainly changes the intermediate-redundancy trajectory here, rather than producing a uniform shift in difficulty.
 
 With hard negatives, the depth-0 gap between 10-gold and 1-gold widens relative to the earlier random-distractor pilot: **+0.163 F1** (95% interval +0.044 to +0.306, p = 0.014) and **+0.150 judge points** (interval 0.0 to +0.30, p = 0.108 — directional, does not exclude zero at n = 20). That gap is *not* preserved at depth 5 — it is numerically near zero on both metrics (F1 +0.028, interval −0.119 to +0.165, p = 0.69; judge −0.05, interval −0.20 to +0.10, p = 0.76), and the 10-gold condition's own within-condition degradation is now the largest of the three (F1 depth-5 change −0.095, interval −0.214 to −0.008, p = 0.064; judge change −0.15, interval −0.30 to 0.0, p = 0.107), while 1-gold is flat-to-improving on both metrics at every depth.
 
@@ -263,6 +292,39 @@ A complete side-by-side example is available in [`summary_generalization_v2_dept
 
 Original corrected pilot cost was approximately **$0.0100**; the depth-10 extension added **$0.013471** (698 live calls, 22 cache hits). Full metrics and contrasts are in [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv) and [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv).
 
+### Wikipedia same-passage rerun (21 August 2026)
+
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** self-generated Wikipedia dataset (`data/wikipedia_random/questions.jsonl`), one pair per source page · **Config:** `summary_generalization_wikipedia_config.yaml` · **Prompts:** identical to the SQuAD run above — same `CHAIN_SYSTEM`/`INITIAL_INSTRUCTION`/`RECOMPRESS_INSTRUCTION` imported from `src/run_chain.py`, same `ANSWER_SYSTEM`; construction logic is new (`construct_pairs_wikipedia()` in `src/run_summary_generalization.py`)
+
+#### Design
+
+The SQuAD pairing above glues two *different* articles' questions into one shared context. This rerun instead uses a pairing the Wikipedia dataset already provides for free: each of the ten source pages carries two independently-generated questions about its single full-article passage. One question per page (chosen per pair, seeded) is designated A and conditioned on at every handoff; the other becomes B, the held-out probe — both genuinely about the *same* gold passage, not two unrelated ones. The other nine of the ten available pages fill out the same 10-passage context width as distractors (random sampling, matching this experiment's existing SQuAD distractor policy — the BM25 hard-negative upgrade only ever applied to Experiments 3/4). Only ten source pages exist today, so this yields 10 pairs (one per page) rather than 20; prompts, chain instructions, depths (0–10), and evaluation (F1 + LLM judge) are otherwise identical to the depth-10 SQuAD run above, and the same question-block-deletion self-test passed.
+
+One structural difference matters for interpretation: **full Wikipedia articles run far longer than SQuAD paragraphs.** The ten-passage context here averages roughly 10,200 words, versus SQuAD's ~1,000–1,500, all compressed into the same 700-token handoff budget — a much harsher compression ratio.
+
+#### Results
+
+![Question-only conditioning on same-passage Wikipedia pairs](summary_generalization_wikipedia/n10/summary_generalization.png)
+
+Paired conditioned-minus-generic contrasts at landmark depths:
+
+| Comparison | Metric | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
+|---|---|---:|---:|---:|---:|
+| Target (Question A) | F1 | **+0.827** (p<0.0001) | **+0.812** (p<0.0001) | **+0.652** (p<0.0001) | **+0.652** (p<0.0001) |
+| Target (Question A) | LLM judge | **+0.900** (p<0.0001) | **+0.900** (p<0.0001) | **+0.700** (p<0.0001) | **+0.700** (p<0.0001) |
+| Held-out (Question B) | F1 | +0.039 (p=0.605) | +0.040 (p=0.615) | +0.020 (p=0.835) | +0.110 (p=0.225) |
+| Held-out (Question B) | LLM judge | 0.000 (p=1.0) | 0.000 (p=1.0) | 0.000 (p=1.0) | +0.100 (p=0.618) |
+
+The target-question benefit of conditioning is **larger and far more persistent** here than in the SQuAD version above: +0.83 F1 / +0.90 judge accuracy at depth 1, still a highly significant +0.65 F1 / +0.70 judge accuracy at depth 10 — it never decays to indistinguishable-from-zero the way the SQuAD result did from depth 3 onward.
+
+The held-out comparison, though, tells a different story than SQuAD, for a reason visible directly in the raw handoffs ([`summary_generalization_wikipedia/n10/example.md`](summary_generalization_wikipedia/n10/example.md)): **generic mode collapses to near-zero on both questions, not just the held-out one** (generic target F1 stays at 0.00–0.04 through all ten depths; generic held-out F1 sits at 0.00–0.04 too). At a ~10,200-word context and a 700-token summary budget, the unguided compressor spreads its budget over all ten documents and preserves only a one-line generic gist of each — including the shared gold passage — so neither question's specific fact (a precise century, a named organization's Latin motto) survives, whether or not it is the one being asked. Conditioning does not visibly damage the held-out question here because there is no floor left to fall from: the generic arm has already failed it. This differs from the SQuAD result, where a generic summary retained enough of the shorter, less-diluted gold passage to answer both questions reasonably well (F1 0.48–0.60), leaving room for conditioning to visibly *reallocate* that capacity away from the held-out question.
+
+**Read together, the two runs sharpen the report's Experiment 5 conclusion rather than contradicting it:** question conditioning's target-side benefit, and whether it comes at the held-out question's expense, both depend on how much compression slack is actually available to redistribute. Under mild compression (SQuAD), a generic summary has enough room to serve a nearby unrelated question, so conditioning visibly steals that room — and the benefit itself fades as recompression keeps eroding the extra headroom. Under severe compression (full Wikipedia articles), there is no such slack to begin with — an unguided summary already fails everything — so conditioning's benefit is undiminished out to depth 10, but there is nothing left for it to visibly damage.
+
+Total cost: **$0.031** (620 live model calls at `llama-3.1-8b-instruct`, plus 206 live + 214 cached judge calls at `gpt-4o-mini`). Full metrics and contrasts are in [`summary_generalization_wikipedia/n10/metrics.csv`](summary_generalization_wikipedia/n10/metrics.csv) and [`summary_generalization_wikipedia/n10/deltas.csv`](summary_generalization_wikipedia/n10/deltas.csv); a complete side-by-side example, including the raw distractor pack, is in [`summary_generalization_wikipedia/n10/example.md`](summary_generalization_wikipedia/n10/example.md).
+
+**Caveat:** n=10 (one pair per currently-built Wikipedia page — this design has no scaling headroom until more pages are generated), one seed, and these questions were not run through the C1 closed-book leakage filter (neither was the original SQuAD version of this experiment).
+
 ## Cross-experiment interpretation
 
 The results support three distinct roles for handoffs:
@@ -300,3 +362,4 @@ These mechanisms can coexist. A handoff may improve the current answer by filter
 - Retrieval quality: [`retrieval_quality/n20/metrics.csv`](retrieval_quality/n20/metrics.csv), [`retrieval_quality/n20/deltas.csv`](retrieval_quality/n20/deltas.csv)
 - Corrected redundant-evidence signal ratio: [`redundant_signal_ratio/n20/metrics.csv`](redundant_signal_ratio/n20/metrics.csv), [`redundant_signal_ratio/n20/deltas.csv`](redundant_signal_ratio/n20/deltas.csv), [`redundant_signal_ratio/n20/redundant_signal_ratio.png`](redundant_signal_ratio/n20/redundant_signal_ratio.png)
 - Corrected generalization, depth-10 extension: [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv), [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv), [`summary_generalization_v2_depth10/n20/summary_generalization.png`](summary_generalization_v2_depth10/n20/summary_generalization.png)
+- Generalization, Wikipedia same-passage rerun: [`summary_generalization_wikipedia/n10/metrics.csv`](summary_generalization_wikipedia/n10/metrics.csv), [`summary_generalization_wikipedia/n10/deltas.csv`](summary_generalization_wikipedia/n10/deltas.csv), [`summary_generalization_wikipedia/n10/summary_generalization.png`](summary_generalization_wikipedia/n10/summary_generalization.png), [`summary_generalization_wikipedia/n10/example.md`](summary_generalization_wikipedia/n10/example.md)

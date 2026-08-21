@@ -153,6 +153,99 @@ def construct_pairs(cfg: dict, n: int, write: bool = True) -> list[dict]:
     return pairs
 
 
+def load_wikipedia_questions(cfg: dict) -> list[dict]:
+    path = ROOT / cfg["dataset"]["local_jsonl"]
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Generated Wikipedia dataset missing: {path}. Build it with "
+            "python src/build_wikipedia_dataset.py"
+        )
+    rows = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x]
+    return [r for r in rows if "qid" in r]  # first line is a _manifest record
+
+
+def construct_pairs_wikipedia(cfg: dict, n: int, write: bool = True) -> list[dict]:
+    """Build conditioning pairs from the generated Wikipedia dataset.
+
+    Each of the ten source pages carries exactly two questions written against
+    its single full-article passage (src/build_wikipedia_dataset.py). Unlike
+    the SQuAD pairing above -- two *different* articles glued into one shared
+    context -- question A and question B here are genuinely about the *same*
+    passage: one is chosen to condition on, the other is the held-out probe of
+    whether that conditioning silently drops a fact the same source supports.
+    The other nine pages' full texts serve as distractors, filled by random
+    sampling to match this experiment's existing SQuAD distractor policy (the
+    BM25 hard-negative upgrade only ever applied to experiments 3/4, not this
+    one).
+    """
+    rows = load_wikipedia_questions(cfg)
+    by_page: dict[str, list[dict]] = {}
+    for row in rows:
+        by_page.setdefault(row["paragraphs"][0]["title"], []).append(row)
+    pages = sorted(by_page)
+    bad = [t for t in pages if len(by_page[t]) != 2]
+    if bad:
+        raise RuntimeError(f"expected exactly 2 questions/page, mismatch for: {bad}")
+    if n > len(pages):
+        raise RuntimeError(
+            f"only {len(pages)} source pages have two questions each; cannot build {n} pairs "
+            "(one pair per page -- generate more pages to scale this up)"
+        )
+
+    rng = random.Random(cfg["dataset"]["sample_seed"])
+    chosen_pages = list(pages)
+    rng.shuffle(chosen_pages)
+    chosen_pages = chosen_pages[:n]
+    page_text = {t: by_page[t][0]["paragraphs"][0]["text"] for t in pages}
+    n_distractors = cfg["dataset"]["context_passages"] - 1
+
+    pairs: list[dict] = []
+    for title in chosen_pages:
+        two = list(by_page[title])
+        rng.shuffle(two)  # which of the page's two questions becomes A (conditioned) vs B (held out)
+        a, b = two
+        distractor_pool = [t for t in pages if t != title]
+        if len(distractor_pool) < n_distractors:
+            raise RuntimeError(
+                f"only {len(distractor_pool)} candidate distractor pages available, need "
+                f"{n_distractors} (raise sampling.n_pages or lower context_passages)"
+            )
+        distractor_titles = rng.sample(distractor_pool, n_distractors)
+        passages = [{"text": page_text[title], "role": "gold_AB", "source_title": title}]
+        passages += [{"text": page_text[t], "role": "distractor", "source_title": t} for t in distractor_titles]
+        rng.shuffle(passages)
+        pair = {
+            "pair_id": f"{a['qid']}__{b['qid']}",
+            "question_A": a["question"], "golds_A": a["golds"], "qid_A": a["qid"],
+            "question_B": b["question"], "golds_B": b["golds"], "qid_B": b["qid"],
+            "title_A": title, "title_B": title,
+            "question_jaccard": jaccard(a["question"], b["question"]),
+            "passages": passages,
+            "context_note": (
+                f"Both questions were written against the same single gold Wikipedia "
+                f"passage ({title}), plus {n_distractors} distractor passages drawn from "
+                "the other source pages."
+            ),
+        }
+        assert len(passages) == cfg["dataset"]["context_passages"]
+        assert sum(p["role"] == "gold_AB" for p in passages) == 1
+        pairs.append(pair)
+
+    report = [{
+        "pairs": len(pairs), "passages_per_pair": cfg["dataset"]["context_passages"],
+        "source_pages_available": len(pages),
+        "same_article_pairs": sum(x["title_A"] == x["title_B"] for x in pairs),
+        "mean_question_jaccard": round(float(np.mean([x["question_jaccard"] for x in pairs])), 4),
+        "max_question_jaccard": round(max((x["question_jaccard"] for x in pairs), default=0.0), 4),
+    }]
+    if write:
+        root = ROOT / cfg["outputs"]["data_root"]
+        write_jsonl(root / f"pairs_n{n}.jsonl", pairs)
+        write_csv(root / f"construction_n{n}.csv", report)
+    print("[generalization:construction:wikipedia] " + json.dumps(report[0]))
+    return pairs
+
+
 def render_context(pair: dict) -> str:
     return "\n\n".join(f"[P{i + 1}] {p['text']}" for i, p in enumerate(pair["passages"]))
 
@@ -200,7 +293,8 @@ def write_example(pair: dict, handoffs: dict, root: Path) -> None:
         "",
         f"**Unrelated held-out Question B:** {pair['question_B']}",
         "",
-        "Both gold passages and the same eight distractors were present in the shared depth-0 context.",
+        pair.get("context_note",
+                  "Both gold passages and the same eight distractors were present in the shared depth-0 context."),
     ]
     for stage in (1, 5):
         for mode in ("conditioned", "generic"):
@@ -291,7 +385,10 @@ def main() -> int:
     args = parser.parse_args()
     cfg = load_config(args.config)
     n = args.n or cfg["dataset"]["n_pairs"]
-    pairs = construct_pairs(cfg, n, write=not args.dry_run)
+    if cfg["dataset"].get("source") == "generated_wikipedia":
+        pairs = construct_pairs_wikipedia(cfg, n, write=not args.dry_run)
+    else:
+        pairs = construct_pairs(cfg, n, write=not args.dry_run)
     prompt_difference_selftest(pairs[0])
     print("[generalization:selftest] conditioned/generic prompts differ only by the Question A block")
     if args.construct_only:
