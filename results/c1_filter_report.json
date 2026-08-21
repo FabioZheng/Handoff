@@ -1,1293 +1,722 @@
 {
-  "candidates_run": 40,
+  "known_method": "llm_judge",
+  "candidates_run": 20,
   "leaked_excluded": 6,
-  "survived": 34,
-  "survival_rate": 0.85,
-  "leak_rate": 0.15,
-  "n_target": 150,
-  "kept": 34,
+  "leaked_qids": [
+    "wiki:841542:2",
+    "wiki:51952678:2",
+    "wiki:109835:1",
+    "wiki:109835:2",
+    "wiki:1580208:1",
+    "wiki:1580208:2"
+  ],
+  "survived": 14,
+  "survival_rate": 0.7,
+  "leak_rate": 0.3,
+  "n_target": 20,
+  "kept": 14,
   "target_met": false,
-  "closed_book_mean_em": 0.10833333333333334,
-  "closed_book_mean_f1": 0.18939445222533458,
+  "closed_book_mean_em": 0.1,
+  "closed_book_mean_f1": 0.26843101343101344,
   "attempts": {
-    "3hop2__127483_76623_10557": [
+    "wiki:841542:1": [
       {
         "sample": 0,
-        "pred": "Latin",
+        "pred": "Tulane University School of Medicine",
         "em": 0.0,
         "f1": 0.6666666666666666,
-        "known": true,
-        "prompt_tokens": 69,
-        "completion_tokens": 2,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Latin",
-        "em": 0.0,
-        "f1": 0.6666666666666666,
-        "known": true,
-        "prompt_tokens": 89,
-        "completion_tokens": 2,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Latin",
-        "em": 0.0,
-        "f1": 0.6666666666666666,
-        "known": true,
-        "prompt_tokens": 70,
-        "completion_tokens": 2,
-        "cached": false
-      }
-    ],
-    "3hop1__639955_834494_33939": [
-      {
-        "sample": 0,
-        "pred": "Baltimore: 508,957",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 65,
+        "prompt_tokens": 67,
         "completion_tokens": 8,
-        "cached": false
+        "cached": true,
+        "judge_correct": false,
+        "known": false
       },
       {
         "sample": 1,
-        "pred": "1,661",
+        "pred": "Vanderbilt University School of Medicine",
         "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 64,
-        "completion_tokens": 4,
-        "cached": false
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 67,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
       },
       {
         "sample": 2,
-        "pred": "2,621",
+        "pred": "Tulane University School of Medicine",
         "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 84,
-        "completion_tokens": 4,
-        "cached": false
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
       }
     ],
-    "3hop1__604991_339990_15538": [
+    "wiki:841542:2": [
       {
         "sample": 0,
-        "pred": "1984",
+        "pred": "April 25, 1904 – March 5, 1905",
+        "em": 0.0,
+        "f1": 0.8571428571428571,
+        "prompt_tokens": 69,
+        "completion_tokens": 16,
+        "cached": true,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "April 25, 1906 - March 5, 1907",
+        "em": 0.0,
+        "f1": 0.6153846153846153,
+        "prompt_tokens": 70,
+        "completion_tokens": 16,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "April 25, 1904 – March 5, 1905",
+        "em": 0.0,
+        "f1": 0.8571428571428571,
+        "prompt_tokens": 69,
+        "completion_tokens": 16,
+        "cached": true,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "wiki:51952678:1": [
+      {
+        "sample": 0,
+        "pred": "Bills",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Chasing Pavements",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Nobody's Perfect",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:51952678:2": [
+      {
+        "sample": 0,
+        "pred": "Baby Records",
         "em": 1.0,
         "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 60,
+        "prompt_tokens": 85,
         "completion_tokens": 3,
-        "cached": false
+        "cached": false,
+        "judge_correct": true,
+        "known": true
       },
       {
         "sample": 1,
-        "pred": "1973",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 79,
+        "pred": "Baby Records",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 85,
         "completion_tokens": 3,
-        "cached": false
+        "cached": false,
+        "judge_correct": true,
+        "known": true
       },
       {
         "sample": 2,
+        "pred": "Baby Records",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "wiki:54831550:1": [
+      {
+        "sample": 0,
+        "pred": "MK-1",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "MK-1",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "MKN-2000-001",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:54831550:2": [
+      {
+        "sample": 0,
+        "pred": "A telescope",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 88,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Telescope",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 88,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Telescope",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 88,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:386875:1": [
+      {
+        "sample": 0,
+        "pred": "1974",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
         "pred": "1977",
         "em": 0.0,
         "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "3hop2__222979_132957_40768": [
-      {
-        "sample": 0,
-        "pred": "Honda: 1982, Toyota: 1986, Nissan: 1983",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
         "prompt_tokens": 65,
-        "completion_tokens": 18,
-        "cached": false
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       },
       {
-        "sample": 1,
-        "pred": "Honda: 1982, Toyota: 1986, Nissan: 1983",
+        "sample": 2,
+        "pred": "1974",
         "em": 0.0,
         "f1": 0.0,
-        "known": false,
         "prompt_tokens": 65,
-        "completion_tokens": 18,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Honda 1982, Toyota 1986, Nissan 1983",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 85,
-        "completion_tokens": 15,
-        "cached": false
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       }
     ],
-    "3hop1__158848_66089_86107": [
+    "wiki:386875:2": [
       {
         "sample": 0,
-        "pred": "Adulis",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 77,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Adulis",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 76,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Adulis",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 76,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "4hop1__777217_32392_823060_610794": [
-      {
-        "sample": 0,
-        "pred": "Nassau",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 69,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "St. Johns County",
-        "em": 0.0,
-        "f1": 0.4,
-        "known": false,
-        "prompt_tokens": 69,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Charleston County",
+        "pred": "63-68 days",
         "em": 0.0,
         "f1": 0.5,
-        "known": false,
-        "prompt_tokens": 70,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "2hop__748615_123956": [
-      {
-        "sample": 0,
-        "pred": "No information",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 80,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Not found",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "October 20, 1905",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 80,
-        "completion_tokens": 8,
-        "cached": false
-      }
-    ],
-    "3hop1__765565_326948_78782": [
-      {
-        "sample": 0,
-        "pred": "Wolfe",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
         "prompt_tokens": 61,
-        "completion_tokens": 4,
-        "cached": false
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       },
       {
         "sample": 1,
-        "pred": "Wolfe",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 61,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Wolfe",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 61,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "2hop__640262_122868": [
-      {
-        "sample": 0,
-        "pred": "Harvard",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "University of Michigan",
-        "em": 0.0,
-        "f1": 0.5714285714285715,
-        "known": false,
-        "prompt_tokens": 59,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "University of Michigan",
-        "em": 0.0,
-        "f1": 0.5714285714285715,
-        "known": false,
-        "prompt_tokens": 79,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "3hop1__768500_730460_70315": [
-      {
-        "sample": 0,
-        "pred": "New Orleans",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 59,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "New Orleans",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 59,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "New Orleans",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "4hop3__524186_219173_638950_72134": [
-      {
-        "sample": 0,
-        "pred": "1858",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 91,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "1865",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 91,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "1865",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 71,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "2hop__39063_212301": [
-      {
-        "sample": 0,
-        "pred": "Robert Peel",
+        "pred": "63-65 days",
         "em": 0.0,
         "f1": 0.5,
-        "known": false,
-        "prompt_tokens": 59,
-        "completion_tokens": 3,
-        "cached": false
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       },
       {
-        "sample": 1,
-        "pred": "Robert Peel",
+        "sample": 2,
+        "pred": "63-65 days",
         "em": 0.0,
         "f1": 0.5,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Richard Mayne and Charles Rowan are often credited, but Richard's father was  Colonel Richard Mayne",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 79,
-        "completion_tokens": 22,
-        "cached": false
-      }
-    ],
-    "4hop1__58323_375563_161848_28750": [
-      {
-        "sample": 0,
-        "pred": "New Zealand",
-        "em": 0.0,
-        "f1": 0.4,
-        "known": false,
-        "prompt_tokens": 87,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "New Zealand",
-        "em": 0.0,
-        "f1": 0.4,
-        "known": false,
-        "prompt_tokens": 87,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "New Zealand",
-        "em": 0.0,
-        "f1": 0.4,
-        "known": false,
-        "prompt_tokens": 68,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "2hop__73615_16848": [
-      {
-        "sample": 0,
-        "pred": "Confiscated",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 69,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Confiscated by the British East India Company",
-        "em": 0.0,
-        "f1": 0.25,
-        "known": false,
-        "prompt_tokens": 89,
-        "completion_tokens": 10,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Confiscated by the British East India Company",
-        "em": 0.0,
-        "f1": 0.25,
-        "known": false,
-        "prompt_tokens": 89,
-        "completion_tokens": 10,
-        "cached": false
-      }
-    ],
-    "2hop__575797_91104": [
-      {
-        "sample": 0,
-        "pred": "Aryabhata",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 68,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "APPLE",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 69,
-        "completion_tokens": 2,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "APPLE",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 68,
-        "completion_tokens": 2,
-        "cached": false
-      }
-    ],
-    "2hop__2299_38663": [
-      {
-        "sample": 0,
-        "pred": "47.1%",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
         "prompt_tokens": 60,
         "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "47.1%",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "47.1%",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 5,
-        "cached": false
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       }
     ],
-    "3hop1__273571_834494_34099": [
+    "wiki:36221750:1": [
       {
         "sample": 0,
-        "pred": "4 years",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "4 years",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "4 years",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "2hop__567588_67465": [
-      {
-        "sample": 0,
-        "pred": "2013",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 57,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "2013",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 77,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "2013",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 58,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "3hop1__791757_15840_36002": [
-      {
-        "sample": 0,
-        "pred": "Better graphics, faster processing, and more games",
-        "em": 0.0,
-        "f1": 0.23529411764705882,
-        "known": false,
-        "prompt_tokens": 78,
-        "completion_tokens": 11,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Faster processor, more colors, better sound",
-        "em": 0.0,
-        "f1": 0.125,
-        "known": false,
-        "prompt_tokens": 58,
-        "completion_tokens": 11,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Faster processor, more colors, and better sound",
-        "em": 0.0,
-        "f1": 0.23529411764705882,
-        "known": false,
-        "prompt_tokens": 59,
-        "completion_tokens": 12,
-        "cached": false
-      }
-    ],
-    "3hop2__72083_92991_76291": [
-      {
-        "sample": 0,
-        "pred": "January 3, 1947",
+        "pred": "17th century",
         "em": 0.0,
         "f1": 0.4,
-        "known": false,
-        "prompt_tokens": 76,
-        "completion_tokens": 8,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "January 1947",
-        "em": 0.0,
-        "f1": 0.5,
-        "known": false,
-        "prompt_tokens": 76,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "January 3, 1947",
-        "em": 0.0,
-        "f1": 0.4,
-        "known": false,
-        "prompt_tokens": 76,
-        "completion_tokens": 8,
-        "cached": false
-      }
-    ],
-    "2hop__10114_599630": [
-      {
-        "sample": 0,
-        "pred": "Wenzhou",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 59,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Wenzhou",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 58,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Wenzhou",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 58,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "4hop1__130480_53706_795904_580996": [
-      {
-        "sample": 0,
-        "pred": "Nevada shares a border with California",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 90,
-        "completion_tokens": 10,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Nevada",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 90,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "California",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 70,
-        "completion_tokens": 2,
-        "cached": false
-      }
-    ],
-    "2hop__497191_129669": [
-      {
-        "sample": 0,
-        "pred": "São Miguel Arcanjo",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 72,
-        "completion_tokens": 7,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "São Vicente",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 89,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "São Paulo",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 52,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "2hop__268084_78303": [
-      {
-        "sample": 0,
-        "pred": "Chuck Norris",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 61,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Chuck Norris",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 60,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Chuck Norris",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 80,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "4hop2__161602_474028_88460_21062": [
-      {
-        "sample": 0,
-        "pred": "Thailand and Vietnam",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
         "prompt_tokens": 73,
-        "completion_tokens": 5,
-        "cached": false
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       },
       {
         "sample": 1,
-        "pred": "Thailand and Vietnam",
+        "pred": "17th century",
         "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 93,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Thailand",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 73,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "2hop__41158_22946": [
-      {
-        "sample": 0,
-        "pred": "Aristotle",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 68,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Aristotle",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 67,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Aristotle",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 68,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "3hop1__127837_157828_239539": [
-      {
-        "sample": 0,
-        "pred": "Zagreb",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
+        "f1": 0.4,
         "prompt_tokens": 93,
         "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Zagreb",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 93,
-        "completion_tokens": 4,
-        "cached": false
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       },
       {
         "sample": 2,
-        "pred": "Zagreb",
+        "pred": "17th century",
         "em": 0.0,
-        "f1": 0.0,
-        "known": false,
+        "f1": 0.4,
         "prompt_tokens": 73,
         "completion_tokens": 4,
-        "cached": false
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       }
     ],
-    "3hop2__67618_30587_44003": [
+    "wiki:36221750:2": [
       {
         "sample": 0,
-        "pred": "Gulf of Mexico",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 65,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "The Gulf of Mexico",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 66,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "The Gulf of Mexico",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 66,
-        "completion_tokens": 5,
-        "cached": false
-      }
-    ],
-    "4hop2__161602_426860_88460_126088": [
-      {
-        "sample": 0,
-        "pred": "Hun Sen",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 72,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Hun Sen",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 72,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Hun Sen",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 72,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "2hop__54651_169233": [
-      {
-        "sample": 0,
-        "pred": "Grammy",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 61,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Robin Williams, Grammy Award",
-        "em": 0.0,
-        "f1": 0.2,
-        "known": false,
-        "prompt_tokens": 61,
-        "completion_tokens": 6,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Robin Williams, Grammy Award",
-        "em": 0.0,
-        "f1": 0.2,
-        "known": false,
-        "prompt_tokens": 61,
-        "completion_tokens": 6,
-        "cached": false
-      }
-    ],
-    "2hop__335899_124498": [
-      {
-        "sample": 0,
-        "pred": "Brel",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 77,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Victor Hugo",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 57,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Jordy Lemoine's father, Philippe Lemoine",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 58,
-        "completion_tokens": 14,
-        "cached": false
-      }
-    ],
-    "3hop1__390489_502967_84283": [
-      {
-        "sample": 0,
-        "pred": "Bela Fleck",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 63,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Barry White",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 62,
-        "completion_tokens": 4,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Jared Hasselhoff",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 63,
-        "completion_tokens": 6,
-        "cached": false
-      }
-    ],
-    "2hop__197470_271394": [
-      {
-        "sample": 0,
-        "pred": "Unknown",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 73,
-        "completion_tokens": 2,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Not available",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 53,
-        "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Not available",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 73,
-        "completion_tokens": 3,
-        "cached": false
-      }
-    ],
-    "2hop__215896_460425": [
-      {
-        "sample": 0,
-        "pred": "Universal Pictures, United States",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 77,
-        "completion_tokens": 6,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Universal Pictures, Los Angeles",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 77,
-        "completion_tokens": 6,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Universal Pictures, Los Angeles",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 58,
-        "completion_tokens": 6,
-        "cached": false
-      }
-    ],
-    "2hop__40485_40501": [
-      {
-        "sample": 0,
-        "pred": "50,000 to Prussia, 20,000 to England",
-        "em": 0.0,
-        "f1": 0.2222222222222222,
-        "known": false,
-        "prompt_tokens": 65,
-        "completion_tokens": 14,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "50,000 to 80,000 to Prussia, 40,000 to England, and 20,000 to the Netherlands",
-        "em": 0.0,
-        "f1": 0.13333333333333333,
-        "known": false,
-        "prompt_tokens": 66,
-        "completion_tokens": 29,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "50,000 to the Netherlands",
+        "pred": "Non fumus sed ignis",
         "em": 0.0,
         "f1": 0.3333333333333333,
-        "known": false,
-        "prompt_tokens": 65,
-        "completion_tokens": 7,
-        "cached": false
-      }
-    ],
-    "2hop__656411_345851": [
-      {
-        "sample": 0,
-        "pred": "Hollywood Records",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 59,
-        "completion_tokens": 4,
-        "cached": false
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       },
       {
         "sample": 1,
-        "pred": "Hollywood Records",
+        "pred": "Non mobis imperhabitis",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 68,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Non quo, sed quo modo advenias",
+        "em": 0.0,
+        "f1": 0.25,
+        "prompt_tokens": 68,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:80946842:1": [
+      {
+        "sample": 0,
+        "pred": "Brenda Song",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 56,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Natalie Portman",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 56,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Mark Hamill",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:80946842:2": [
+      {
+        "sample": 0,
+        "pred": "A Christmas Carol",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 76,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Oklahoma!",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 76,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Oklahoma",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 76,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:109835:1": [
+      {
+        "sample": 0,
+        "pred": "1904 World's Fair in St. Louis",
+        "em": 0.0,
+        "f1": 0.2,
+        "prompt_tokens": 84,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "1893 World's Columbian Exposition",
+        "em": 0.0,
+        "f1": 0.25,
+        "prompt_tokens": 64,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "1904 World's Fair",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "wiki:109835:2": [
+      {
+        "sample": 0,
+        "pred": "6",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "6",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 82,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "6",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 82,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "wiki:1580208:1": [
+      {
+        "sample": 0,
+        "pred": "The Mojo Wire",
         "em": 1.0,
         "f1": 1.0,
-        "known": true,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "The Mojo Wire",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "The Mojo Wire",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "wiki:1580208:2": [
+      {
+        "sample": 0,
+        "pred": "Massachusetts, District of Columbia",
+        "em": 0.0,
+        "f1": 0.25,
+        "prompt_tokens": 64,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Massachusetts, Washington D.C",
+        "em": 0.0,
+        "f1": 0.8571428571428571,
+        "prompt_tokens": 84,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Massachusetts, District of Columbia",
+        "em": 0.0,
+        "f1": 0.25,
+        "prompt_tokens": 64,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "wiki:61827050:1": [
+      {
+        "sample": 0,
+        "pred": "CNN en Español",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "CNN en Español",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "CNN en Español",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:61827050:2": [
+      {
+        "sample": 0,
+        "pred": "Maya in the Moment",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Maya in the Moment",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Maya in the Moment",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:10715230:1": [
+      {
+        "sample": 0,
+        "pred": "Maurice Binder",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Maurice Binder",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Maurice Binder",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 89,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:10715230:2": [
+      {
+        "sample": 0,
+        "pred": "Bantam Books",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 80,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Dell Publishing",
+        "em": 0.0,
+        "f1": 0.0,
         "prompt_tokens": 60,
         "completion_tokens": 4,
-        "cached": false
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       },
       {
         "sample": 2,
-        "pred": "Hollywood Records",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 59,
-        "completion_tokens": 4,
-        "cached": false
-      }
-    ],
-    "2hop__88149_807969": [
-      {
-        "sample": 0,
-        "pred": "Blackburn Rovers",
+        "pred": "Dell Publishing",
         "em": 0.0,
         "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 63,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Manchester City",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 63,
+        "prompt_tokens": 60,
         "completion_tokens": 3,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Manchester City, Blackburn Rovers, and Liverpool",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 62,
-        "completion_tokens": 10,
-        "cached": false
-      }
-    ],
-    "4hop1__151650_5274_458768_33632": [
-      {
-        "sample": 0,
-        "pred": "Saturday",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 71,
-        "completion_tokens": 2,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Thursday",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 71,
-        "completion_tokens": 2,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Saturday",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 71,
-        "completion_tokens": 2,
-        "cached": false
-      }
-    ],
-    "2hop__763380_74735": [
-      {
-        "sample": 0,
-        "pred": "No More Lonely Nights",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 62,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "No More Lonely Nights",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 62,
-        "completion_tokens": 5,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "No More Lonely Nights",
-        "em": 0.0,
-        "f1": 0.0,
-        "known": false,
-        "prompt_tokens": 62,
-        "completion_tokens": 5,
-        "cached": false
-      }
-    ],
-    "3hop1__823336_228453_86925": [
-      {
-        "sample": 0,
-        "pred": "Fleur-de-lis",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 62,
-        "completion_tokens": 6,
-        "cached": false
-      },
-      {
-        "sample": 1,
-        "pred": "Fleur-de-lis",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 62,
-        "completion_tokens": 6,
-        "cached": false
-      },
-      {
-        "sample": 2,
-        "pred": "Fleur-de-lis",
-        "em": 1.0,
-        "f1": 1.0,
-        "known": true,
-        "prompt_tokens": 62,
-        "completion_tokens": 6,
-        "cached": false
+        "cached": false,
+        "judge_correct": false,
+        "known": false
       }
     ]
   }

@@ -1,12 +1,21 @@
 {
-  "candidates_run": 40,
+  "known_method": "llm_judge",
+  "candidates_run": 20,
   "leaked_excluded": 6,
-  "survived": 34,
-  "survival_rate": 0.85,
-  "leak_rate": 0.15,
-  "n_target": 150,
-  "kept": 34,
+  "leaked_qids": [
+    "wiki:841542:2",
+    "wiki:51952678:2",
+    "wiki:109835:1",
+    "wiki:109835:2",
+    "wiki:1580208:1",
+    "wiki:1580208:2"
+  ],
+  "survived": 14,
+  "survival_rate": 0.7,
+  "leak_rate": 0.3,
+  "n_target": 20,
+  "kept": 14,
   "target_met": false,
-  "closed_book_mean_em": 0.10833333333333334,
-  "closed_book_mean_f1": 0.18939445222533458
+  "closed_book_mean_em": 0.1,
+  "closed_book_mean_f1": 0.26843101343101344
 }

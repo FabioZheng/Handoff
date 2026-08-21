@@ -194,7 +194,8 @@ def prepare_questions(client, base_cfg: dict, chain_cfg: dict, args, data_root: 
             )
             filter_cfg = chain_data.filter_config(base_cfg, args.n)
             questions, report = data_mod.apply_c1(
-                client, candidates, filter_cfg, base_cfg["runtime"]["concurrency"]
+                client, candidates, filter_cfg, base_cfg["runtime"]["concurrency"],
+                dry_run=args.dry_run,
             )
             if len(questions) < args.n:
                 print(f"[chain:stage0] WARNING {dataset}: only {len(questions)}/{args.n} survived C1")

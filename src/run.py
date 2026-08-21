@@ -95,13 +95,20 @@ def stage0(client, cfg, args) -> list[Question]:
     out_path = DATA_DIR / "filtered_questions.jsonl"
     report_path = RESULTS_DIR / "c1_filter_report.json"
 
-    if out_path.exists() and not args.force:
-        qs = data_mod.read_filtered(out_path)
-        print(f"[stage0] reusing {len(qs)} filtered questions from {out_path}")
-        if report_path.exists():
-            rep = json.loads(report_path.read_text(encoding="utf-8"))
-            _print_c1(rep)
-        return qs
+    manifest = data_mod.stage0_manifest(cfg, ROOT)
+    manifest["candidates_override"] = args.candidates or None
+
+    if not args.force:
+        qs = data_mod.read_filtered(out_path, manifest)
+        if qs is not None:
+            print(f"[stage0] reusing {len(qs)} filtered questions from {out_path}")
+            if report_path.exists():
+                rep = json.loads(report_path.read_text(encoding="utf-8"))
+                _print_c1(rep)
+            return qs
+        if out_path.exists():
+            print(f"[stage0] {out_path} is stale (dataset/config no longer matches "
+                  f"its recorded manifest) -- regenerating")
 
     candidates = data_mod.sample_candidates(cfg, ROOT)
     if args.candidates:
@@ -109,7 +116,8 @@ def stage0(client, cfg, args) -> list[Question]:
     print(f"[stage0] C1 closed-book filter on {len(candidates)} candidates "
           f"({cfg['leakage_filter']['samples']} samples @ T={cfg['leakage_filter']['temperature']})")
 
-    kept, report = data_mod.apply_c1(client, candidates, cfg, cfg["runtime"]["concurrency"])
+    kept, report = data_mod.apply_c1(
+        client, candidates, cfg, cfg["runtime"]["concurrency"], dry_run=args.dry_run)
 
     if args.dry_run:
         # Closed-book answers are stubs under --dry-run, so the survivor set is
@@ -123,7 +131,7 @@ def stage0(client, cfg, args) -> list[Question]:
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     (RESULTS_DIR / "c1_filter_summary.json").write_text(
         json.dumps(slim, ensure_ascii=False, indent=2), encoding="utf-8")
-    data_mod.write_filtered(kept, out_path)
+    data_mod.write_filtered(kept, out_path, manifest)
     (DATA_DIR / "sampled_ids.json").write_text(
         json.dumps({"seed": cfg["sampling"]["seed"], "ids": [q.qid for q in kept]},
                    ensure_ascii=False, indent=2), encoding="utf-8")
@@ -135,10 +143,13 @@ def stage0(client, cfg, args) -> list[Question]:
 
 
 def _print_c1(rep: dict) -> None:
-    print(f"[stage0] C1 leakage filter: {rep['candidates_run']} candidates -> "
+    method = rep.get("known_method", "f1_threshold")
+    print(f"[stage0] C1 leakage filter ({method}): {rep['candidates_run']} candidates -> "
           f"{rep['survived']} survived ({100 * rep['survival_rate']:.1f}%), "
           f"{rep['leaked_excluded']} excluded as already-known "
           f"({100 * rep['leak_rate']:.1f}% leak rate)")
+    if rep.get("leaked_qids"):
+        print(f"[stage0] leaked qids: {', '.join(rep['leaked_qids'])}")
     print(f"[stage0] closed-book mean EM={rep['closed_book_mean_em']:.3f} "
           f"F1={rep['closed_book_mean_f1']:.3f} over all attempts")
 

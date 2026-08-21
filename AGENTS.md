@@ -68,8 +68,11 @@ argument. Cost is hard-capped at `$15.0` in `config.yaml` (`cost.cap_usd`).
   weaken it to make a mechanism easier to implement.
 - Config is centralized in `config.yaml` so the whole pipeline is
   model-agnostic — change `model.id` there, not in code, for a second-model
-  robustness check (note: this invalidates the C1 leakage filter, which is
-  model-specific — delete `data/filtered_questions.jsonl` or pass `--force`).
+  robustness check. `data/filtered_questions.jsonl` carries a manifest (model
+  id, dataset source + content hash, sampling, leakage-filter config) as its
+  first line; `stage0` auto-regenerates it when the manifest no longer
+  matches the current config or dataset file, so no manual delete or
+  `--force` is needed for this specific case.
 
 ## Decisions
 

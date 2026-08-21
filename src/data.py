@@ -8,6 +8,7 @@ temperature 0.7 and kept only if all three attempts fail.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import random
 import re
@@ -209,6 +210,45 @@ def build_question(row, rng_seed: int) -> Question:
     )
 
 
+def _hash_file(path: Path) -> str | None:
+    if not path.exists():
+        return None
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def stage0_manifest(cfg: dict, repo_root: Path) -> dict:
+    """Everything that determines the C1-filtered survivor set.
+
+    Written as the first line of ``filtered_questions.jsonl`` (same convention
+    as ``chain_data.write_questions`` and the generated Wikipedia dataset
+    files) so a cached filter output can be validated against the *current*
+    config and source data, not just trusted because it exists on disk. The
+    source file is content-hashed rather than just path-compared: swapping in
+    a rebuilt dataset at the same path (as happened when the Wikipedia
+    dataset was regenerated) must invalidate the cache even though every
+    config value is unchanged.
+    """
+    ds = cfg["dataset"]
+    if ds.get("source") == "generated_wikipedia":
+        source_path = ds["local_jsonl"]
+    else:
+        source_path = ds.get("local_parquet")
+    judge = cfg.get("judge") or {}
+    return {
+        "dataset_source": ds.get("source", "musique"),
+        "dataset_name": ds.get("name"),
+        "source_path": source_path,
+        "source_hash": _hash_file(repo_root / source_path) if source_path else None,
+        "model_id": cfg["model"]["id"],
+        "sampling_seed": cfg["sampling"]["seed"],
+        "n_candidates": cfg["sampling"]["n_candidates"],
+        "n_target": cfg["sampling"]["n_target"],
+        "leakage_filter": cfg["leakage_filter"],
+        "judge_enabled": bool(judge.get("enabled")),
+        "judge_model_id": judge.get("model_id") if judge.get("enabled") else None,
+    }
+
+
 def sample_candidates(cfg: dict, repo_root: Path) -> list[Question]:
     import pandas as pd
 
@@ -262,13 +302,14 @@ def closed_book_attempts(client, q: Question, cfg: dict) -> list[dict]:
         )
         pred = extract_short_answer(res.text)
         em, f1 = score_against_golds(pred, q.golds)
+        # "known" is filled in by apply_c1 once every attempt has been generated:
+        # by LLM judge when enabled, else by the em/f1 fallback below.
         out.append(
             {
                 "sample": k,
                 "pred": pred,
                 "em": em,
                 "f1": f1,
-                "known": bool(em == 1.0 or f1 >= lf["f1_known_threshold"]),
                 "prompt_tokens": res.prompt_tokens,
                 "completion_tokens": res.completion_tokens,
                 "cached": res.cached,
@@ -277,17 +318,52 @@ def closed_book_attempts(client, q: Question, cfg: dict) -> list[dict]:
     return out
 
 
-def apply_c1(client, candidates: list[Question], cfg: dict, concurrency: int) -> tuple[list[Question], dict]:
-    """Run the closed-book filter and return (survivors, filter report)."""
+def apply_c1(
+    client, candidates: list[Question], cfg: dict, concurrency: int, dry_run: bool = False,
+) -> tuple[list[Question], dict]:
+    """Run the closed-book filter and return (survivors, filter report).
+
+    A closed-book attempt counts as "the model already knows this" via an LLM
+    judge verdict (semantic match against the gold, same judge used for the
+    main experiment's answers) when ``judge.enabled`` in config, since token-F1
+    is a poor leakage signal for short entity-name answers: generic phrase
+    overlap (e.g. "... University School of Medicine") clears a fixed F1
+    threshold even when the model named the wrong entity. Falls back to the
+    em/f1 threshold only if the judge is disabled.
+    """
+    import judge as judge_mod
     from concurrent.futures import ThreadPoolExecutor
 
     n_target = cfg["sampling"]["n_target"]
+    lf = cfg["leakage_filter"]
     records: dict[str, list[dict]] = {}
 
     with ThreadPoolExecutor(max_workers=concurrency) as ex:
         futs = {ex.submit(closed_book_attempts, client, q, cfg): q for q in candidates}
         for fut, q in futs.items():
             records[q.qid] = fut.result()
+
+    qmap = {q.qid: q for q in candidates}
+    use_judge = judge_mod.judge_config(cfg)["enabled"] and not dry_run
+
+    if use_judge:
+        rows = [
+            {"qid": qid, "sample": a["sample"], "question": qmap[qid].question,
+             "pred": a["pred"], "golds": qmap[qid].golds}
+            for qid, attempts in records.items() for a in attempts
+        ]
+        judge_mod.add_judge(rows, cfg, dry_run=dry_run, tag="c1_leakage_judge")
+        verdicts = {(r["qid"], r["sample"]): bool(r["judge_correct"]) for r in rows}
+        for qid, attempts in records.items():
+            for a in attempts:
+                a["judge_correct"] = verdicts[(qid, a["sample"])]
+                a["known"] = a["judge_correct"]
+        known_method = "llm_judge"
+    else:
+        for attempts in records.values():
+            for a in attempts:
+                a["known"] = bool(a["em"] == 1.0 or a["f1"] >= lf["f1_known_threshold"])
+        known_method = "f1_threshold"
 
     survivors: list[Question] = []
     leaked: list[str] = []
@@ -300,8 +376,10 @@ def apply_c1(client, candidates: list[Question], cfg: dict, concurrency: int) ->
 
     kept = survivors[:n_target]
     report = {
+        "known_method": known_method,
         "candidates_run": len(candidates),
         "leaked_excluded": len(leaked),
+        "leaked_qids": leaked,
         "survived": len(survivors),
         "survival_rate": len(survivors) / len(candidates) if candidates else 0.0,
         "leak_rate": len(leaked) / len(candidates) if candidates else 0.0,
@@ -317,19 +395,39 @@ def apply_c1(client, candidates: list[Question], cfg: dict, concurrency: int) ->
     return kept, report
 
 
-def write_filtered(questions: list[Question], path: Path) -> None:
+def write_filtered(questions: list[Question], path: Path, manifest: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as fh:
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps({"_manifest": manifest}, ensure_ascii=False) + "\n")
         for q in questions:
             fh.write(json.dumps(q.to_json(), ensure_ascii=False) + "\n")
+    tmp.replace(path)
     print(f"[data] wrote {len(questions)} questions -> {path}")
 
 
-def read_filtered(path: Path) -> list[Question]:
-    out = []
+def read_filtered(path: Path, expected_manifest: dict) -> list[Question] | None:
+    """Return survivors from ``path``, or None if missing/stale.
+
+    Stale covers both a manifest that no longer matches ``expected_manifest``
+    (dataset source, model, sampling, or filter config changed) and a legacy
+    file with no manifest line at all -- the caller should treat None exactly
+    like a cache miss and regenerate.
+    """
+    if not path.exists():
+        return None
     with open(path, "r", encoding="utf-8") as fh:
+        first_line = fh.readline().strip()
+        if not first_line:
+            return None
+        first = json.loads(first_line)
+        if "_manifest" not in first:
+            return None  # legacy file predating manifest validation
+        if first["_manifest"] != expected_manifest:
+            return None
+        out = []
         for line in fh:
             line = line.strip()
             if line:
                 out.append(Question.from_json(json.loads(line)))
-    return out
+        return out
