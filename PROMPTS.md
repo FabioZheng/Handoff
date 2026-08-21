@@ -418,19 +418,24 @@ reuses shared `ANSWER_SYSTEM`. User message:
 
 ### Dataset variants
 
-Two pair-construction functions build the `pairs` list these prompts run
-over, selected by `dataset.source` in the config — the prompts above are
-identical either way:
+Two pair-construction paths feed the prompts above, selected by
+`dataset.source` in the config -- the prompts themselves are identical
+either way:
 
-- `construct_pairs()` (SQuAD, default): question A and B come from two
-  *different* articles glued into one shared context, plus real SQuAD
-  distractors.
-- `construct_pairs_wikipedia()` (`dataset.source: generated_wikipedia`,
-  [`run_summary_generalization.py:167`](src/run_summary_generalization.py#L167)):
-  reuses the two questions the self-generated Wikipedia dataset already
-  writes per page against its *one* shared passage, so A and B are genuinely
-  about the same source; the other nine built pages fill out the context as
-  distractors.
+- `construct_pairs()` (default; used by `summary_generalization_config.yaml`
+  and `summary_generalization_depth10_config.yaml`): question A and B come
+  from two *different* SQuAD articles glued into one shared context, plus
+  real SQuAD distractors. This is the original design and its results
+  (`summary_generalization_v2*`) are still cited in the report as the
+  separate-passage comparison point.
+- `load_prebuilt_pairs()` (`dataset.source: prebuilt_pairs`, used by
+  `summary_generalization_squad_pairs_config.yaml`): loads a dataset built
+  and validated ahead of time by
+  [`src/build_squad_same_passage.py`](src/build_squad_same_passage.py). Each
+  example takes two native SQuAD questions from one *shared* SQuAD passage,
+  placed at a stratified slot among nine length-matched SQuAD distractors,
+  with both questions independently audited for salience/independence and
+  filtered through the project's closed-book C1 leakage check.
 
 ---
 
