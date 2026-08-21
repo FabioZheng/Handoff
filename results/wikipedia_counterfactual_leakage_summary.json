@@ -1,0 +1,16 @@
+{
+  "known_method": "llm_judge",
+  "candidates_run": 20,
+  "leaked_excluded": 1,
+  "leaked_qids": [
+    "wiki:10715230:2"
+  ],
+  "survived": 19,
+  "survival_rate": 0.95,
+  "leak_rate": 0.05,
+  "n_target": 20,
+  "kept": 19,
+  "target_met": false,
+  "closed_book_mean_em": 0.03333333333333333,
+  "closed_book_mean_f1": 0.13400793650793652
+}

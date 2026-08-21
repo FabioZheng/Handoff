@@ -1,0 +1,718 @@
+{
+  "known_method": "llm_judge",
+  "candidates_run": 20,
+  "leaked_excluded": 1,
+  "leaked_qids": [
+    "wiki:10715230:2"
+  ],
+  "survived": 19,
+  "survival_rate": 0.95,
+  "leak_rate": 0.05,
+  "n_target": 20,
+  "kept": 19,
+  "target_met": false,
+  "closed_book_mean_em": 0.03333333333333333,
+  "closed_book_mean_f1": 0.13400793650793652,
+  "attempts": {
+    "wiki:61827050:1": [
+      {
+        "sample": 0,
+        "pred": "CNN en Español",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "CNN en Español",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "CNN en Español",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:61827050:2": [
+      {
+        "sample": 0,
+        "pred": "Maya in the Moment",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Maya in the Moment",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 6,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Maya in the Moment",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 6,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:386875:1": [
+      {
+        "sample": 0,
+        "pred": "1974",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "1977",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 2,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "1974",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:386875:2": [
+      {
+        "sample": 0,
+        "pred": "63-68 days",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 61,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "63-65 days",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "63-65 days",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:1580208:1": [
+      {
+        "sample": 0,
+        "pred": "The Mojo Wire",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "The Mojo Wire",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "The Mojo Wire",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:1580208:2": [
+      {
+        "sample": 0,
+        "pred": "Massachusetts, District of Columbia",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 7,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Massachusetts, Washington D.C",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Massachusetts, District of Columbia",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 7,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:54831550:1": [
+      {
+        "sample": 0,
+        "pred": "MK-1",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "MK-1",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "MKN-2000-001",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:54831550:2": [
+      {
+        "sample": 0,
+        "pred": "A telescope",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 88,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Telescope",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 88,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Telescope",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 88,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:80946842:1": [
+      {
+        "sample": 0,
+        "pred": "Brenda Song",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 56,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Natalie Portman",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 56,
+        "completion_tokens": 6,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Mark Hamill",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:80946842:2": [
+      {
+        "sample": 0,
+        "pred": "A Christmas Carol",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 76,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Oklahoma!",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 76,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Oklahoma",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 76,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:51952678:1": [
+      {
+        "sample": 0,
+        "pred": "Bills",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Chasing Pavements",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 7,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Nobody's Perfect",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 6,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:51952678:2": [
+      {
+        "sample": 0,
+        "pred": "Baby Records",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Baby Records",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Baby Records",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 85,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:10715230:1": [
+      {
+        "sample": 0,
+        "pred": "Maurice Binder",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Maurice Binder",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Maurice Binder",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 89,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:10715230:2": [
+      {
+        "sample": 0,
+        "pred": "Bantam Books",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 80,
+        "completion_tokens": 5,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Dell Publishing",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Dell Publishing",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 3,
+        "cached": true,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "wiki:109835:1": [
+      {
+        "sample": 0,
+        "pred": "1904 World's Fair in St. Louis",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 84,
+        "completion_tokens": 10,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "1893 World's Columbian Exposition",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "prompt_tokens": 64,
+        "completion_tokens": 9,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "1904 World's Fair",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:109835:2": [
+      {
+        "sample": 0,
+        "pred": "6",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 2,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "6",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 82,
+        "completion_tokens": 2,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "6",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 82,
+        "completion_tokens": 2,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:841542:1": [
+      {
+        "sample": 0,
+        "pred": "Tulane University School of Medicine",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Vanderbilt University School of Medicine",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Tulane University School of Medicine",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:841542:2": [
+      {
+        "sample": 0,
+        "pred": "April 25, 1904 – March 5, 1905",
+        "em": 0.0,
+        "f1": 0.2857142857142857,
+        "prompt_tokens": 69,
+        "completion_tokens": 16,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "April 25, 1906 - March 5, 1907",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 70,
+        "completion_tokens": 16,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "April 25, 1904 – March 5, 1905",
+        "em": 0.0,
+        "f1": 0.2857142857142857,
+        "prompt_tokens": 69,
+        "completion_tokens": 16,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:36221750:1": [
+      {
+        "sample": 0,
+        "pred": "17th century",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 73,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "17th century",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 93,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "17th century",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 73,
+        "completion_tokens": 4,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "wiki:36221750:2": [
+      {
+        "sample": 0,
+        "pred": "Non fumus sed ignis",
+        "em": 0.0,
+        "f1": 0.3333333333333333,
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Non mobis imperhabitis",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 68,
+        "completion_tokens": 7,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Non quo, sed quo modo advenias",
+        "em": 0.0,
+        "f1": 0.25,
+        "prompt_tokens": 68,
+        "completion_tokens": 10,
+        "cached": true,
+        "judge_correct": false,
+        "known": false
+      }
+    ]
+  }
+}
