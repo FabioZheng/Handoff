@@ -30,6 +30,17 @@ from llm import LLMClient, load_config  # noqa: E402
 from retrieval import BM25Index, content_fingerprint  # noqa: E402
 from score import bootstrap_ci, extract_short_answer, paired_bootstrap_delta, score_against_golds  # noqa: E402
 
+
+def arm_name(negative_type: str, signal_condition: str) -> str:
+    """Keep legacy hard-arm ids so their prior cached results remain reusable."""
+    return signal_condition if negative_type == "hard" else f"{negative_type}_{signal_condition}"
+
+
+def arm_specs(cfg: dict) -> list[tuple[str, str, str, int]]:
+    return [(arm_name(negative_type, condition), negative_type, condition, relevant)
+            for negative_type in cfg["negative_types"]
+            for condition, relevant in cfg["conditions"].items()]
+
 SYSTEM = ("You are a research handoff agent. Preserve every fact needed to answer the question. "
           "Your notes replace your entire input for the next agent, so omitted information is lost. "
           "Do not answer the question directly.")
@@ -114,6 +125,7 @@ def make_base_packs(cfg: dict, n: int, write: bool) -> tuple[list[dict], BM25Ind
         by_title.setdefault(row["title"], []).append(row)
     bm25, doc_lookup = build_paragraph_index(source)
     top_k = cfg["dataset"]["bm25_top_k"]
+    bottom_k = cfg["dataset"]["bm25_bottom_k"]
     # One source paragraph is the answer-bearing core; each of the ten gold
     # documents also needs a different same-article extension.
     candidates = [row for row in source if len({x["context"] for x in by_title[row["title"]]}) >= cfg["dataset"]["passages_per_query"] + 1]
@@ -137,7 +149,11 @@ def make_base_packs(cfg: dict, n: int, write: bool) -> tuple[list[dict], BM25Ind
         hard_negatives = [doc_id for doc_id, _ in retrieved
                           if doc_lookup[doc_id]["title"] != item["title"]
                           and not any(a in doc_lookup[doc_id]["context"].casefold() for a in answer_strings)]
-        if len(hard_negatives) < width - 1:
+        bottom = bm25.bottom_k(item["question"], bottom_k)
+        easy_negatives = [doc_id for doc_id, _ in bottom
+                          if doc_lookup[doc_id]["title"] != item["title"]
+                          and not any(a in doc_lookup[doc_id]["context"].casefold() for a in answer_strings)]
+        if len(hard_negatives) < width - 1 or len(easy_negatives) < width - 1:
             continue
         rng.shuffle(extensions)
         docs = []
@@ -149,29 +165,34 @@ def make_base_packs(cfg: dict, n: int, write: bool) -> tuple[list[dict], BM25Ind
                          "is_relevant": True, "source_title": item["title"]})
         assert len(docs) == width and all(item["context"] in doc["text"] for doc in docs)
         chosen.append({"qid": item["qid"], "question": item["question"], "golds": item["golds"],
-                       "title": item["title"], "gold_passages": docs, "hard_negative_ids": hard_negatives})
+                       "title": item["title"], "gold_passages": docs,
+                       "hard_negative_ids": hard_negatives, "easy_negative_ids": easy_negatives})
         used_qids.add(item["qid"])
         if len(chosen) == n:
             break
     if len(chosen) < n:
-        raise RuntimeError(f"only built {len(chosen)}/{n} redundant-evidence packs with >= {width - 1} BM25 hard negatives "
+        raise RuntimeError(f"only built {len(chosen)}/{n} redundant-evidence packs with >= {width - 1} BM25 hard and easy negatives "
                             f"(raise bm25_top_k if this is short)")
     if write:
         write_jsonl(ROOT / cfg["outputs"]["data_root"] / f"base_packs_n{n}.jsonl", chosen)
     return chosen, bm25, doc_lookup
 
 
-def condition_pack(base: dict, doc_lookup: dict[str, dict], condition: str, relevant: int, cfg: dict) -> dict:
+def condition_pack(base: dict, doc_lookup: dict[str, dict], condition: str, relevant: int,
+                   negative_type: str, cfg: dict) -> dict:
     width = cfg["dataset"]["passages_per_query"]
     rng = random.Random(f"{cfg['dataset']['sample_seed']}:{base['qid']}:{condition}")
     indices = list(range(width))
     rng.shuffle(indices)
     keep = set(indices[:relevant])
-    neg_order = base["hard_negative_ids"][:]
-    random.Random(f"{cfg['dataset']['sample_seed']}:{base['qid']}:{condition}:negatives").shuffle(neg_order)
+    neg_order = base[f"{negative_type}_negative_ids"][:]
+    neg_seed = (f"{cfg['dataset']['sample_seed']}:{base['qid']}:{condition}:negatives"
+                if negative_type == "hard" else
+                f"{cfg['dataset']['sample_seed']}:easy:{base['qid']}:{condition}:negatives")
+    random.Random(neg_seed).shuffle(neg_order)
     fill_n = width - relevant
     if len(neg_order) < fill_n:
-        raise RuntimeError(f"insufficient BM25 hard negatives for {base['qid']}")
+        raise RuntimeError(f"insufficient BM25 {negative_type} negatives for {base['qid']}")
     distractors = neg_order[:fill_n]
     docs = []
     for index in range(width):
@@ -184,7 +205,8 @@ def condition_pack(base: dict, doc_lookup: dict[str, dict], condition: str, rele
     rng.shuffle(docs)
     assert len(docs) == width and sum(doc["is_relevant"] for doc in docs) == relevant
     assert all(not doc["is_relevant"] or base["gold_passages"][0]["text"].split("\n\n", 1)[0] in doc["text"] for doc in docs)
-    return {"condition": condition, "relevant_count": relevant, "passages": docs,
+    return {"condition": arm_name(negative_type, condition), "negative_type": negative_type,
+            "signal_condition": condition, "relevant_count": relevant, "passages": docs,
             **{key: base[key] for key in ("qid", "question", "golds", "title")}}
 
 
@@ -192,13 +214,15 @@ def construct(cfg: dict, n: int, write: bool) -> tuple[list[dict], list[dict]]:
     base, bm25, doc_lookup = make_base_packs(cfg, n, write)
     packs, report = [], []
     width = cfg["dataset"]["passages_per_query"]
-    for condition, count in cfg["conditions"].items():
-        packs.extend(condition_pack(row, doc_lookup, condition, count, cfg) for row in base)
-        report.append({"condition": condition, "questions": n, "passages_per_query": width,
+    for condition_id, negative_type, condition, count in arm_specs(cfg):
+        packs.extend(condition_pack(row, doc_lookup, condition, count, negative_type, cfg) for row in base)
+        report.append({"condition": condition_id, "negative_type": negative_type,
+                       "signal_condition": condition, "questions": n, "passages_per_query": width,
                        "answer_sufficient_gold_passages": count, "distractors": width - count,
                        "signal_ratio": count / width, "same_question_for_all_gold_passages": True,
                        "source_paragraph_present_in_every_gold_passage": True})
-    assert [row["signal_ratio"] for row in report] == [1.0, 0.5, 0.1]
+    for negative_type in cfg["negative_types"]:
+        assert [row["signal_ratio"] for row in report if row["negative_type"] == negative_type] == [1.0, 0.5, 0.1]
     if write:
         root = ROOT / cfg["outputs"]["data_root"]
         write_jsonl(root / f"packs_n{n}.jsonl", packs)
@@ -237,10 +261,12 @@ def answer(client, pack: dict, material: str, cfg: dict, tag: str) -> dict:
 def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
     boot, ci = cfg["analysis"]["bootstrap_resamples"], cfg["analysis"]["ci_level"]
     metrics, values = [], {}
-    for condition in cfg["conditions"]:
+    for condition, negative_type, signal_condition, relevant_count in arm_specs(cfg):
         for depth in cfg["depths"]:
             subset = sorted((r for r in rows if r["condition"] == condition and int(r["depth"]) == depth), key=lambda r: r["qid"])
-            record = {"condition": condition, "signal_ratio": cfg["conditions"][condition] / 10, "depth": depth, "n": len(subset)}
+            record = {"condition": condition, "negative_type": negative_type,
+                      "signal_condition": signal_condition, "signal_ratio": relevant_count / 10,
+                      "depth": depth, "n": len(subset)}
             values[(condition, depth)] = {}
             for metric in ("em", "f1", "judge_correct"):
                 vector = np.array([r[metric] for r in subset])
@@ -249,23 +275,35 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
                 record.update({metric: round(mean, 4), f"{metric}_lo": round(lo, 4), f"{metric}_hi": round(hi, 4)})
             metrics.append(record)
     deltas = []
-    for condition in cfg["conditions"]:
+    for condition, negative_type, signal_condition, _ in arm_specs(cfg):
         for depth in (d for d in cfg["depths"] if d):
             for metric in ("em", "f1", "judge_correct"):
                 current, baseline = values[(condition, depth)][metric], values[(condition, 0)][metric]
                 ids = sorted(set(current) & set(baseline))
                 delta = paired_bootstrap_delta(np.array([current[x] for x in ids]), np.array([baseline[x] for x in ids]), boot, ci, seed=73)
-                deltas.append({"comparison": "depth_minus_depth0", "condition": condition, "depth": depth, "metric": metric, **delta})
+                deltas.append({"comparison": "depth_minus_depth0", "condition": condition,
+                               "negative_type": negative_type, "signal_condition": signal_condition,
+                               "depth": depth, "metric": metric, **delta})
     # The causal retrieval-quality contrast: all prompts, questions, passage
     # count, and handoff depths are matched; only 10 vs 1 answer-sufficient
     # passages differ.
-    for depth in cfg["depths"]:
-        for metric in ("em", "f1", "judge_correct"):
-            high = values[("signal_1_0", depth)][metric]
-            low = values[("signal_0_1", depth)][metric]
-            ids = sorted(set(high) & set(low))
-            delta = paired_bootstrap_delta(np.array([high[x] for x in ids]), np.array([low[x] for x in ids]), boot, ci, seed=79)
-            deltas.append({"comparison": "signal_1_0_minus_signal_0_1", "condition": "signal_1_0_minus_signal_0_1", "depth": depth, "metric": metric, **delta})
+    for negative_type in cfg["negative_types"]:
+        for depth in cfg["depths"]:
+            for metric in ("em", "f1", "judge_correct"):
+                high = values[(arm_name(negative_type, "signal_1_0"), depth)][metric]
+                low = values[(arm_name(negative_type, "signal_0_1"), depth)][metric]
+                ids = sorted(set(high) & set(low))
+                delta = paired_bootstrap_delta(np.array([high[x] for x in ids]), np.array([low[x] for x in ids]), boot, ci, seed=79)
+                deltas.append({"comparison": "signal_1_0_minus_signal_0_1", "condition": f"{negative_type}_signal_1_0_minus_signal_0_1", "negative_type": negative_type, "depth": depth, "metric": metric, **delta})
+    for signal_condition in cfg["conditions"]:
+        for depth in cfg["depths"]:
+            for metric in ("em", "f1", "judge_correct"):
+                hard = values[(arm_name("hard", signal_condition), depth)][metric]
+                easy = values[(arm_name("easy", signal_condition), depth)][metric]
+                ids = sorted(set(hard) & set(easy))
+                delta = paired_bootstrap_delta(np.array([hard[x] for x in ids]), np.array([easy[x] for x in ids]), boot, ci, seed=83)
+                deltas.append({"comparison": "hard_minus_easy", "condition": signal_condition,
+                               "signal_condition": signal_condition, "depth": depth, "metric": metric, **delta})
     write_csv(root / "metrics.csv", metrics)
     write_csv(root / "deltas.csv", deltas)
     import matplotlib
@@ -273,25 +311,31 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
     import matplotlib.pyplot as plt
     labels = {"signal_1_0": "10 answer-sufficient / 0 distractor", "signal_0_5": "5 answer-sufficient / 5 distractor", "signal_0_1": "1 answer-sufficient / 9 distractor"}
     colors = {"signal_1_0": "#1b9e77", "signal_0_5": "#7570b3", "signal_0_1": "#d95f02"}
-    fig, axes = plt.subplots(1, 3, figsize=(17, 4.5))
-    for condition in cfg["conditions"]:
+    styles = {"hard": "-", "easy": "--"}
+    fig, axes = plt.subplots(1, 3, figsize=(18, 4.8))
+    for condition, negative_type, signal_condition, _ in arm_specs(cfg):
+        # With zero distractors, hard/easy contexts are byte-identical. Keep
+        # both rows in the metrics/deltas as a control, but draw one line.
+        if negative_type == "easy" and signal_condition == "signal_1_0":
+            continue
         subset = sorted((r for r in metrics if r["condition"] == condition), key=lambda r: r["depth"])
         x, y = [r["depth"] for r in subset], [r["f1"] for r in subset]
-        axes[0].plot(x, y, marker="o", color=colors[condition], label=labels[condition])
-        axes[1].plot(x, [score / y[0] if y[0] else float("nan") for score in y], marker="o", color=colors[condition], label=labels[condition])
+        label = f"{labels[signal_condition]} / {negative_type}"
+        axes[0].plot(x, y, marker="o", linestyle=styles[negative_type], color=colors[signal_condition], label=label)
+        axes[1].plot(x, [score / y[0] if y[0] else float("nan") for score in y], marker="o", linestyle=styles[negative_type], color=colors[signal_condition], label=label)
         judge = [r["judge_correct"] for r in subset]
         lower = [r["judge_correct"] - r["judge_correct_lo"] for r in subset]
         upper = [r["judge_correct_hi"] - r["judge_correct"] for r in subset]
         axes[2].errorbar(x, judge, yerr=[lower, upper], marker="o", capsize=3,
-                         color=colors[condition], label=labels[condition])
-    axes[0].set(title="QA F1 by redundant-evidence ratio", xlabel="Compression handoffs", ylabel="Token F1")
+                         linestyle=styles[negative_type], color=colors[signal_condition], label=label)
+    axes[0].set(title="QA F1: hard vs easy distractors", xlabel="Compression handoffs", ylabel="Token F1")
     axes[1].set(title="Answer accuracy retained", xlabel="Compression handoffs", ylabel="F1 / depth-0 F1")
     axes[2].set(title="LLM-judge answer correctness", xlabel="Compression handoffs", ylabel="Judge accuracy")
     for axis in axes:
         axis.set_xticks(cfg["depths"])
         axis.grid(alpha=.25)
-        axis.legend(fontsize=8)
-    fig.suptitle("Fixed ten-passage contexts: answer-sufficient relevant signal")
+    axes[0].legend(fontsize=8, loc="lower left")
+    fig.suptitle("Fixed ten-passage contexts: answer-sufficient signal and distractor difficulty")
     fig.tight_layout()
     fig.savefig(root / "redundant_signal_ratio.png", dpi=180, bbox_inches="tight")
     plt.close(fig)
@@ -322,7 +366,7 @@ def main() -> int:
         pack["fp"] = content_fingerprint([p["text"] for p in pack["passages"]])
     handoff_path = run_root / "handoffs.jsonl"
     handoffs = {(r["condition"], r["qid"], r.get("fp"), int(r["stage"])): r["text"] for r in read_jsonl(handoff_path)}
-    for condition in cfg["conditions"]:
+    for condition, _, _, _ in arm_specs(cfg):
         subset = [p for p in packs if p["condition"] == condition]
         for stage in range(1, cfg["max_depth"] + 1):
             todo = [p for p in subset if (condition, p["qid"], p["fp"], stage) not in handoffs]
@@ -344,7 +388,9 @@ def main() -> int:
     with ThreadPoolExecutor(max_workers=cfg["runtime"]["concurrency"]) as pool:
         futures = {pool.submit(answer, client, pack, material, cfg, f"redundant_signal_{key[0]}_answer_d{key[1]}"): key for key, pack, material in jobs}
         for future, key in futures.items():
-            existing[key] = {"condition": key[0], "depth": key[1], "qid": key[2], "fp": key[3], **future.result()}
+            existing[key] = {"condition": key[0], "negative_type": pack["negative_type"],
+                             "signal_condition": pack["signal_condition"], "depth": key[1],
+                             "qid": key[2], "fp": key[3], **future.result()}
     rows = sorted(existing.values(), key=lambda r: (r["condition"], int(r["depth"]), r["qid"]))
     # Rows written before the judge existed carry no question text.
     questions = {p["qid"]: p["question"] for p in packs}

@@ -1,4 +1,7 @@
-condition,questions,passages_per_query,gold_retained,gold_bm25_findable,gold_labelled_by_msmarco,gold_recall_at_10
-good,2,10,7,7,8,1.0
-medium,2,10,4,7,8,0.5714
-bad,2,10,1,7,8,0.1429
+condition,negative_type,retrieval_condition,questions,passages_per_query,gold_retained,gold_bm25_findable,gold_labelled_by_msmarco,gold_recall_at_10
+good,hard,good,2,10,7,7,8,1.0
+medium,hard,medium,2,10,4,7,8,0.5714
+bad,hard,bad,2,10,1,7,8,0.1429
+easy_good,easy,good,2,10,7,7,8,1.0
+easy_medium,easy,medium,2,10,4,7,8,0.5714
+easy_bad,easy,bad,2,10,1,7,8,0.1429

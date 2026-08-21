@@ -43,6 +43,24 @@ class BM25Index:
 
     def top_k(self, query_text: str, k: int) -> list[tuple[str, float]]:
         """Return up to k (doc_id, score) pairs, highest BM25 score first."""
+        scores = self._scores(query_text)
+        ranked = sorted(scores.items(), key=lambda x: -x[1])[:k]
+        return [(self.doc_ids[doc_idx], score) for doc_idx, score in ranked]
+
+    def bottom_k(self, query_text: str, k: int) -> list[tuple[str, float]]:
+        """Return the globally lowest-ranked passages for a query.
+
+        This deliberately includes zero-overlap passages. They are the
+        easy-negative counterpart to ``top_k``: documents a lexical retriever
+        would place at the bottom, not merely arbitrary random documents.
+        """
+        scores = self._scores(query_text)
+        ranked = sorted(
+            range(len(self.doc_ids)), key=lambda idx: (scores.get(idx, 0.0), self.doc_ids[idx])
+        )[:k]
+        return [(self.doc_ids[doc_idx], scores.get(doc_idx, 0.0)) for doc_idx in ranked]
+
+    def _scores(self, query_text: str) -> dict[int, float]:
         scores: dict[int, float] = defaultdict(float)
         for term in set(tokenize(query_text)):
             idf = self.idf.get(term)
@@ -52,8 +70,7 @@ class BM25Index:
                 dl = self.doc_len[doc_idx]
                 denom = tf + self.k1 * (1 - self.b + self.b * dl / self.avgdl)
                 scores[doc_idx] += idf * (tf * (self.k1 + 1)) / denom
-        ranked = sorted(scores.items(), key=lambda x: -x[1])[:k]
-        return [(self.doc_ids[doc_idx], score) for doc_idx, score in ranked]
+        return scores
 
 
 def content_fingerprint(texts: list[str]) -> str:

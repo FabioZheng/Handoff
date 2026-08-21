@@ -1,4 +1,7 @@
-condition,questions,passages_per_query,answer_sufficient_gold_passages,distractors,signal_ratio,same_question_for_all_gold_passages,source_paragraph_present_in_every_gold_passage
-signal_1_0,20,10,10,0,1.0,True,True
-signal_0_5,20,10,5,5,0.5,True,True
-signal_0_1,20,10,1,9,0.1,True,True
+condition,negative_type,signal_condition,questions,passages_per_query,answer_sufficient_gold_passages,distractors,signal_ratio,same_question_for_all_gold_passages,source_paragraph_present_in_every_gold_passage
+signal_1_0,hard,signal_1_0,20,10,10,0,1.0,True,True
+signal_0_5,hard,signal_0_5,20,10,5,5,0.5,True,True
+signal_0_1,hard,signal_0_1,20,10,1,9,0.1,True,True
+easy_signal_1_0,easy,signal_1_0,20,10,10,0,1.0,True,True
+easy_signal_0_5,easy,signal_0_5,20,10,5,5,0.5,True,True
+easy_signal_0_1,easy,signal_0_1,20,10,1,9,0.1,True,True

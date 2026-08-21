@@ -41,6 +41,16 @@ REWRITE = "Rewrite the prior notes concisely. Preserve every fact needed to answ
 # hard negatives instead of a uniformly random unrelated passage.
 
 
+def arm_name(negative_type: str, retrieval_condition: str) -> str:
+    """Keep legacy hard-arm ids so their prior cached results remain reusable."""
+    return retrieval_condition if negative_type == "hard" else f"{negative_type}_{retrieval_condition}"
+
+
+def arm_specs(cfg: dict) -> list[tuple[str, str, str]]:
+    return [(arm_name(negative_type, condition), negative_type, condition)
+            for negative_type in cfg["negative_types"] for condition in cfg["conditions"]]
+
+
 def build_bm25_pool(raw: dict, cfg: dict, required_qids: list[str]) -> tuple[BM25Index, dict[str, dict]]:
     """Index a bounded, deterministic pool of queries' passages.
 
@@ -102,7 +112,7 @@ def passages(raw, qid):
 
 def make_packs(raw,cfg,n):
     ids=list(raw['query'].keys()); rng=random.Random(cfg['dataset']['sample_seed']); rng.shuffle(ids)
-    top_k=cfg['dataset']['bm25_top_k']
+    top_k=cfg['dataset']['bm25_top_k']; bottom_k=cfg['dataset']['bm25_bottom_k']
     # First pass: cheap structural eligibility only (answers exist, exactly
     # ten passages, at least one MS MARCO-labelled relevant). This over-collects
     # a larger candidate pool than n, because the BM25 pass below will reject
@@ -138,17 +148,23 @@ def make_packs(raw,cfg,n):
         # another query's passage that happens to be lexically on-topic.
         # BM25 rank order is preserved so condition_packs draws the hardest
         # (highest-scoring) negatives first.
-        usable_gold_set=set(usable_gold)
-        hard_negatives=[doc_id for doc_id,_ in retrieved if doc_id not in usable_gold_set]
-        if usable_gold and len(hard_negatives)>=9:
-            chosen.append({**q,'usable_gold_ids':usable_gold,'hard_negative_ids':hard_negatives})
+        # Easy negatives use the *bottom* of the same BM25 ranking. They are
+        # deliberately zero/near-zero lexical-overlap distractors, with the
+        # same own-query relevant passages excluded as in the hard arm.
+        hard_negatives=[doc_id for doc_id,_ in retrieved if doc_id not in own_relevant_ids]
+        bottom=bm25.bottom_k(q['question'],bottom_k)
+        easy_negatives=[doc_id for doc_id,_ in bottom if doc_id not in own_relevant_ids]
+        if usable_gold and len(hard_negatives)>=9 and len(easy_negatives)>=9:
+            chosen.append({**q,'usable_gold_ids':usable_gold,
+                           'hard_negative_ids':hard_negatives,
+                           'easy_negative_ids':easy_negatives})
         if len(chosen)==n: break
     if len(chosen)<n:
-        raise RuntimeError(f'only found {len(chosen)}/{n} examples with BM25-retrievable gold and >=9 hard negatives '
+        raise RuntimeError(f'only found {len(chosen)}/{n} examples with BM25-retrievable gold and >=9 hard and easy negatives '
                             f'(from {len(structural)} structurally eligible); raise structural_cap or bm25_pool_queries')
     return chosen,doc_lookup
 
-def condition_packs(packs,doc_lookup,condition,seed):
+def condition_packs(packs,doc_lookup,condition,negative_type,seed):
     # Recall target is a GLOBAL knob over every usable-gold passage pooled
     # across all queries, exactly like the pre-BM25 design -- not a per-query
     # fraction. Per-query fractions break down (e.g. round(1*.5)==0 by
@@ -163,7 +179,12 @@ def condition_packs(packs,doc_lookup,condition,seed):
     for q in packs:
         keep_ids=[doc_id for doc_id in q['usable_gold_ids'] if (q['qid'],doc_id) in keep]
         fill_n=10-len(keep_ids)
-        neg_order=q['hard_negative_ids'][:]; random.Random(f'{seed}:{condition}:{q["qid"]}:negatives').shuffle(neg_order)
+        neg_order=q[f'{negative_type}_negative_ids'][:]
+        # The hard arm keeps its prior construction seed. Easy negatives add
+        # only a type namespace; gold selection and final passage positions
+        # remain matched across the two difficulties.
+        neg_seed=f'{seed}:{condition}:{q["qid"]}:negatives' if negative_type=='hard' else f'{seed}:easy:{condition}:{q["qid"]}:negatives'
+        random.Random(neg_seed).shuffle(neg_order)
         fill_ids=neg_order[:fill_n]
         assert len(fill_ids)==fill_n, f'not enough hard negatives for {q["qid"]}/{condition}: need {fill_n}, have {len(neg_order)}'
         chosen_ids=keep_ids+fill_ids
@@ -174,7 +195,9 @@ def condition_packs(packs,doc_lookup,condition,seed):
             ps.append({'text':src['text'],'url':src['url'],'source_qid':src['qid'],
                        'selected':int(doc_id in keep_ids)})
         assert len(ps)==10 and sum(p['selected'] for p in ps)==len(keep_ids)
-        out.append({'qid':q['qid'],'question':q['question'],'golds':q['golds'],'passages':ps})
+        out.append({'qid':q['qid'],'question':q['question'],'golds':q['golds'],'passages':ps,
+                    'condition':arm_name(negative_type,condition),
+                    'retrieval_condition':condition,'negative_type':negative_type})
     return out
 
 def context(q): return '\n\n'.join(f"[P{i+1}] {p['text']}" for i,p in enumerate(q['passages']))
@@ -201,48 +224,59 @@ def construct(cfg,n,write=True):
     # a diagnostic of the retriever, independent of the good/medium/bad knob.
     labelled=sum(p['selected'] for q in packs for p in q['passages'])
     bm25_findable=sum(len(q['usable_gold_ids']) for q in packs)
-    for condition in cfg['conditions']:
-        built=condition_packs(packs,doc_lookup,condition,cfg['dataset']['sample_seed'])
+    for condition_id,negative_type,condition in arm_specs(cfg):
+        built=condition_packs(packs,doc_lookup,condition,negative_type,cfg['dataset']['sample_seed'])
         retained=sum(p['selected'] for q in built for p in q['passages'])
-        summary.append({'condition':condition,'questions':len(built),'passages_per_query':10,
+        summary.append({'condition':condition_id,'negative_type':negative_type,
+                        'retrieval_condition':condition,'questions':len(built),'passages_per_query':10,
                         'gold_retained':retained,'gold_bm25_findable':bm25_findable,
                         'gold_labelled_by_msmarco':labelled,
                         'gold_recall_at_10':round(retained/bm25_findable,4)})
-        for q in built: rows.append({'condition':condition,**q})
-    recalls=[x['gold_recall_at_10'] for x in summary]
-    if not (recalls[0]>recalls[1]>recalls[2]): raise AssertionError(f'recall separation failed: {summary}')
+        rows.extend(built)
+    for negative_type in cfg['negative_types']:
+        recalls=[x['gold_recall_at_10'] for x in summary if x['negative_type']==negative_type]
+        if not (recalls[0]>recalls[1]>recalls[2]): raise AssertionError(f'recall separation failed: {summary}')
     if write:
         write_jsonl(data_root/f'packs_n{n}.jsonl',rows); write_csv(data_root/f'construction_n{n}.csv',summary)
     print('[retrieval:construction] '+json.dumps(summary)); return rows,summary
 
 def analyse(rows,cfg,result_root):
     boot,ci=cfg['analysis']['bootstrap_resamples'],cfg['analysis']['ci_level']; metrics=[]; vectors={}
-    for cond in cfg['conditions']:
+    for cond,negative_type,retrieval_condition in arm_specs(cfg):
         for depth in cfg['depths']:
             rs=sorted([r for r in rows if r['condition']==cond and int(r['depth'])==depth],key=lambda x:x['qid'])
             vals={m:np.array([r[m] for r in rs]) for m in ('em','f1','bertscore_f1')}; vectors[(cond,depth)]={m:dict(zip([r['qid'] for r in rs],v)) for m,v in vals.items()}
-            rec={'condition':cond,'depth':depth,'n':len(rs)}
+            rec={'condition':cond,'negative_type':negative_type,'retrieval_condition':retrieval_condition,'depth':depth,'n':len(rs)}
             for m,v in vals.items():
                 mean,lo,hi=bootstrap_ci(v,boot,ci,seed=51); rec.update({m:round(mean,4),f'{m}_lo':round(lo,4),f'{m}_hi':round(hi,4)})
             metrics.append(rec)
     deltas=[]
-    for cond in cfg['conditions']:
+    for cond,negative_type,retrieval_condition in arm_specs(cfg):
         for depth in cfg['depths']:
             if depth==0: continue
             for metric in ('em','f1','bertscore_f1'):
                 a,b=vectors[(cond,depth)][metric],vectors[(cond,0)][metric]; ids=sorted(set(a)&set(b)); d=paired_bootstrap_delta(np.array([a[i] for i in ids]),np.array([b[i] for i in ids]),boot,ci,seed=53)
-                deltas.append({'comparison':'depth_minus_depth0','condition':cond,'depth':depth,'metric':metric,**d})
-    for depth in cfg['depths']:
-        for metric in ('em','f1','bertscore_f1'):
-            a,b=vectors[('good',depth)][metric],vectors[('bad',depth)][metric]; ids=sorted(set(a)&set(b)); d=paired_bootstrap_delta(np.array([a[i] for i in ids]),np.array([b[i] for i in ids]),boot,ci,seed=57)
-            deltas.append({'comparison':'good_minus_bad','condition':'good_minus_bad','depth':depth,'metric':metric,**d})
+                deltas.append({'comparison':'depth_minus_depth0','condition':cond,'negative_type':negative_type,'retrieval_condition':retrieval_condition,'depth':depth,'metric':metric,**d})
+    for negative_type in cfg['negative_types']:
+        for depth in cfg['depths']:
+            for metric in ('em','f1','bertscore_f1'):
+                a,b=vectors[(arm_name(negative_type,'good'),depth)][metric],vectors[(arm_name(negative_type,'bad'),depth)][metric]
+                ids=sorted(set(a)&set(b)); d=paired_bootstrap_delta(np.array([a[i] for i in ids]),np.array([b[i] for i in ids]),boot,ci,seed=57)
+                deltas.append({'comparison':'good_minus_bad','condition':f'{negative_type}_good_minus_bad','negative_type':negative_type,'depth':depth,'metric':metric,**d})
+    for retrieval_condition in cfg['conditions']:
+        for depth in cfg['depths']:
+            for metric in ('em','f1','bertscore_f1'):
+                hard,easy=vectors[(arm_name('hard',retrieval_condition),depth)][metric],vectors[(arm_name('easy',retrieval_condition),depth)][metric]
+                ids=sorted(set(hard)&set(easy)); d=paired_bootstrap_delta(np.array([hard[i] for i in ids]),np.array([easy[i] for i in ids]),boot,ci,seed=59)
+                deltas.append({'comparison':'hard_minus_easy','condition':retrieval_condition,'retrieval_condition':retrieval_condition,'depth':depth,'metric':metric,**d})
     write_csv(result_root/'metrics.csv',metrics); write_csv(result_root/'deltas.csv',deltas)
     import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
-    fig,axes=plt.subplots(1,2,figsize=(11,4)); colors={'good':'#1b9e77','medium':'#7570b3','bad':'#d95f02'}
-    for cond in cfg['conditions']:
+    fig,axes=plt.subplots(1,2,figsize=(12,4.4)); colors={'good':'#1b9e77','medium':'#7570b3','bad':'#d95f02'}; styles={'hard':'-','easy':'--'}
+    for cond,negative_type,retrieval_condition in arm_specs(cfg):
         rs=[r for r in metrics if r['condition']==cond]; x=[r['depth'] for r in rs]
-        axes[0].plot(x,[r['f1'] for r in rs],marker='o',label=cond,color=colors[cond]); axes[1].plot(x,[r['f1']-next(z['f1'] for z in metrics if z['condition']==cond and z['depth']==0) for r in rs],marker='o',label=cond,color=colors[cond])
-    axes[0].set(title='QA quality by retrieval condition',xlabel='Handoff depth',ylabel='Token F1'); axes[1].set(title='Degradation from depth 0',xlabel='Handoff depth',ylabel='Token F1 change')
+        label=f'{retrieval_condition} / {negative_type}'
+        axes[0].plot(x,[r['f1'] for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition]); axes[1].plot(x,[r['f1']-next(z['f1'] for z in metrics if z['condition']==cond and z['depth']==0) for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
+    axes[0].set(title='QA quality: hard vs easy distractors',xlabel='Handoff depth',ylabel='Token F1'); axes[1].set(title='Degradation from depth 0',xlabel='Handoff depth',ylabel='Token F1 change')
     for a in axes: a.grid(alpha=.25); a.legend(); a.set_xticks(cfg['depths'])
     fig.tight_layout(); fig.savefig(result_root/'retrieval_quality.png',dpi=180); plt.close(fig)
 
@@ -255,7 +289,7 @@ def main():
     by={(r['condition'],r['qid']):r for r in packs}; client=LLMClient(cfg,dry_run=args.dry_run)
     hp=run_root/'handoffs.jsonl'
     handoffs={(r['condition'],r['qid'],r.get('fp'),int(r['stage'])):r['text'] for r in read_jsonl(hp)}
-    for condition in cfg['conditions']:
+    for condition,_,_ in arm_specs(cfg):
         qs=[by[(condition,qid)] for qid in sorted(qid for c,qid in by if c==condition)]
         for stage in range(1,cfg['max_depth']+1):
             todo=[q for q in qs if (condition,q['qid'],q['fp'],stage) not in handoffs]
@@ -272,7 +306,10 @@ def main():
             if key not in existing: jobs.append((key,q,context(q) if depth==0 else handoffs[(condition,qid,q['fp'],depth)]))
     with ThreadPoolExecutor(max_workers=cfg['runtime']['concurrency']) as pool:
         fs={pool.submit(answer,client,q,mat,cfg,f'retrieval_{c}_answer_d{d}'):(c,d,qid,fp) for (c,d,qid,fp),q,mat in jobs}
-        for f,key in fs.items(): c,d,qid,fp=key; existing[key]={'condition':c,'depth':d,'qid':qid,'fp':fp,**f.result()}
+        for f,key in fs.items():
+            c,d,qid,fp=key; q=by[(c,qid)]
+            existing[key]={'condition':c,'retrieval_condition':q['retrieval_condition'],
+                           'negative_type':q['negative_type'],'depth':d,'qid':qid,'fp':fp,**f.result()}
     rows=sorted(existing.values(),key=lambda r:(r['condition'],r['depth'],r['qid']))
     if not args.dry_run:
         write_jsonl(apath,rows); add_bertscore(rows,cfg); write_jsonl(apath,rows); analyse(rows,cfg,result_root)
