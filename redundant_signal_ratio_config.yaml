@@ -15,11 +15,11 @@ decoding:
 
 cost:
   cap_usd: 0.25
-  api_call_cap: 650
+  api_call_cap: 1200
   warn_at_fraction: 0.8
 
 runtime:
-  concurrency: 2
+  concurrency: 12
   max_retries: 4
   backoff_base_s: 1.5
   backoff_max_s: 30.0
@@ -72,3 +72,13 @@ judge:
   model_id: "openai/gpt-4o-mini"
   max_tokens: 8
   cap_usd: 2.0
+
+# Conservative automatic relevance audit before a BM25 candidate can be used
+# as a distractor. The resulting labels are LLM-screened, not human labels.
+negative_verification:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 3.0
+  concurrency: 12
+  candidate_scan_k: 30

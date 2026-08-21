@@ -15,11 +15,11 @@ decoding:
 cost:
   # A successful 20-question pilot is expected to be well below this.
   cap_usd: 0.35
-  api_call_cap: 650
+  api_call_cap: 1200
   warn_at_fraction: 0.8
 
 runtime:
-  concurrency: 2
+  concurrency: 6
   max_retries: 4
   backoff_base_s: 1.5
   backoff_max_s: 30.0
@@ -53,14 +53,27 @@ max_depth: 5
 analysis:
   bootstrap_resamples: 10000
   ci_level: 0.95
-  bertscore:
-    enabled: true
-    model_type: roberta-large
-    num_layers: 17
-    batch_size: 64
-    rescale_with_baseline: true
 
 outputs:
   data_root: data/retrieval_quality
   run_root: runs/retrieval_quality
   result_root: results/retrieval_quality
+
+# Semantic answer correctness is the secondary metric; EM/F1 remain primary.
+# The judge deliberately uses a different model family from the llama system
+# under test, and its separate cap keeps it outside the experiment call cap.
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0
+
+# Automatic conservative relevance audit for every candidate used by the
+# rerun. It is reported as LLM-screened rather than human-verified.
+negative_verification:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 3.0
+  concurrency: 12
+  candidate_scan_k: 30

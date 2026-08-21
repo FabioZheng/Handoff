@@ -1,25 +1,25 @@
-condition,negative_type,signal_condition,signal_ratio,depth,n,em,em_lo,em_hi,f1,f1_lo,f1_hi,judge_correct,judge_correct_lo,judge_correct_hi
-signal_1_0,hard,signal_1_0,1.0,0,20,0.75,0.55,0.95,0.8961,0.8127,0.975,1.0,1.0,1.0
-signal_1_0,hard,signal_1_0,1.0,1,20,0.65,0.45,0.85,0.8498,0.7441,0.9444,0.95,0.85,1.0
-signal_1_0,hard,signal_1_0,1.0,3,20,0.65,0.45,0.85,0.8095,0.6714,0.931,0.9,0.75,1.0
-signal_1_0,hard,signal_1_0,1.0,5,20,0.65,0.45,0.85,0.8012,0.6607,0.9226,0.85,0.7,1.0
-signal_0_5,hard,signal_0_5,0.5,0,20,0.75,0.55,0.95,0.8961,0.8127,0.975,1.0,1.0,1.0
-signal_0_5,hard,signal_0_5,0.5,1,20,0.65,0.45,0.85,0.8488,0.756,0.9369,0.95,0.85,1.0
-signal_0_5,hard,signal_0_5,0.5,3,20,0.65,0.45,0.85,0.852,0.7422,0.95,1.0,1.0,1.0
-signal_0_5,hard,signal_0_5,0.5,5,20,0.7,0.5,0.9,0.8854,0.7874,0.9667,1.0,1.0,1.0
-signal_0_1,hard,signal_0_1,0.1,0,20,0.6,0.4,0.8,0.7336,0.5686,0.8786,0.85,0.7,1.0
-signal_0_1,hard,signal_0_1,0.1,1,20,0.6,0.4,0.8,0.7632,0.6129,0.895,0.85,0.7,1.0
-signal_0_1,hard,signal_0_1,0.1,3,20,0.7,0.5,0.9,0.815,0.68,0.945,0.85,0.7,1.0
-signal_0_1,hard,signal_0_1,0.1,5,20,0.65,0.45,0.85,0.7729,0.6194,0.9119,0.9,0.75,1.0
-easy_signal_1_0,easy,signal_1_0,1.0,0,20,0.75,0.55,0.95,0.8961,0.8127,0.975,1.0,1.0,1.0
-easy_signal_1_0,easy,signal_1_0,1.0,1,20,0.65,0.45,0.85,0.8498,0.7441,0.9444,0.95,0.85,1.0
-easy_signal_1_0,easy,signal_1_0,1.0,3,20,0.65,0.45,0.85,0.8095,0.6714,0.931,0.9,0.75,1.0
-easy_signal_1_0,easy,signal_1_0,1.0,5,20,0.65,0.45,0.85,0.8012,0.6607,0.9226,0.85,0.7,1.0
-easy_signal_0_5,easy,signal_0_5,0.5,0,20,0.75,0.55,0.95,0.8917,0.8,0.975,0.95,0.85,1.0
-easy_signal_0_5,easy,signal_0_5,0.5,1,20,0.7,0.5,0.9,0.8404,0.7105,0.95,0.9,0.75,1.0
-easy_signal_0_5,easy,signal_0_5,0.5,3,20,0.6,0.4,0.8,0.7524,0.5952,0.8941,0.8,0.6,0.95
-easy_signal_0_5,easy,signal_0_5,0.5,5,20,0.6,0.4,0.8,0.7625,0.6021,0.9041,0.8,0.6,0.95
-easy_signal_0_1,easy,signal_0_1,0.1,0,20,0.65,0.45,0.85,0.8194,0.6836,0.9327,0.95,0.85,1.0
-easy_signal_0_1,easy,signal_0_1,0.1,1,20,0.65,0.45,0.85,0.7952,0.6452,0.925,0.85,0.7,1.0
-easy_signal_0_1,easy,signal_0_1,0.1,3,20,0.55,0.35,0.75,0.7444,0.595,0.8794,0.9,0.75,1.0
-easy_signal_0_1,easy,signal_0_1,0.1,5,20,0.5,0.3,0.7,0.6446,0.458,0.8167,0.85,0.7,1.0
+condition,negative_type,signal_condition,context_label,context_composition,signal_ratio,depth,n,em,em_lo,em_hi,f1,f1_lo,f1_hi,judge_correct,judge_correct_lo,judge_correct_hi
+signal_1_0,hard,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,0,20,0.75,0.55,0.95,0.8961,0.8127,0.975,1.0,1.0,1.0
+signal_1_0,hard,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,1,20,0.65,0.45,0.85,0.8498,0.7441,0.9444,0.95,0.85,1.0
+signal_1_0,hard,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,3,20,0.65,0.45,0.85,0.8095,0.6714,0.931,0.9,0.75,1.0
+signal_1_0,hard,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,5,20,0.65,0.45,0.85,0.8012,0.6607,0.9226,0.85,0.7,1.0
+signal_0_5,hard,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,0,20,0.75,0.55,0.95,0.8867,0.7916,0.97,0.95,0.85,1.0
+signal_0_5,hard,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,1,20,0.75,0.55,0.95,0.8667,0.7417,0.9667,0.95,0.85,1.0
+signal_0_5,hard,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,3,20,0.75,0.55,0.95,0.8867,0.7933,0.97,0.95,0.85,1.0
+signal_0_5,hard,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,5,20,0.75,0.55,0.95,0.8911,0.8017,0.97,1.0,1.0,1.0
+signal_0_1,hard,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,0,20,0.65,0.45,0.85,0.7869,0.6321,0.9202,0.9,0.75,1.0
+signal_0_1,hard,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,1,20,0.5,0.3,0.7,0.7019,0.5433,0.845,0.85,0.7,1.0
+signal_0_1,hard,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,3,20,0.65,0.45,0.85,0.7635,0.6056,0.9,0.9,0.75,1.0
+signal_0_1,hard,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,5,20,0.6,0.4,0.8,0.7763,0.6392,0.9029,0.9,0.75,1.0
+easy_signal_1_0,easy,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,0,20,0.75,0.55,0.95,0.8961,0.8127,0.975,1.0,1.0,1.0
+easy_signal_1_0,easy,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,1,20,0.65,0.45,0.85,0.8498,0.7441,0.9444,0.95,0.85,1.0
+easy_signal_1_0,easy,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,3,20,0.65,0.45,0.85,0.8095,0.6714,0.931,0.9,0.75,1.0
+easy_signal_1_0,easy,signal_1_0,No noise,10 answer-sufficient gold passages and 0 distractors.,1.0,5,20,0.65,0.45,0.85,0.8012,0.6607,0.9226,0.85,0.7,1.0
+easy_signal_0_5,easy,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,0,20,0.8,0.6,0.95,0.9211,0.8461,0.9833,1.0,1.0,1.0
+easy_signal_0_5,easy,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,1,20,0.75,0.55,0.95,0.87,0.7617,0.9667,0.95,0.85,1.0
+easy_signal_0_5,easy,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,3,20,0.65,0.45,0.85,0.7909,0.6421,0.9226,0.9,0.75,1.0
+easy_signal_0_5,easy,signal_0_5,Medium noise,5 answer-sufficient gold passages and 5 distractors.,0.5,5,20,0.7,0.5,0.9,0.8465,0.7271,0.9476,0.95,0.85,1.0
+easy_signal_0_1,easy,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,0,20,0.65,0.45,0.85,0.7783,0.62,0.915,0.85,0.7,1.0
+easy_signal_0_1,easy,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,1,20,0.65,0.45,0.85,0.8521,0.73,0.9538,0.9,0.75,1.0
+easy_signal_0_1,easy,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,3,20,0.65,0.45,0.85,0.7444,0.5722,0.9,0.85,0.7,1.0
+easy_signal_0_1,easy,signal_0_1,High noise,1 answer-sufficient gold passage and 9 distractors.,0.1,5,20,0.65,0.45,0.85,0.7667,0.6,0.9167,0.85,0.7,1.0

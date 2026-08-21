@@ -28,6 +28,7 @@ import handoffs as hm  # noqa: E402
 from judge import add_judge  # noqa: E402
 from llm import LLMClient, load_config  # noqa: E402
 from retrieval import BM25Index, content_fingerprint  # noqa: E402
+from negative_verifier import screen, verifier_config  # noqa: E402
 from score import bootstrap_ci, extract_short_answer, paired_bootstrap_delta, score_against_golds  # noqa: E402
 
 
@@ -225,8 +226,37 @@ def condition_pack(base: dict, doc_lookup: dict[str, dict], condition: str, rele
             **{key: base[key] for key in ("qid", "question", "golds", "title")}}
 
 
+def verify_negative_pools(base: list[dict], doc_lookup: dict[str, dict], cfg: dict, n: int) -> None:
+    """Screen both BM25 pools before any hard/easy negative is selected."""
+    spec = verifier_config(cfg)
+    if not spec["enabled"]:
+        return
+    candidates=[]
+    for pack in base:
+        for negative_type in cfg["negative_types"]:
+            for rank, doc_id in enumerate(pack[f"{negative_type}_negative_ids"][:int(spec["candidate_scan_k"])], start=1):
+                candidates.append({"qid": pack["qid"], "negative_type": negative_type, "rank": rank,
+                                   "doc_id": doc_id, "question": pack["question"], "golds": pack["golds"],
+                                   "text": doc_lookup[doc_id]["context"]})
+    audited, client = screen(candidates, cfg)
+    allowed = {(row["qid"], row["negative_type"]): [] for row in audited}
+    for row in audited:
+        if row["is_irrelevant"]:
+            allowed[(row["qid"], row["negative_type"])].append(row["doc_id"])
+    needed = cfg["dataset"]["passages_per_query"] - 1
+    for pack in base:
+        for negative_type in cfg["negative_types"]:
+            verified = allowed.get((pack["qid"], negative_type), [])
+            if len(verified) < needed:
+                raise RuntimeError(f"only {len(verified)} LLM-screened irrelevant {negative_type} negatives for {pack['qid']}; increase negative_verification.candidate_scan_k")
+            pack[f"{negative_type}_negative_ids"] = verified
+    write_csv(ROOT / cfg["outputs"]["data_root"] / f"negative_verification_n{n}.csv", audited)
+    print("[redundant-signal:negative-verification] " + json.dumps(client.ledger.summary()))
+
+
 def construct(cfg: dict, n: int, write: bool) -> tuple[list[dict], list[dict]]:
     base, bm25, doc_lookup = make_base_packs(cfg, n, write)
+    verify_negative_pools(base, doc_lookup, cfg, n)
     packs, report = [], []
     width = cfg["dataset"]["passages_per_query"]
     for condition_id, negative_type, condition, count in arm_specs(cfg):
@@ -302,6 +332,8 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
                 delta = paired_bootstrap_delta(np.array([current[x] for x in ids]), np.array([baseline[x] for x in ids]), boot, ci, seed=73)
                 deltas.append({"comparison": "depth_minus_depth0", "condition": condition,
                                "negative_type": negative_type, "signal_condition": signal_condition,
+                               "context_label": CONTEXT_LABELS[signal_condition],
+                               "context_composition": CONTEXT_COMPOSITIONS[signal_condition],
                                "depth": depth, "metric": metric, **delta})
     # The causal retrieval-quality contrast: all prompts, questions, passage
     # count, and handoff depths are matched; only 10 vs 1 answer-sufficient
@@ -322,7 +354,10 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
                 ids = sorted(set(hard) & set(easy))
                 delta = paired_bootstrap_delta(np.array([hard[x] for x in ids]), np.array([easy[x] for x in ids]), boot, ci, seed=83)
                 deltas.append({"comparison": "hard_minus_easy", "condition": signal_condition,
-                               "signal_condition": signal_condition, "depth": depth, "metric": metric, **delta})
+                               "signal_condition": signal_condition,
+                               "context_label": CONTEXT_LABELS[signal_condition],
+                               "context_composition": CONTEXT_COMPOSITIONS[signal_condition],
+                               "depth": depth, "metric": metric, **delta})
     write_csv(root / "metrics.csv", metrics)
     write_csv(root / "deltas.csv", deltas)
     import matplotlib
@@ -355,7 +390,7 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
         axis.set_xticks(cfg["depths"])
         axis.grid(alpha=.25)
     axes[0].legend(fontsize=8, loc="lower left")
-    fig.suptitle("Fixed ten-passage contexts: answer-sufficient signal and distractor difficulty")
+    fig.suptitle("LLM-screened distractors: fixed ten-passage answer-sufficient signal")
     fig.tight_layout()
     fig.savefig(root / "redundant_signal_ratio.png", dpi=180, bbox_inches="tight")
     plt.close(fig)
@@ -411,7 +446,17 @@ def main() -> int:
             existing[key] = {"condition": key[0], "negative_type": pack["negative_type"],
                              "signal_condition": pack["signal_condition"], "depth": key[1],
                              "qid": key[2], "fp": key[3], **future.result()}
-    rows = sorted(existing.values(), key=lambda r: (r["condition"], int(r["depth"]), r["qid"]))
+    # Keep only answer rows for the newly constructed screened context. A qid
+    # can legitimately recur with a different passage fingerprint after the
+    # negative-verification pool changes; stale rows must not enter bootstrap
+    # or judge aggregates.
+    current_fps = {(pack["condition"], pack["qid"]): pack["fp"] for pack in packs}
+    rows = sorted((row for row in existing.values()
+                   if current_fps.get((row["condition"], row["qid"])) == row.get("fp")),
+                  key=lambda r: (r["condition"], int(r["depth"]), r["qid"]))
+    expected_rows = len(packs) * len(cfg["depths"])
+    if len(rows) != expected_rows:
+        raise AssertionError(f"expected {expected_rows} current answer rows, found {len(rows)}")
     # Rows written before the judge existed carry no question text.
     questions = {p["qid"]: p["question"] for p in packs}
     for row in rows:

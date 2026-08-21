@@ -27,8 +27,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import handoffs as hm  # noqa
 from llm import LLMClient, load_config  # noqa
 from retrieval import BM25Index, content_fingerprint  # noqa
+from judge import add_judge  # noqa
+from negative_verifier import screen, verifier_config  # noqa
 from score import bootstrap_ci, extract_short_answer, paired_bootstrap_delta, score_against_golds  # noqa
-from run_chain import add_bertscore  # noqa
 
 SYSTEM = ("You are a research handoff agent. Preserve every fact needed to answer the "
           "question. Your notes replace the entire input for the next agent, so omitted "
@@ -139,7 +140,7 @@ def make_packs(raw,cfg,n):
         ans=[str(x).strip() for x in raw['answers'].get(qid,[]) if str(x).strip()]
         ps=passages(raw,qid)
         # The 2-question smoke deliberately uses multi-selected examples so
-        # its 10--20% bad arm is mathematically meaningful.  The 20-question
+        # its 10--20% high-noise arm is mathematically meaningful.  The 20-question
         # pilot is sampled normally, preserving the dataset's natural mix.
         needs_multi = n <= cfg['dataset']['smoke_questions']
         if ans and len(ps)==10 and any(x['selected'] for x in ps) and (not needs_multi or sum(x['selected'] for x in ps) >= 4):
@@ -218,6 +219,32 @@ def condition_packs(packs,doc_lookup,condition,negative_type,seed):
                     'negative_type':negative_type})
     return out
 
+
+def verify_negative_pools(packs, doc_lookup, cfg, n):
+    """Retain only independently screened negatives before BM25 arm selection."""
+    spec = verifier_config(cfg)
+    if not spec["enabled"]:
+        return
+    candidates=[]
+    for q in packs:
+        for negative_type in cfg['negative_types']:
+            for rank, doc_id in enumerate(q[f'{negative_type}_negative_ids'][:int(spec['candidate_scan_k'])], start=1):
+                candidates.append({'qid':q['qid'],'negative_type':negative_type,'rank':rank,'doc_id':doc_id,
+                                   'question':q['question'],'golds':q['golds'],'text':doc_lookup[doc_id]['text']})
+    audited, client=screen(candidates,cfg)
+    allowed={(row['qid'],row['negative_type']):[] for row in audited}
+    for row in audited:
+        if row['is_irrelevant']:
+            allowed[(row['qid'],row['negative_type'])].append(row['doc_id'])
+    for q in packs:
+        for negative_type in cfg['negative_types']:
+            verified=allowed.get((q['qid'],negative_type),[])
+            if len(verified)<10:
+                raise RuntimeError(f"only {len(verified)} LLM-screened irrelevant {negative_type} negatives for {q['qid']}; increase negative_verification.candidate_scan_k")
+            q[f'{negative_type}_negative_ids']=verified
+    write_csv(ROOT/cfg['outputs']['data_root']/f'negative_verification_n{n}.csv',audited)
+    print('[retrieval:negative-verification] '+json.dumps(client.ledger.summary()))
+
 def context(q): return '\n\n'.join(f"[P{i+1}] {p['text']}" for i,p in enumerate(q['passages']))
 
 def compress_first(client,q,cfg,condition):
@@ -237,7 +264,7 @@ def answer(client,q,material,cfg,tag):
     return {'pred':pred,'raw':r.text,'golds':q['golds'],'em':em,'f1':f1,'cached':r.cached}
 
 def construct(cfg,n,write=True):
-    raw=ensure_data(cfg); packs,doc_lookup=make_packs(raw,cfg,n); data_root=ROOT/cfg['outputs']['data_root']; rows=[]; summary=[]
+    raw=ensure_data(cfg); packs,doc_lookup=make_packs(raw,cfg,n); verify_negative_pools(packs,doc_lookup,cfg,n); data_root=ROOT/cfg['outputs']['data_root']; rows=[]; summary=[]
     # How much of MS MARCO's own relevance judgment BM25 actually surfaces --
     # a diagnostic of the retriever, independent of the noise-level knob.
     labelled=sum(p['selected'] for q in packs for p in q['passages'])
@@ -265,7 +292,7 @@ def analyse(rows,cfg,result_root):
     for cond,negative_type,retrieval_condition in arm_specs(cfg):
         for depth in cfg['depths']:
             rs=sorted([r for r in rows if r['condition']==cond and int(r['depth'])==depth],key=lambda x:x['qid'])
-            vals={m:np.array([r[m] for r in rs]) for m in ('em','f1','bertscore_f1')}; vectors[(cond,depth)]={m:dict(zip([r['qid'] for r in rs],v)) for m,v in vals.items()}
+            vals={m:np.array([r[m] for r in rs]) for m in ('em','f1','judge_correct')}; vectors[(cond,depth)]={m:dict(zip([r['qid'] for r in rs],v)) for m,v in vals.items()}
             rec={'condition':cond,'negative_type':negative_type,'retrieval_condition':retrieval_condition,
                  'context_label':CONTEXT_LABELS[retrieval_condition],
                  'context_composition':CONTEXT_COMPOSITIONS[retrieval_condition],
@@ -277,31 +304,50 @@ def analyse(rows,cfg,result_root):
     for cond,negative_type,retrieval_condition in arm_specs(cfg):
         for depth in cfg['depths']:
             if depth==0: continue
-            for metric in ('em','f1','bertscore_f1'):
+            for metric in ('em','f1','judge_correct'):
                 a,b=vectors[(cond,depth)][metric],vectors[(cond,0)][metric]; ids=sorted(set(a)&set(b)); d=paired_bootstrap_delta(np.array([a[i] for i in ids]),np.array([b[i] for i in ids]),boot,ci,seed=53)
-                deltas.append({'comparison':'depth_minus_depth0','condition':cond,'negative_type':negative_type,'retrieval_condition':retrieval_condition,'depth':depth,'metric':metric,**d})
+                deltas.append({'comparison':'depth_minus_depth0','condition':cond,'negative_type':negative_type,
+                               'retrieval_condition':retrieval_condition,
+                               'context_label':CONTEXT_LABELS[retrieval_condition],
+                               'context_composition':CONTEXT_COMPOSITIONS[retrieval_condition],
+                               'depth':depth,'metric':metric,**d})
     for negative_type in cfg['negative_types']:
         for depth in cfg['depths']:
-            for metric in ('em','f1','bertscore_f1'):
+            for metric in ('em','f1','judge_correct'):
                 a,b=vectors[(arm_name(negative_type,'good'),depth)][metric],vectors[(arm_name(negative_type,'bad'),depth)][metric]
                 ids=sorted(set(a)&set(b)); d=paired_bootstrap_delta(np.array([a[i] for i in ids]),np.array([b[i] for i in ids]),boot,ci,seed=57)
-                deltas.append({'comparison':'good_minus_bad','condition':f'{negative_type}_good_minus_bad','negative_type':negative_type,'depth':depth,'metric':metric,**d})
+                deltas.append({'comparison':'good_minus_bad','comparison_label':'low_noise_minus_high_noise',
+                               'condition':f'{negative_type}_good_minus_bad','negative_type':negative_type,
+                               'depth':depth,'metric':metric,**d})
     for retrieval_condition in cfg['conditions']:
         for depth in cfg['depths']:
-            for metric in ('em','f1','bertscore_f1'):
+            for metric in ('em','f1','judge_correct'):
                 hard,easy=vectors[(arm_name('hard',retrieval_condition),depth)][metric],vectors[(arm_name('easy',retrieval_condition),depth)][metric]
                 ids=sorted(set(hard)&set(easy)); d=paired_bootstrap_delta(np.array([hard[i] for i in ids]),np.array([easy[i] for i in ids]),boot,ci,seed=59)
-                deltas.append({'comparison':'hard_minus_easy','condition':retrieval_condition,'retrieval_condition':retrieval_condition,'depth':depth,'metric':metric,**d})
+                deltas.append({'comparison':'hard_minus_easy','condition':retrieval_condition,
+                               'retrieval_condition':retrieval_condition,
+                               'context_label':CONTEXT_LABELS[retrieval_condition],
+                               'context_composition':CONTEXT_COMPOSITIONS[retrieval_condition],
+                               'depth':depth,'metric':metric,**d})
     write_csv(result_root/'metrics.csv',metrics); write_csv(result_root/'deltas.csv',deltas)
     import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
-    fig,axes=plt.subplots(1,2,figsize=(12,4.4)); colors={'good':'#1b9e77','medium':'#7570b3','bad':'#d95f02'}; styles={'hard':'-','easy':'--'}
+    fig,axes=plt.subplots(1,3,figsize=(18,4.4)); colors={'good':'#1b9e77','medium':'#7570b3','bad':'#d95f02'}; styles={'hard':'-','easy':'--'}
     for cond,negative_type,retrieval_condition in arm_specs(cfg):
         rs=[r for r in metrics if r['condition']==cond]; x=[r['depth'] for r in rs]
         label=f'{CONTEXT_LABELS[retrieval_condition]} / {negative_type}'
-        axes[0].plot(x,[r['f1'] for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition]); axes[1].plot(x,[r['f1']-next(z['f1'] for z in metrics if z['condition']==cond and z['depth']==0) for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
-    axes[0].set(title='QA quality: hard vs easy distractors',xlabel='Handoff depth',ylabel='Token F1'); axes[1].set(title='Degradation from depth 0',xlabel='Handoff depth',ylabel='Token F1 change')
-    for a in axes: a.grid(alpha=.25); a.legend(); a.set_xticks(cfg['depths'])
-    fig.tight_layout(); fig.savefig(result_root/'retrieval_quality.png',dpi=180); plt.close(fig)
+        axes[0].plot(x,[r['f1'] for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
+        axes[1].plot(x,[r['f1']-next(z['f1'] for z in metrics if z['condition']==cond and z['depth']==0) for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
+        judge=[r['judge_correct'] for r in rs]
+        lower=[r['judge_correct']-r['judge_correct_lo'] for r in rs]
+        upper=[r['judge_correct_hi']-r['judge_correct'] for r in rs]
+        axes[2].errorbar(x,judge,yerr=[lower,upper],marker='o',capsize=3,linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
+    axes[0].set(title='QA F1: hard vs easy distractors',xlabel='Handoff depth',ylabel='Token F1')
+    axes[1].set(title='F1 change from depth 0',xlabel='Handoff depth',ylabel='Token F1 change')
+    axes[2].set(title='LLM-judge answer correctness',xlabel='Handoff depth',ylabel='Judge accuracy')
+    for a in axes: a.grid(alpha=.25); a.set_xticks(cfg['depths'])
+    axes[0].legend(fontsize=8,loc='best')
+    fig.suptitle('LLM-screened candidate distractors', y=1.02)
+    fig.tight_layout(); fig.savefig(result_root/'retrieval_quality.png',dpi=180, bbox_inches='tight'); plt.close(fig)
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('--config',default=str(ROOT/'retrieval_quality_config.yaml')); ap.add_argument('--n',type=int); ap.add_argument('--construct-only',action='store_true'); ap.add_argument('--dry-run',action='store_true'); args=ap.parse_args()
@@ -332,9 +378,31 @@ def main():
         for f,key in fs.items():
             c,d,qid,fp=key; q=by[(c,qid)]
             existing[key]={'condition':c,'retrieval_condition':q['retrieval_condition'],
-                           'negative_type':q['negative_type'],'depth':d,'qid':qid,'fp':fp,**f.result()}
-    rows=sorted(existing.values(),key=lambda r:(r['condition'],r['depth'],r['qid']))
+                           'negative_type':q['negative_type'],'question':q['question'],
+                           'depth':d,'qid':qid,'fp':fp,**f.result()}
+    # A constructed pack can change while retaining its (condition, qid), for
+    # example when the eligible BM25 pool changes.  Keep only answer rows whose
+    # content fingerprint matches the current pack; otherwise old contexts
+    # would duplicate a question in the bootstrap and judge analyses.
+    current_fps={(condition,qid):q['fp'] for (condition,qid),q in by.items()}
+    rows=sorted((r for r in existing.values()
+                 if current_fps.get((r['condition'],r['qid'])) == r.get('fp')),
+                key=lambda r:(r['condition'],r['depth'],r['qid']))
+    expected_rows=len(by)*len(cfg['depths'])
+    if len(rows) != expected_rows:
+        raise AssertionError(f'expected {expected_rows} current answer rows, found {len(rows)}')
     if not args.dry_run:
-        write_jsonl(apath,rows); add_bertscore(rows,cfg); write_jsonl(apath,rows); analyse(rows,cfg,result_root)
+        # Legacy answer rows predate the judge and omit question text. Backfill
+        # it from the constructed packs before a judgement is requested.
+        questions={q['qid']:q['question'] for q in packs}
+        for row in rows:
+            if not row.get('question'):
+                row['question']=questions.get(row['qid'],'')
+        write_jsonl(apath,rows)
+        judge_client=add_judge(rows,cfg,tag='retrieval_quality_judge')
+        write_jsonl(apath,rows)
+        if judge_client is not None:
+            print('[retrieval:judge cost] '+json.dumps(judge_client.ledger.summary()))
+        analyse(rows,cfg,result_root)
     print(f'[retrieval:answers] {len(rows)} rows; {len(jobs)} calls this pass'); print(json.dumps(client.ledger.summary(),indent=2))
 if __name__=='__main__': main()
