@@ -71,9 +71,9 @@ The same question was supplied at every compression stage:
 
 Only the first compressor could see source documents. Later compressors received a sealed previous handoff and the original question. Two seeds were run. Each dataset used three evidence conditions:
 
-- **Short:** all and only gold documents (mean 2.7 documents for MuSiQue; 2 for HotpotQA).
-- **Medium:** all gold documents plus distractors up to five documents.
-- **Full:** the complete dataset context (20 MuSiQue paragraphs; 10 HotpotQA paragraphs).
+- **No noise (gold-only; formerly “Short”):** all and only gold documents (mean 2.7 documents for MuSiQue; 2 for HotpotQA).
+- **Medium noise (formerly “Medium”):** all gold documents plus distractors up to five documents.
+- **High noise (full; formerly “Full”):** the complete dataset context (20 MuSiQue paragraphs; 10 HotpotQA paragraphs).
 
 ### Results
 
@@ -83,12 +83,12 @@ Depth-10 change from direct depth 0:
 
 | Dataset | Context | Token F1 change | LLM-judge change |
 |---|---|---:|---:|
-| MuSiQue | Short | −0.027 | +0.017 |
-| MuSiQue | Medium | −0.025 | −0.033 |
-| MuSiQue | Full | +0.080 | −0.017 |
-| HotpotQA | Short | **−0.107** | **+0.000** |
-| HotpotQA | Medium | −0.035 | −0.050 |
-| HotpotQA | Full | +0.014 | −0.033 |
+| MuSiQue | No noise (gold-only) | −0.027 | +0.017 |
+| MuSiQue | Medium noise | −0.025 | −0.033 |
+| MuSiQue | High noise (full) | +0.080 | −0.017 |
+| HotpotQA | No noise (gold-only) | **−0.107** | **+0.000** |
+| HotpotQA | Medium noise | −0.035 | −0.050 |
+| HotpotQA | High noise (full) | +0.014 | −0.033 |
 
 BERTScore was replaced by an LLM judge (`openai/gpt-4o-mini`, temperature 0, binary correct/incorrect against the gold answer, deliberately a different model family from the llama systems under test). EM and token F1 remain primary and are reported unchanged alongside it.
 
@@ -96,9 +96,9 @@ BERTScore was replaced by an LLM judge (`openai/gpt-4o-mini`, temperature 0, bin
 
 This does not erase the F1 result, and the two should be read together: F1 says the *surface form* of answers drifts steadily away from the gold string under repeated compression, while the judge says the *fact being asserted* mostly survives. The conclusion that gold-only evidence is the most fragile condition is supported by F1 but is not corroborated by the judge at this sample size.
 
-The full-context conditions often improved after the first handoff, consistent with denoising. Summary length also collapsed rapidly: for example, HotpotQA full context averaged 5,530 characters at depth 0, 720 after one handoff, and 413 by depth 10.
+The high-noise full-context conditions often improved after the first handoff, consistent with denoising. Summary length also collapsed rapidly: for example, HotpotQA full context averaged 5,530 characters at depth 0, 720 after one handoff, and 413 by depth 10.
 
-The main conclusion is not that long contexts are inherently safer. Rather, noisy full contexts provide an opportunity for useful selection, while already-minimal gold evidence has little redundancy and therefore exposes omissions more directly.
+The main conclusion is not that long contexts are inherently safer. Rather, high-noise full contexts provide an opportunity for useful selection, while already-minimal no-noise evidence has little redundancy and therefore exposes omissions more directly.
 
 The confirmed incremental cost reported for extending the chains through depths 6–10 and filling missing answers was **$0.2436**.
 
@@ -108,7 +108,7 @@ The confirmed incremental cost reported for extending the chains through depths 
 
 ![Qwen3 8B repeated-handoff replication](chain_qwen/degradation.png)
 
-The same dataset and evidence-variant design was rerun with Qwen3 8B in non-thinking mode, but with 10 questions per dataset, one seed, and depths 0/1/3/5. It broadly reproduces the dataset split in the original probe: at depth 5, HotpotQA loses F1 in every context (short −0.110, medium −0.086, full −0.108), while MuSiQue is stable-to-improved (short +0.127, medium +0.077, full +0.117). None of the depth-5 intervals exclude zero at this small sample size, so this is directional replication evidence rather than a conclusive cross-model comparison.
+The same dataset and evidence-variant design was rerun with Qwen3 8B in non-thinking mode, but with 10 questions per dataset, one seed, and depths 0/1/3/5. It broadly reproduces the dataset split in the original probe: at depth 5, HotpotQA loses F1 at every noise level (no noise −0.110, medium noise −0.086, high noise −0.108), while MuSiQue is stable-to-improved (no noise +0.127, medium noise +0.077, high noise +0.117). None of the depth-5 intervals exclude zero at this small sample size, so this is directional replication evidence rather than a conclusive cross-model comparison.
 
 Reconciled cost was **$0.0443** across Qwen-specific leakage filtering, 300 summary calls, 240 answer calls, and a compatibility smoke call. The raw outputs and full table are in [`chain_qwen/report.md`](chain_qwen/report.md).
 
@@ -124,16 +124,16 @@ Depth-10 change from direct depth 0, question-conditioned vs question-omitted:
 
 | Dataset | Context | Conditioned F1 | Omitted F1 | Conditioned judge | Omitted judge |
 |---|---|---:|---:|---:|---:|
-| MuSiQue | Short | −0.027 | −0.035 | +0.017 | −0.033 |
-| MuSiQue | Medium | −0.025 | −0.127 | −0.033 | −0.183 |
-| MuSiQue | Full | **+0.080** | **−0.272** | −0.017 | **−0.467** |
-| HotpotQA | Short | −0.107 | −0.247 | +0.000 | −0.117 |
-| HotpotQA | Medium | −0.035 | −0.218 | −0.050 | −0.250 |
-| HotpotQA | Full | +0.014 | **−0.326** | −0.033 | **−0.400** |
+| MuSiQue | No noise (gold-only) | −0.027 | −0.035 | +0.017 | −0.033 |
+| MuSiQue | Medium noise | −0.025 | −0.127 | −0.033 | −0.183 |
+| MuSiQue | High noise (full) | **+0.080** | **−0.272** | −0.017 | **−0.467** |
+| HotpotQA | No noise (gold-only) | −0.107 | −0.247 | +0.000 | −0.117 |
+| HotpotQA | Medium noise | −0.035 | −0.218 | −0.050 | −0.250 |
+| HotpotQA | High noise (full) | +0.014 | **−0.326** | −0.033 | **−0.400** |
 
-Every condition is worse without the question, and the gap widens with more distractors: full-context degradation goes from mildly positive (conditioned) to the worst result in either chain (omitted). This is consistent with the denoising story in §2 — a compressor can only filter distractors *toward* a task it knows, and full-context evidence has the most distractor mass to filter. It also complements §5's finding below: §5 shows conditioning narrows a summary toward one task at the cost of others; this replication shows the opposite failure mode — a compressor with no task at all keeps too much noise and too little signal for any task.
+Every condition is worse without the question, and the gap widens with more distractors: high-noise full-context degradation goes from mildly positive (conditioned) to the worst result in either chain (omitted). This is consistent with the denoising story in §2 — a compressor can only filter distractors *toward* a task it knows, and high-noise full context has the most distractor mass to filter. It also complements §5's finding below: §5 shows conditioning narrows a summary toward one task at the cost of others; this replication shows the opposite failure mode — a compressor with no task at all keeps too much noise and too little signal for any task.
 
-**Judge update, 2026-08-20:** this replication now has real LLM-judge scores (added as a side effect of regenerating its plot with the new size-encoding — see §2 above). Unlike the main serial-degradation result, where the judge flattened the token-F1 signal almost to zero, **here the judge corroborates F1 rather than contradicting it**: question-omitted is worse than conditioned by the judge at every single dataset/context pair, matching F1's direction throughout, and often by a larger margin (MuSiQue full: −0.017 conditioned vs **−0.467** omitted; HotpotQA full: −0.033 vs **−0.400**). This is the same asymmetry noted for §5's judge update below — some findings in this report survive judged-correctness scrutiny and some don't, and this one does.
+**Judge update, 2026-08-20:** this replication now has real LLM-judge scores (added as a side effect of regenerating its plot with the new size-encoding — see §2 above). Unlike the main serial-degradation result, where the judge flattened the token-F1 signal almost to zero, **here the judge corroborates F1 rather than contradicting it**: question-omitted is worse than conditioned by the judge at every single dataset/context pair, matching F1's direction throughout, and often by a larger margin (MuSiQue high noise: −0.017 conditioned vs **−0.467** omitted; HotpotQA high noise: −0.033 vs **−0.400** omitted). This is the same asymmetry noted for §5's judge update below — some findings in this report survive judged-correctness scrutiny and some don't, and this one does.
 
 Cost: **$0.9564** (7,000 live calls, 20 cached) for the original chain, plus **$0.0105** (341 live, 3,439 cached) for the judge pass.
 
@@ -143,28 +143,28 @@ Cost: **$0.9564** (7,000 live calls, 20 cached) for the original chain, plus **$
 
 ### Design
 
-**Revised 2026-08-20: retrieval is now real, not assumed.** MS MARCO QA v2.1 provides ten passages per query with `is_selected` relevance labels, but the original pilot treated any non-selected passage — from any query — as a valid "bad" distractor, which meant the bad condition's filler was often lexically unrelated to the question entirely (an "easy" negative). This run replaces that with a self-contained Okapi BM25 index (`src/retrieval.py`, no external dependency) built over a 4,000-query pool:
+**Revised 2026-08-20: retrieval is now real, not assumed.** MS MARCO QA v2.1 provides ten passages per query with `is_selected` relevance labels, but the original pilot treated any non-selected passage — from any query — as a valid distractor, which meant the low-retention arm's filler was often lexically unrelated to the question entirely (an “easy” candidate negative). This run replaces that with a self-contained Okapi BM25 index (`src/retrieval.py`, no external dependency) built over a 4,000-query pool:
 
 - **Gold** = a passage MS MARCO's own `is_selected` label marks relevant **and** that this code's own BM25 ranking actually retrieves for that query ("top retrieved and relevant," not relevance judged in isolation — 22/22 originally-labelled passages turned out to be BM25-findable in this sample, i.e. `gold_bm25_findable == gold_labelled_by_msmarco`).
-- **Hard negative** = a passage BM25 ranks in that same query's top-50 but that is *not* gold — either the query's own non-relevant passages, or another query's passage lexically on-topic enough to rank highly. These replace the previous random-unrelated-query filler.
+- **Hard candidate negative** = a passage BM25 ranks in that same query's top-50 but that is *not* gold — either the query's own non-selected passage, or another query's passage lexically on-topic enough to rank highly. These replace the previous random-unrelated-query filler.
 
-The good/medium/bad recall knob keeps the original global-pool mechanic (one seeded shuffle-and-slice over every gold passage pooled across all 20 queries, not a per-query fraction — a per-query fraction breaks down when a query has only one findable gold passage, since `round(1 × 0.5) == 0` under Python's banker's rounding while `bad`'s floor keeps it at 1, inverting the intended ordering). Twenty questions, one seed, depths 0, 1, 3, and 5. Question text was passed at every handoff.
+The low-/medium-/high-noise knob keeps the original global-pool mechanic (one seeded shuffle-and-slice over every gold passage pooled across all 20 queries, not a per-query fraction — a per-query fraction breaks down when a query has only one findable gold passage, since `round(1 × 0.5) == 0` under Python's banker's rounding while the high-noise floor keeps at least one, inverting the intended ordering). Every context still has ten passages; the label refers to the *relative amount of retrieved gold retained*, not an assertion that any arm lacks distractors. Twenty questions, one seed, depths 0, 1, 3, and 5. Question text was passed at every handoff.
 
-**Easy-negative matched rerun, 2026-08-21.** Each hard arm is now paired with an easy arm that keeps the same questions, gold passages, global recall target, ten-passage width, gold/distractor positions, prompts, depths, and model. The sole change is filler selection: hard fillers are eligible BM25 top-50 passages, while easy fillers are eligible passages drawn from that query's BM25 bottom-1,000 (including zero-overlap passages). `hard − easy` is bootstrapped over the same 20 question ids at each condition/depth.
+**Easy-negative matched rerun, 2026-08-21.** Each hard arm is now paired with an easy arm that keeps the same questions, gold passages, global recall target, ten-passage width, gold/distractor positions, prompts, depths, and model. The sole change is filler selection: hard fillers are eligible BM25 top-50 passages, while easy fillers are eligible passages drawn from that query's BM25 bottom-1,000 (including zero-overlap passages). `hard − easy` is bootstrapped over the same 20 question ids at each condition/depth. These are BM25-selected *candidate* distractors; neither dataset supplies an exhaustive target-question non-relevance judgment for every cross-query candidate.
 
 Empirical recall-at-10 against BM25-findable gold:
 
-| Retrieval condition | Gold passages retained | Recall@10 |
+| Noise level | Exact input composition across the 20 contexts | Recall@10 |
 |---|---:|---:|
-| Good | 22/22 | 1.000 |
-| Medium | 11/22 | 0.500 |
-| Bad | 3/22 | 0.136 |
+| Low noise | All 22 BM25-findable gold passages + 178 candidate distractors | 1.000 |
+| Medium noise | 11/22 gold passages + 189 candidate distractors | 0.500 |
+| High noise | 3/22 gold passages + 197 candidate distractors | 0.136 |
 
 ### Results
 
 ![Retrieval quality propagation](retrieval_quality/n20/retrieval_quality.png)
 
-| Depth | Good F1 | Medium F1 | Bad F1 |
+| Depth | Low-noise F1 | Medium-noise F1 | High-noise F1 |
 |---:|---:|---:|---:|
 | 0 | 0.492 | 0.382 | 0.291 |
 | 1 | 0.423 | 0.392 | 0.258 |
@@ -177,13 +177,13 @@ The updated plot shows solid hard-negative and dashed easy-negative trajectories
 
 | Retrieval arm | Hard F1 d0 | Easy F1 d0 | Hard F1 d5 | Easy F1 d5 |
 |---|---:|---:|---:|---:|
-| Good | 0.492 | 0.547 | 0.433 | 0.460 |
-| Medium | 0.382 | 0.321 | 0.336 | 0.283 |
-| Bad | 0.291 | 0.204 | 0.325 | 0.150 |
+| Low noise | 0.492 | 0.547 | 0.433 | 0.460 |
+| Medium noise | 0.382 | 0.321 | 0.336 | 0.283 |
+| High noise | 0.291 | 0.204 | 0.325 | 0.150 |
 
-Bottom-ranked “easy” distractors do **not** uniformly improve QA. They make the low-recall bad arm substantially worse: hard minus easy is +0.153 F1 at depth 3 (95% interval +0.022 to +0.308) and +0.176 at depth 5 (+0.042 to +0.331). Conversely, the good arm favors easy negatives at depth 1 (hard minus easy −0.173, −0.308 to −0.056). The resulting good-minus-bad gap is larger and remains distinguishable under easy negatives (+0.342 at depth 0; +0.310 at depth 5), while the hard-negative gap is +0.201 and +0.107 respectively. This suggests lexical hard negatives can preserve question-adjacent information that partly rescues a weak-retrieval context; they are not interchangeable with empty noise.
+Bottom-ranked “easy” candidate distractors do **not** uniformly improve QA. They make the high-noise arm substantially worse: hard minus easy is +0.153 F1 at depth 3 (95% interval +0.022 to +0.308) and +0.176 at depth 5 (+0.042 to +0.331). Conversely, the low-noise arm favors easy negatives at depth 1 (hard minus easy −0.173, −0.308 to −0.056). The resulting low-minus-high-noise gap is larger and remains distinguishable under easy negatives (+0.342 at depth 0; +0.310 at depth 5), while the hard-negative gap is +0.201 and +0.107 respectively. This suggests lexical hard negatives can preserve question-adjacent information that partly rescues a weak-retrieval context; they are not interchangeable with empty noise.
 
-Under BM25 hard negatives, the good–bad gap is larger and more persistent than the original random-distractor design found: **+0.201 F1 at depth 0** (95% interval +0.093 to +0.326, p = 0.002) and still **+0.107 at depth 5** (interval −0.014 to +0.243, p = 0.103 — directionally consistent but no longer excluding zero at n = 20). The good condition still degrades most in absolute terms (depth-5 change −0.059 F1, interval −0.125 to +0.006), while bad is statistically flat across depth (all `depth_minus_depth0` intervals for bad span zero).
+Under BM25 hard candidate negatives, the low–high-noise gap is larger and more persistent than the original random-distractor design found: **+0.201 F1 at depth 0** (95% interval +0.093 to +0.326, p = 0.002) and still **+0.107 at depth 5** (interval −0.014 to +0.243, p = 0.103 — directionally consistent but no longer excluding zero at n = 20). The low-noise condition still degrades most in absolute terms (depth-5 change −0.059 F1, interval −0.125 to +0.006), while high noise is statistically flat across depth (all `depth_minus_depth0` intervals for high noise span zero).
 
 This is a materially different picture from the random-distractor version: with genuinely confusable hard negatives, the retrieval-quality advantage is bigger to start with (real distractors are harder to filter than easy ones) and does not visibly close by depth 5, though the interval no longer rules out zero. Read together with §4 below — where the same BM25 hard-negative swap produced the opposite ordering shift — this suggests hard negatives change results in ways that depend on task structure, not a uniform "harder distractors always widen the gap."
 
