@@ -347,14 +347,29 @@ def answer(client, pair: dict, query_type: str, material: str, cfg: dict, tag: s
             "em": em, "f1": f1, "cached": result.cached}
 
 
-def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
+def analyse(rows: list[dict], cfg: dict, root: Path, pairs: list[dict], handoffs: dict) -> None:
     boot, ci = cfg["analysis"]["bootstrap_resamples"], cfg["analysis"]["ci_level"]
+    pair_lookup = {p["pair_id"]: p for p in pairs}
+
+    def mean_chars(mode: str, depth: int, pair_ids: list[str]) -> float:
+        # "direct" (depth 0) has no generated summary -- the answerer sees the
+        # raw context instead, so size that marker by context length. Every
+        # other point is sized by the actual generated handoff/summary text,
+        # so shrinkage across repeated compression is visible on the accuracy
+        # curve itself, not just in a separate token-count table.
+        if mode == "direct":
+            lengths = [len(render_context(pair_lookup[pid])) for pid in pair_ids]
+        else:
+            lengths = [len(handoffs[(pid, mode, depth)]["text"]) for pid in pair_ids]
+        return sum(lengths) / len(lengths)
+
     metrics, vectors = [], {}
     keys = sorted(set((r["mode"], r["query_type"], int(r["depth"])) for r in rows))
     for mode, query_type, depth in keys:
         subset = sorted([r for r in rows if (r["mode"], r["query_type"], int(r["depth"])) == (mode, query_type, depth)], key=lambda x: x["pair_id"])
         vectors[(mode, query_type, depth)] = {m: {r["pair_id"]: r[m] for r in subset} for m in ("em", "f1", "judge_correct")}
-        record = {"mode": mode, "query_type": query_type, "depth": depth, "n": len(subset)}
+        record = {"mode": mode, "query_type": query_type, "depth": depth, "n": len(subset),
+                  "handoff_characters_mean": round(mean_chars(mode, depth, [r["pair_id"] for r in subset]), 1)}
         for metric in ("em", "f1", "judge_correct"):
             mean, lo, hi = bootstrap_ci(np.array([r[metric] for r in subset]), boot, ci, seed=71)
             record.update({metric: round(mean, 4), f"{metric}_lo": round(lo, 4), f"{metric}_hi": round(hi, 4)})
@@ -385,14 +400,31 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
                              sharey="row", squeeze=False)
     colors = {"direct": "#7570b3", "conditioned": "#d95f02", "generic": "#1b9e77"}
     titles = ("Conditioning question A", "Unrelated held-out question B")
+    # Marker area proportional to the mean size (characters) of whatever text
+    # actually fed the answerer at that point -- the raw context at depth 0,
+    # the generated summary at depth >=1 -- one scale for the whole figure so
+    # area is comparable across both panels, both arms, and both metric rows.
+    all_chars = [r["handoff_characters_mean"] for r in metrics if "handoff_characters_mean" in r]
+    max_chars = max(all_chars) if all_chars else 1.0
+    max_area, min_area = 900.0, 15.0
+    size_scale = max_area / max_chars
+
+    def marker_area(record: dict) -> float:
+        chars = record.get("handoff_characters_mean")
+        return max_area if chars is None else max(min_area, size_scale * chars)
+
     for row_idx, (metric, label) in enumerate(plot_metrics):
         for col_idx, (query_type, title) in enumerate(zip(("target", "heldout"), titles)):
             axis = axes[row_idx][col_idx]
             direct = next(r for r in metrics if r["mode"] == "direct" and r["query_type"] == query_type)
-            axis.scatter([0], [direct[metric]], color=colors["direct"], label="direct context", s=45)
+            axis.scatter([0], [direct[metric]], s=marker_area(direct), color=colors["direct"],
+                        edgecolors="white", linewidths=0.6, label="direct context", zorder=3)
             for mode in cfg["modes"]:
                 subset = sorted([r for r in metrics if r["mode"] == mode and r["query_type"] == query_type], key=lambda r: r["depth"])
-                axis.plot([r["depth"] for r in subset], [r[metric] for r in subset], marker="o", linewidth=2, color=colors[mode], label=mode)
+                x = [r["depth"] for r in subset]
+                axis.plot(x, [r[metric] for r in subset], marker="", linewidth=2, color=colors[mode], label=mode, zorder=2)
+                axis.scatter(x, [r[metric] for r in subset], s=[marker_area(r) for r in subset],
+                            color=colors[mode], edgecolors="white", linewidths=0.6, zorder=3)
             if row_idx == 0:
                 axis.set_title(title)
             if row_idx == len(plot_metrics) - 1:
@@ -402,7 +434,12 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
         axes[row_idx][0].set_ylabel(label)
     axes[0][1].legend()
     fig.suptitle("Question-only conditioning and summary generalizability")
-    fig.tight_layout()
+    fig.tight_layout(rect=(0, 0.03, 1, 1))
+    fig.text(0.5, 0.005,
+              f"Marker area ∝ mean characters in the answerer's input at that point "
+              f"(raw context at depth 0, else the generated summary) — smallest marker "
+              f"{min_area:.0f}pt² floor, largest ≈{max_chars:,.0f} characters.",
+              ha="center", fontsize=8, color="#555555")
     fig.savefig(root / "summary_generalization.png", dpi=180, bbox_inches="tight")
     plt.close(fig)
 
@@ -475,7 +512,7 @@ def main() -> int:
         write_jsonl(answer_path, rows)
         judge_client = add_judge(rows, cfg, tag="summary_generalization_judge")
         write_jsonl(answer_path, rows)
-        analyse(rows, cfg, result_root)
+        analyse(rows, cfg, result_root, pairs, handoffs)
         write_example(pairs[0], handoffs, result_root)
         if judge_client is not None:
             print("[generalization:judge cost] " + json.dumps(judge_client.ledger.summary()))

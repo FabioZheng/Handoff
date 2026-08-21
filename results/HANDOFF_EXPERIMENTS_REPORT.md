@@ -280,6 +280,8 @@ The final answerer receives whichever question is being evaluated. Summaries hav
 
 ![Question-only conditioning through ten handoffs](summary_generalization_v2_depth10/n20/summary_generalization.png)
 
+Dot area is proportional to the mean number of characters the answerer actually received at that point (the raw 10-passage context at depth 0, the generated summary at every depth after) — the same size encoding used for the repeated-degradation plot in §2. It makes the mechanism visible directly on the accuracy curve: conditioned summaries settle to 726–883 characters after the first handoff, while generic summaries, with no question to focus them, stay roughly 3–4x larger throughout (2,983–3,140 characters) despite sharing the identical 700-token cap. Conditioning is not just differently-focused here, it is writing a substantially shorter note.
+
 The plot evaluates every depth from 0 to 10. Selected Token-F1 landmarks are:
 
 | Evaluation | Direct | Conditioned d1 | Generic d1 | Conditioned d2 | Generic d2 | Conditioned d5 | Generic d5 | Conditioned d10 | Generic d10 |
@@ -354,6 +356,8 @@ Before reading any effect, the three diagnostics that invalidated the previous r
 #### Results
 
 ![Question-only conditioning on SQuAD same-passage pairs](squad_same_passage/n20/summary_generalization.png)
+
+Dot area again encodes mean characters received at that point. Against a 7,954-character direct context, conditioned summaries shrink to 612 characters at depth 1 (927 by depth 10), while generic summaries — compressing the same ten passages with no question to focus them — stay far larger throughout, 3,784–4,491 characters. This is the visual counterpart to the stage-1 fact-survival numbers above: generic keeps more text overall but still loses the specific fact either question needs.
 
 Paired conditioned-minus-generic contrasts:
 
