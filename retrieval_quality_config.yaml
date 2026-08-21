@@ -43,6 +43,8 @@ dataset:
   # This is a pool, not a retrieval cutoff: zero-overlap documents are valid.
   bm25_bottom_k: 1000
 
+# Stable machine ids retained for cached artifacts.  Report/plot labels are
+# low, medium, and high noise; each remains a fixed ten-passage context.
 conditions: [good, medium, bad]
 negative_types: [hard, easy]
 depths: [0, 1, 3, 5]

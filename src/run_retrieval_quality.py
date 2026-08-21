@@ -2,10 +2,11 @@
 
 This intentionally changes only passage relevance: every condition has exactly
 ten real MS MARCO passages.  A self-contained BM25 index does the retrieval:
-"good" passages are a query's own MS MARCO-labelled-relevant passages that
-BM25 also actually surfaces for that query (top retrieved AND relevant, not
-relevance in isolation).  Passages removed to build the medium/bad conditions
-are backfilled with real BM25 hard negatives for that query -- passages BM25
+The low-noise context retains every query's own MS MARCO-labelled-relevant
+passage that BM25 also actually surfaces (top retrieved AND relevant, not
+relevance in isolation).  The medium- and high-noise contexts retain fewer
+such passages and backfill the fixed ten-passage width with real BM25 hard
+negatives -- passages BM25
 ranks highly (lexically on-topic) but MS MARCO's `is_selected` label marks
 irrelevant, rather than an unrelated passage sampled from a different query.
 All compressors receive the original question at every stage; later stages
@@ -44,6 +45,19 @@ REWRITE = "Rewrite the prior notes concisely. Preserve every fact needed to answ
 def arm_name(negative_type: str, retrieval_condition: str) -> str:
     """Keep legacy hard-arm ids so their prior cached results remain reusable."""
     return retrieval_condition if negative_type == "hard" else f"{negative_type}_{retrieval_condition}"
+
+
+CONTEXT_LABELS = {
+    "good": "Low noise",
+    "medium": "Medium noise",
+    "bad": "High noise",
+}
+
+CONTEXT_COMPOSITIONS = {
+    "good": "All BM25-findable gold passages retained; remaining slots are distractors.",
+    "medium": "Half of BM25-findable gold passages retained; remaining slots are distractors.",
+    "bad": "15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.",
+}
 
 
 def arm_specs(cfg: dict) -> list[tuple[str, str, str]]:
@@ -168,8 +182,9 @@ def condition_packs(packs,doc_lookup,condition,negative_type,seed):
     # Recall target is a GLOBAL knob over every usable-gold passage pooled
     # across all queries, exactly like the pre-BM25 design -- not a per-query
     # fraction. Per-query fractions break down (e.g. round(1*.5)==0 by
-    # banker's rounding while bad's max(1,...) floor stays at 1, inverting
-    # good>medium>bad) whenever a query has only one BM25-findable gold
+    # banker's rounding while high noise's max(1,...) floor stays at 1,
+    # inverting the intended low > medium > high retention ordering whenever
+    # a query has only one BM25-findable gold
     # passage, which is the common case here.
     all_gold=[(q['qid'],doc_id) for q in packs for doc_id in q['usable_gold_ids']]
     target={'good':len(all_gold),'medium':round(len(all_gold)*.5),'bad':max(1,round(len(all_gold)*.15))}[condition]
@@ -186,7 +201,7 @@ def condition_packs(packs,doc_lookup,condition,negative_type,seed):
         neg_seed=f'{seed}:{condition}:{q["qid"]}:negatives' if negative_type=='hard' else f'{seed}:easy:{condition}:{q["qid"]}:negatives'
         random.Random(neg_seed).shuffle(neg_order)
         fill_ids=neg_order[:fill_n]
-        assert len(fill_ids)==fill_n, f'not enough hard negatives for {q["qid"]}/{condition}: need {fill_n}, have {len(neg_order)}'
+        assert len(fill_ids)==fill_n, f'not enough {negative_type} negatives for {q["qid"]}/{condition}: need {fill_n}, have {len(neg_order)}'
         chosen_ids=keep_ids+fill_ids
         rng=random.Random(f'{seed}:{condition}:{q["qid"]}:order'); rng.shuffle(chosen_ids)
         ps=[]
@@ -197,7 +212,10 @@ def condition_packs(packs,doc_lookup,condition,negative_type,seed):
         assert len(ps)==10 and sum(p['selected'] for p in ps)==len(keep_ids)
         out.append({'qid':q['qid'],'question':q['question'],'golds':q['golds'],'passages':ps,
                     'condition':arm_name(negative_type,condition),
-                    'retrieval_condition':condition,'negative_type':negative_type})
+                    'retrieval_condition':condition,
+                    'context_label': CONTEXT_LABELS[condition],
+                    'context_composition': CONTEXT_COMPOSITIONS[condition],
+                    'negative_type':negative_type})
     return out
 
 def context(q): return '\n\n'.join(f"[P{i+1}] {p['text']}" for i,p in enumerate(q['passages']))
@@ -221,14 +239,16 @@ def answer(client,q,material,cfg,tag):
 def construct(cfg,n,write=True):
     raw=ensure_data(cfg); packs,doc_lookup=make_packs(raw,cfg,n); data_root=ROOT/cfg['outputs']['data_root']; rows=[]; summary=[]
     # How much of MS MARCO's own relevance judgment BM25 actually surfaces --
-    # a diagnostic of the retriever, independent of the good/medium/bad knob.
+    # a diagnostic of the retriever, independent of the noise-level knob.
     labelled=sum(p['selected'] for q in packs for p in q['passages'])
     bm25_findable=sum(len(q['usable_gold_ids']) for q in packs)
     for condition_id,negative_type,condition in arm_specs(cfg):
         built=condition_packs(packs,doc_lookup,condition,negative_type,cfg['dataset']['sample_seed'])
         retained=sum(p['selected'] for q in built for p in q['passages'])
         summary.append({'condition':condition_id,'negative_type':negative_type,
-                        'retrieval_condition':condition,'questions':len(built),'passages_per_query':10,
+                        'retrieval_condition':condition,'context_label':CONTEXT_LABELS[condition],
+                        'context_composition':CONTEXT_COMPOSITIONS[condition],
+                        'questions':len(built),'passages_per_query':10,
                         'gold_retained':retained,'gold_bm25_findable':bm25_findable,
                         'gold_labelled_by_msmarco':labelled,
                         'gold_recall_at_10':round(retained/bm25_findable,4)})
@@ -246,7 +266,10 @@ def analyse(rows,cfg,result_root):
         for depth in cfg['depths']:
             rs=sorted([r for r in rows if r['condition']==cond and int(r['depth'])==depth],key=lambda x:x['qid'])
             vals={m:np.array([r[m] for r in rs]) for m in ('em','f1','bertscore_f1')}; vectors[(cond,depth)]={m:dict(zip([r['qid'] for r in rs],v)) for m,v in vals.items()}
-            rec={'condition':cond,'negative_type':negative_type,'retrieval_condition':retrieval_condition,'depth':depth,'n':len(rs)}
+            rec={'condition':cond,'negative_type':negative_type,'retrieval_condition':retrieval_condition,
+                 'context_label':CONTEXT_LABELS[retrieval_condition],
+                 'context_composition':CONTEXT_COMPOSITIONS[retrieval_condition],
+                 'depth':depth,'n':len(rs)}
             for m,v in vals.items():
                 mean,lo,hi=bootstrap_ci(v,boot,ci,seed=51); rec.update({m:round(mean,4),f'{m}_lo':round(lo,4),f'{m}_hi':round(hi,4)})
             metrics.append(rec)
@@ -274,7 +297,7 @@ def analyse(rows,cfg,result_root):
     fig,axes=plt.subplots(1,2,figsize=(12,4.4)); colors={'good':'#1b9e77','medium':'#7570b3','bad':'#d95f02'}; styles={'hard':'-','easy':'--'}
     for cond,negative_type,retrieval_condition in arm_specs(cfg):
         rs=[r for r in metrics if r['condition']==cond]; x=[r['depth'] for r in rs]
-        label=f'{retrieval_condition} / {negative_type}'
+        label=f'{CONTEXT_LABELS[retrieval_condition]} / {negative_type}'
         axes[0].plot(x,[r['f1'] for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition]); axes[1].plot(x,[r['f1']-next(z['f1'] for z in metrics if z['condition']==cond and z['depth']==0) for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
     axes[0].set(title='QA quality: hard vs easy distractors',xlabel='Handoff depth',ylabel='Token F1'); axes[1].set(title='Degradation from depth 0',xlabel='Handoff depth',ylabel='Token F1 change')
     for a in axes: a.grid(alpha=.25); a.legend(); a.set_xticks(cfg['depths'])

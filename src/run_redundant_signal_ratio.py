@@ -36,6 +36,19 @@ def arm_name(negative_type: str, signal_condition: str) -> str:
     return signal_condition if negative_type == "hard" else f"{negative_type}_{signal_condition}"
 
 
+CONTEXT_LABELS = {
+    "signal_1_0": "No noise",
+    "signal_0_5": "Medium noise",
+    "signal_0_1": "High noise",
+}
+
+CONTEXT_COMPOSITIONS = {
+    "signal_1_0": "10 answer-sufficient gold passages and 0 distractors.",
+    "signal_0_5": "5 answer-sufficient gold passages and 5 distractors.",
+    "signal_0_1": "1 answer-sufficient gold passage and 9 distractors.",
+}
+
+
 def arm_specs(cfg: dict) -> list[tuple[str, str, str, int]]:
     return [(arm_name(negative_type, condition), negative_type, condition, relevant)
             for negative_type in cfg["negative_types"]
@@ -207,6 +220,8 @@ def condition_pack(base: dict, doc_lookup: dict[str, dict], condition: str, rele
     assert all(not doc["is_relevant"] or base["gold_passages"][0]["text"].split("\n\n", 1)[0] in doc["text"] for doc in docs)
     return {"condition": arm_name(negative_type, condition), "negative_type": negative_type,
             "signal_condition": condition, "relevant_count": relevant, "passages": docs,
+            "context_label": CONTEXT_LABELS[condition],
+            "context_composition": CONTEXT_COMPOSITIONS[condition],
             **{key: base[key] for key in ("qid", "question", "golds", "title")}}
 
 
@@ -217,7 +232,9 @@ def construct(cfg: dict, n: int, write: bool) -> tuple[list[dict], list[dict]]:
     for condition_id, negative_type, condition, count in arm_specs(cfg):
         packs.extend(condition_pack(row, doc_lookup, condition, count, negative_type, cfg) for row in base)
         report.append({"condition": condition_id, "negative_type": negative_type,
-                       "signal_condition": condition, "questions": n, "passages_per_query": width,
+                       "signal_condition": condition, "context_label": CONTEXT_LABELS[condition],
+                       "context_composition": CONTEXT_COMPOSITIONS[condition],
+                       "questions": n, "passages_per_query": width,
                        "answer_sufficient_gold_passages": count, "distractors": width - count,
                        "signal_ratio": count / width, "same_question_for_all_gold_passages": True,
                        "source_paragraph_present_in_every_gold_passage": True})
@@ -265,7 +282,9 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
         for depth in cfg["depths"]:
             subset = sorted((r for r in rows if r["condition"] == condition and int(r["depth"]) == depth), key=lambda r: r["qid"])
             record = {"condition": condition, "negative_type": negative_type,
-                      "signal_condition": signal_condition, "signal_ratio": relevant_count / 10,
+                      "signal_condition": signal_condition, "context_label": CONTEXT_LABELS[signal_condition],
+                      "context_composition": CONTEXT_COMPOSITIONS[signal_condition],
+                      "signal_ratio": relevant_count / 10,
                       "depth": depth, "n": len(subset)}
             values[(condition, depth)] = {}
             for metric in ("em", "f1", "judge_correct"):
@@ -309,7 +328,8 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    labels = {"signal_1_0": "10 answer-sufficient / 0 distractor", "signal_0_5": "5 answer-sufficient / 5 distractor", "signal_0_1": "1 answer-sufficient / 9 distractor"}
+    labels = {condition: f"{CONTEXT_LABELS[condition]} ({CONTEXT_COMPOSITIONS[condition].rstrip('.')})"
+              for condition in cfg["conditions"]}
     colors = {"signal_1_0": "#1b9e77", "signal_0_5": "#7570b3", "signal_0_1": "#d95f02"}
     styles = {"hard": "-", "easy": "--"}
     fig, axes = plt.subplots(1, 3, figsize=(18, 4.8))

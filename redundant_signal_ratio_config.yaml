@@ -41,6 +41,7 @@ dataset:
   bm25_bottom_k: 1000
 
 conditions:
+  # Report/plot labels: no, medium, and high noise, respectively.
   signal_1_0: 10
   signal_0_5: 5
   signal_0_1: 1
