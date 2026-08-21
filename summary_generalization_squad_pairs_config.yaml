@@ -1,0 +1,84 @@
+# Question conditioning vs summary generalization on SQuAD same-passage A/B pairs.
+#
+# Supersedes the generated-Wikipedia variant of Experiment 5, which was
+# confounded (obscurity-selected questions, whole-article passages ~10x the
+# summary budget, unstratified gold position -> a degenerate generic arm).
+# Dataset is built and validated by src/build_squad_same_passage.py.
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  # NON-BINDING by design. The context here is ~8,000 characters (~2,000 tokens),
+  # comparable to the original paired-SQuAD run, so this is a similar compression
+  # ratio -- but the cap is set above the model's natural summary length rather
+  # than at it, so summary length is chosen by the model and measured as an
+  # outcome. It is identical across both arms and every depth: the C2/C6
+  # constraint is that no arm may write more than another, not that the cap bind.
+  # Truncation rate is reported; a binding cap invalidates the generic arm.
+  handoff_max_tokens: 1500
+
+cost:
+  cap_usd: 2.0
+  api_call_cap: 3000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 8
+  max_retries: 4
+  backoff_base_s: 1.5
+  backoff_max_s: 30.0
+  request_timeout_s: 120
+  cache_dir: cache
+
+dataset:
+  source: "prebuilt_pairs"
+  parquet_url: "https://huggingface.co/datasets/rajpurkar/squad/resolve/refs%2Fconvert%2Fparquet/plain_text/validation/0000.parquet"
+  local_parquet: data/raw/squad_validation.parquet
+  pairs_jsonl: data/squad_same_passage/pairs_n20.jsonl
+  sample_seed: 20260821
+  n_pairs: 20
+  context_passages: 10       # 1 shared gold passage + 9 unrelated distractors
+  # Length matching: every passage, gold and distractor alike, is drawn from this
+  # band, so total context length is near-constant across examples.
+  passage_chars_min: 700
+  passage_chars_max: 900
+  max_answer_tokens: 6       # keep both targets crisp, comparable spans
+  max_question_jaccard: 0.10 # same threshold as the original paired-SQuAD run
+  # SQuAD is a heavily-pretrained public benchmark: the first build measured a
+  # 42% closed-book leak rate on its questions, and a pair dies if EITHER of its
+  # two questions leaks. The pool is sized so ~20 fully-clean pairs survive.
+  max_candidates: 400        # structural candidates sent to the LLM audit
+  validated_target: 110      # audited pairs to keep before C1 leakage filtering
+
+# C1 closed-book leakage filter, applied to BOTH questions of every pair using
+# the model under test. Semantic judging, not F1 thresholding.
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  f1_known_threshold: 0.6
+
+modes: [conditioned, generic]
+depths: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+max_depth: 10
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+
+outputs:
+  data_root: data/squad_same_passage
+  run_root: runs/squad_same_passage
+  result_root: results/squad_same_passage
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0

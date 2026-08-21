@@ -1,2 +1,0 @@
-pairs,passages_per_pair,source_pages_available,same_article_pairs,mean_question_jaccard,max_question_jaccard
-10,10,10,10,0.0824,0.1818

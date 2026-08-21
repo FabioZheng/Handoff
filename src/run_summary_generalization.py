@@ -246,6 +246,36 @@ def construct_pairs_wikipedia(cfg: dict, n: int, write: bool = True) -> list[dic
     return pairs
 
 
+def load_prebuilt_pairs(cfg: dict, n: int) -> list[dict]:
+    """Load pairs built and validated by a separate builder script.
+
+    Construction that needs LLM calls (independence/salience audit, C1 leakage
+    filtering) belongs in the builder, not in the experiment runner, so the
+    experiment never silently re-derives its own dataset. See
+    src/build_squad_same_passage.py.
+    """
+    path = ROOT / cfg["dataset"]["pairs_jsonl"]
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Prebuilt pair file missing: {path}. Build it with "
+            "python src/build_squad_same_passage.py")
+    pairs = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x]
+    if len(pairs) < n:
+        raise RuntimeError(f"{path} holds {len(pairs)} pairs, need {n}")
+    pairs = pairs[:n]
+    width = cfg["dataset"]["context_passages"]
+    for pair in pairs:
+        assert len(pair["passages"]) == width, f"{pair['pair_id']} has {len(pair['passages'])} passages"
+        assert sum(p["role"] == "gold_AB" for p in pair["passages"]) == 1
+    positions = sorted(p["gold_position"] for p in pairs)
+    chars = [p["context_chars"] for p in pairs]
+    print(f"[generalization:pairs] {len(pairs)} prebuilt pairs from {path.name}; "
+          f"gold positions {min(positions)}-{max(positions)} over "
+          f"{len(set(positions))} distinct slots; context "
+          f"{min(chars)}-{max(chars)} chars")
+    return pairs
+
+
 def render_context(pair: dict) -> str:
     return "\n\n".join(f"[P{i + 1}] {p['text']}" for i, p in enumerate(pair["passages"]))
 
@@ -282,7 +312,8 @@ def compress(client, pair: dict, notes: str | None, mode: str, stage: int, cfg: 
                          max_tokens=cfg["decoding"]["handoff_max_tokens"], seed=stage,
                          tag=f"summary_generalization_{mode}_stage{stage}")
     return {"text": result.text.strip(), "cached": result.cached,
-            "prompt_tokens": result.prompt_tokens, "completion_tokens": result.completion_tokens}
+            "prompt_tokens": result.prompt_tokens, "completion_tokens": result.completion_tokens,
+            "finish_reason": result.finish_reason}
 
 
 def write_example(pair: dict, handoffs: dict, root: Path) -> None:
@@ -385,8 +416,9 @@ def main() -> int:
     args = parser.parse_args()
     cfg = load_config(args.config)
     n = args.n or cfg["dataset"]["n_pairs"]
-    if cfg["dataset"].get("source") == "generated_wikipedia":
-        pairs = construct_pairs_wikipedia(cfg, n, write=not args.dry_run)
+    source = cfg["dataset"].get("source")
+    if source == "prebuilt_pairs":
+        pairs = load_prebuilt_pairs(cfg, n)
     else:
         pairs = construct_pairs(cfg, n, write=not args.dry_run)
     prompt_difference_selftest(pairs[0])
@@ -411,7 +443,16 @@ def main() -> int:
                     handoffs[(pair["pair_id"], mode, stage)] = {"pair_id": pair["pair_id"], "mode": mode, "stage": stage, **future.result()}
             if not args.dry_run:
                 write_jsonl(handoff_path, [r for _, r in sorted(handoffs.items())])
-            print(f"[generalization:handoff] {mode}/stage{stage}: {len(missing)} generated")
+            stage_rows = [handoffs[(pair["pair_id"], mode, stage)] for pair in pairs]
+            # A handoff cut off at the cap is not a summary the model chose to end --
+            # it is a truncated one, and the lost tail is silently absent from every
+            # later stage. Surface it loudly; a binding cap invalidates the arm.
+            truncated = [r for r in stage_rows if r.get("finish_reason") == "length"]
+            note = ""
+            if truncated:
+                note = (f"  WARNING: {len(truncated)}/{len(stage_rows)} hit the "
+                        f"{cfg['decoding']['handoff_max_tokens']}-token cap (truncated mid-summary)")
+            print(f"[generalization:handoff] {mode}/stage{stage}: {len(missing)} generated{note}")
     answer_path = run_root / "answers.jsonl"
     existing = {(r["mode"], r["query_type"], int(r["depth"]), r["pair_id"]): r for r in read_jsonl(answer_path)}
     jobs = []

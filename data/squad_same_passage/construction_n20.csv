@@ -1,0 +1,2 @@
+pairs,passages_per_pair,same_passage_answers_both,questions_model_authored,gold_positions_used,gold_position_counts,gold_passage_chars_min,gold_passage_chars_max,context_chars_min,context_chars_max,context_chars_spread_pct,mean_question_jaccard,max_question_jaccard,c1_questions_probed,c1_questions_leaked,c1_method
+20,10,20,0,10,"{""1"": 2, ""2"": 2, ""3"": 2, ""4"": 2, ""5"": 2, ""6"": 2, ""7"": 2, ""8"": 2, ""9"": 2, ""10"": 2}",712,878,7432,8197,10.29,0.0146,0.0909,220,85,llm_judge
