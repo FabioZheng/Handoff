@@ -367,7 +367,7 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
               for condition in cfg["conditions"]}
     colors = {"signal_1_0": "#1b9e77", "signal_0_5": "#7570b3", "signal_0_1": "#d95f02"}
     styles = {"hard": "-", "easy": "--"}
-    fig, axes = plt.subplots(1, 3, figsize=(18, 4.8))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.8))
     for condition, negative_type, signal_condition, _ in arm_specs(cfg):
         # With zero distractors, hard/easy contexts are byte-identical. Keep
         # both rows in the metrics/deltas as a control, but draw one line.
@@ -377,15 +377,13 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
         x, y = [r["depth"] for r in subset], [r["f1"] for r in subset]
         label = f"{labels[signal_condition]} / {negative_type}"
         axes[0].plot(x, y, marker="o", linestyle=styles[negative_type], color=colors[signal_condition], label=label)
-        axes[1].plot(x, [score / y[0] if y[0] else float("nan") for score in y], marker="o", linestyle=styles[negative_type], color=colors[signal_condition], label=label)
         judge = [r["judge_correct"] for r in subset]
         lower = [r["judge_correct"] - r["judge_correct_lo"] for r in subset]
         upper = [r["judge_correct_hi"] - r["judge_correct"] for r in subset]
-        axes[2].errorbar(x, judge, yerr=[lower, upper], marker="o", capsize=3,
+        axes[1].errorbar(x, judge, yerr=[lower, upper], marker="o", capsize=3,
                          linestyle=styles[negative_type], color=colors[signal_condition], label=label)
     axes[0].set(title="QA F1: hard vs easy distractors", xlabel="Compression handoffs", ylabel="Token F1")
-    axes[1].set(title="Answer accuracy retained", xlabel="Compression handoffs", ylabel="F1 / depth-0 F1")
-    axes[2].set(title="LLM-judge answer correctness", xlabel="Compression handoffs", ylabel="Judge accuracy")
+    axes[1].set(title="LLM-judge answer correctness", xlabel="Compression handoffs", ylabel="Judge accuracy")
     for axis in axes:
         axis.set_xticks(cfg["depths"])
         axis.grid(alpha=.25)

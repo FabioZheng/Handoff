@@ -331,19 +331,17 @@ def analyse(rows,cfg,result_root):
                                'depth':depth,'metric':metric,**d})
     write_csv(result_root/'metrics.csv',metrics); write_csv(result_root/'deltas.csv',deltas)
     import matplotlib; matplotlib.use('Agg'); import matplotlib.pyplot as plt
-    fig,axes=plt.subplots(1,3,figsize=(18,4.4)); colors={'good':'#1b9e77','medium':'#7570b3','bad':'#d95f02'}; styles={'hard':'-','easy':'--'}
+    fig,axes=plt.subplots(1,2,figsize=(12,4.4)); colors={'good':'#1b9e77','medium':'#7570b3','bad':'#d95f02'}; styles={'hard':'-','easy':'--'}
     for cond,negative_type,retrieval_condition in arm_specs(cfg):
         rs=[r for r in metrics if r['condition']==cond]; x=[r['depth'] for r in rs]
         label=f'{CONTEXT_LABELS[retrieval_condition]} / {negative_type}'
         axes[0].plot(x,[r['f1'] for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
-        axes[1].plot(x,[r['f1']-next(z['f1'] for z in metrics if z['condition']==cond and z['depth']==0) for r in rs],marker='o',linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
         judge=[r['judge_correct'] for r in rs]
         lower=[r['judge_correct']-r['judge_correct_lo'] for r in rs]
         upper=[r['judge_correct_hi']-r['judge_correct'] for r in rs]
-        axes[2].errorbar(x,judge,yerr=[lower,upper],marker='o',capsize=3,linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
+        axes[1].errorbar(x,judge,yerr=[lower,upper],marker='o',capsize=3,linestyle=styles[negative_type],label=label,color=colors[retrieval_condition])
     axes[0].set(title='QA F1: hard vs easy distractors',xlabel='Handoff depth',ylabel='Token F1')
-    axes[1].set(title='F1 change from depth 0',xlabel='Handoff depth',ylabel='Token F1 change')
-    axes[2].set(title='LLM-judge answer correctness',xlabel='Handoff depth',ylabel='Judge accuracy')
+    axes[1].set(title='LLM-judge answer correctness',xlabel='Handoff depth',ylabel='Judge accuracy')
     for a in axes: a.grid(alpha=.25); a.set_xticks(cfg['depths'])
     axes[0].legend(fontsize=8,loc='best')
     fig.suptitle('LLM-screened candidate distractors', y=1.02)

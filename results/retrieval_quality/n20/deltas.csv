@@ -9,23 +9,23 @@ depth_minus_depth0,good,hard,good,Low noise,All BM25-findable gold passages reta
 depth_minus_depth0,good,hard,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,5,f1,0.022027334178152693,-0.1253276713470021,0.1939227877836869,0.7934,20,
 depth_minus_depth0,good,hard,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,0.1,-0.1,0.3,0.4264,20,
 depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,f1,-0.06233303773867869,-0.14396644164259648,0.019670798623696334,0.1364,20,
+depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,f1,-0.044912733505874436,-0.1265949022444946,0.034361022167487675,0.2701,20,
 depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,judge_correct,0.05,-0.1,0.2,0.7641,20,
 depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,f1,-0.07858514869652247,-0.17305896042736976,0.0102232906548813,0.0912,20,
-depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,judge_correct,-0.05,-0.25,0.15,0.821,20,
+depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,f1,-0.04419768430905805,-0.1276506334432572,0.03249379684604933,0.2736,20,
+depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,judge_correct,0.0,-0.2,0.2,1.0,20,
 depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,f1,-0.01935786719013855,-0.09121888910401371,0.05751710654285146,0.6041,20,
-depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,0.1,0.0,0.25,0.2523,20,
+depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,f1,0.010495435706642613,-0.05732314814814813,0.08407288199529579,0.7747,20,
+depth_minus_depth0,medium,hard,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,0.15,0.0,0.3,0.1113,20,
 depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,f1,-0.021855989854380364,-0.08557292885976793,0.03673762039820273,0.4807,20,
-depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,judge_correct,0.1,-0.1,0.3,0.4366,20,
+depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,f1,-0.043103872406610746,-0.11001428329952669,0.02052707997434164,0.2019,20,
+depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,judge_correct,0.0,-0.2,0.2,1.0,20,
 depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,f1,-0.02188935826981368,-0.07346522626645961,0.020174992543825557,0.3617,20,
-depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,judge_correct,0.1,-0.1,0.3,0.4366,20,
+depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,f1,-0.037662085542540955,-0.08853563398966623,0.004831819350794609,0.114,20,
+depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,judge_correct,0.05,-0.1,0.2,0.7635,20,
 depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,f1,-0.02319671757717299,-0.07257728798715517,0.014153492301499893,0.2899,20,
-depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,judge_correct,0.15,-0.05,0.35,0.2372,20,
+depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,f1,-0.03991388929434471,-0.08889400472761476,-0.0019882835433595006,0.0688,20,
+depth_minus_depth0,bad,hard,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,judge_correct,0.1,-0.1,0.3,0.432,20,
 depth_minus_depth0,easy_good,easy,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,1,em,0.05,0.0,0.15,0.6186,20,
 depth_minus_depth0,easy_good,easy,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,1,f1,-0.0032181487798881247,-0.14734179478609624,0.15483158595334673,0.9678,20,
 depth_minus_depth0,easy_good,easy,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,1,judge_correct,0.05,-0.15,0.25,0.8144,20,
@@ -36,46 +36,46 @@ depth_minus_depth0,easy_good,easy,good,Low noise,All BM25-findable gold passages
 depth_minus_depth0,easy_good,easy,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,5,f1,-0.08939819442193084,-0.24273478466338613,0.05301773437896434,0.243,20,
 depth_minus_depth0,easy_good,easy,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,0.0,-0.2,0.2,1.0,20,
 depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,f1,-0.11219483160197971,-0.21692084065733655,-0.01645398458565373,0.0264,20,
+depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,f1,-0.13969618288577662,-0.23628655169966642,-0.05356934641445514,0.0027,20,
 depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,judge_correct,-0.2,-0.4,-0.05,0.0405,20,
 depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,f1,-0.02678659088939118,-0.11336888849434905,0.054612070741630374,0.5332,20,
+depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,f1,-0.027954748954748955,-0.08754523347023344,0.03444128371628368,0.3687,20,
 depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,judge_correct,0.0,0.0,0.0,1.0,20,
 depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,em,0.0,0.0,0.0,1.0,20,
-depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,f1,-0.03507550150088244,-0.12301537708110288,0.05079014600752926,0.4251,20,
-depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,-0.05,-0.2,0.1,0.7625,20,
+depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,f1,-0.05442547774805839,-0.13917894538257436,0.02556462703962701,0.1927,20,
+depth_minus_depth0,easy_medium,easy,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,-0.1,-0.3,0.1,0.4349,20,
 depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,em,-0.05,-0.15,0.0,0.6313,20,
-depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,f1,-0.05005247840595247,-0.18726616323964365,0.06802231237322515,0.4225,20,
+depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,f1,-0.046460753580429046,-0.18313970588235295,0.07047616632860035,0.4542,20,
 depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,judge_correct,0.0,-0.2,0.2,1.0,20,
 depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,em,-0.05,-0.15,0.0,0.6313,20,
-depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,f1,-0.05235944639088654,-0.18234123563218388,0.04607812019792226,0.3635,20,
+depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,f1,-0.056794930261854296,-0.1869839854740561,0.04421455938697318,0.3281,20,
 depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,judge_correct,0.05,-0.15,0.25,0.8165,20,
 depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,em,-0.05,-0.15,0.0,0.6313,20,
-depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,f1,-0.016217588696609504,-0.15923063973434684,0.1102128834048184,0.8099,20,
+depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,f1,-0.027960764875269557,-0.17170511992907675,0.10038640342500628,0.6779,20,
 depth_minus_depth0,easy_bad,easy,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,judge_correct,0.05,-0.15,0.25,0.8222,20,
 good_minus_bad,hard_good_minus_bad,hard,,,,0,em,0.05,0.0,0.15,0.6212,20,low_noise_minus_high_noise
-good_minus_bad,hard_good_minus_bad,hard,,,,0,f1,0.25389531173022634,0.1319192847475106,0.3874413153313057,0.0001,20,low_noise_minus_high_noise
-good_minus_bad,hard_good_minus_bad,hard,,,,0,judge_correct,0.6,0.4,0.8,0.0,20,low_noise_minus_high_noise
+good_minus_bad,hard_good_minus_bad,hard,,,,0,f1,0.23995591779083236,0.11706516261516262,0.37571532759355336,0.0009,20,low_noise_minus_high_noise
+good_minus_bad,hard_good_minus_bad,hard,,,,0,judge_correct,0.55,0.35,0.75,0.0,20,low_noise_minus_high_noise
 good_minus_bad,hard_good_minus_bad,hard,,,,1,em,0.15,0.0,0.3,0.107,20,low_noise_minus_high_noise
-good_minus_bad,hard_good_minus_bad,hard,,,,1,f1,0.3303471474823608,0.16531664150643569,0.5033420291108978,0.0001,20,low_noise_minus_high_noise
-good_minus_bad,hard_good_minus_bad,hard,,,,1,judge_correct,0.5,0.25,0.75,0.0003,20,low_noise_minus_high_noise
+good_minus_bad,hard_good_minus_bad,hard,,,,1,f1,0.3376556360951973,0.1732094677811422,0.5093112707279847,0.0001,20,low_noise_minus_high_noise
+good_minus_bad,hard_good_minus_bad,hard,,,,1,judge_correct,0.55,0.3,0.8,0.0002,20,low_noise_minus_high_noise
 good_minus_bad,hard_good_minus_bad,hard,,,,3,em,0.15,0.0,0.3,0.107,20,low_noise_minus_high_noise
-good_minus_bad,hard_good_minus_bad,hard,,,,3,f1,0.2858290635225442,0.1416148544236102,0.4462996393769554,0.0006,20,low_noise_minus_high_noise
+good_minus_bad,hard_good_minus_bad,hard,,,,3,f1,0.2876623968558775,0.14391718363693323,0.44751015684866313,0.0004,20,low_noise_minus_high_noise
 good_minus_bad,hard_good_minus_bad,hard,,,,3,judge_correct,0.55,0.35,0.75,0.0,20,low_noise_minus_high_noise
 good_minus_bad,hard_good_minus_bad,hard,,,,5,em,0.15,0.0,0.3,0.107,20,low_noise_minus_high_noise
-good_minus_bad,hard_good_minus_bad,hard,,,,5,f1,0.29911936348555207,0.151059004690767,0.4585299196077791,0.0003,20,low_noise_minus_high_noise
+good_minus_bad,hard_good_minus_bad,hard,,,,5,f1,0.30189714126332984,0.15490077451353867,0.4595936446538913,0.0003,20,low_noise_minus_high_noise
 good_minus_bad,hard_good_minus_bad,hard,,,,5,judge_correct,0.55,0.25,0.8,0.0,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,0,em,0.15,0.0,0.3,0.107,20,low_noise_minus_high_noise
-good_minus_bad,easy_good_minus_bad,easy,,,,0,f1,0.38118225455522614,0.22558693841303507,0.5433404634581104,0.0,20,low_noise_minus_high_noise
+good_minus_bad,easy_good_minus_bad,easy,,,,0,f1,0.37368225455522613,0.2139809452527696,0.5388479927956031,0.0,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,0,judge_correct,0.65,0.45,0.85,0.0,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,1,em,0.25,0.1,0.45,0.0166,20,low_noise_minus_high_noise
-good_minus_bad,easy_good_minus_bad,easy,,,,1,f1,0.4280165841812905,0.24281855734064792,0.6108457665307369,0.0,20,low_noise_minus_high_noise
+good_minus_bad,easy_good_minus_bad,easy,,,,1,f1,0.4169248593557671,0.22486633515585724,0.6029920692334485,0.0,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,1,judge_correct,0.7,0.5,0.9,0.0,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,3,em,0.2,0.05,0.4,0.042,20,low_noise_minus_high_noise
-good_minus_bad,easy_good_minus_bad,easy,,,,3,f1,0.3464274051230573,0.19295319213797477,0.513241969584361,0.0,20,low_noise_minus_high_noise
+good_minus_bad,easy_good_minus_bad,easy,,,,3,f1,0.34336288899402506,0.18716924455213374,0.5120761854632822,0.0001,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,3,judge_correct,0.55,0.25,0.8,0.0006,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,5,em,0.15,0.0,0.3,0.1055,20,low_noise_minus_high_noise
-good_minus_bad,easy_good_minus_bad,easy,,,,5,f1,0.3080016488299048,0.142142023674825,0.47960374979637826,0.0004,20,low_noise_minus_high_noise
+good_minus_bad,easy_good_minus_bad,easy,,,,5,f1,0.3122448250085649,0.1471113099379433,0.48296033828014706,0.0003,20,low_noise_minus_high_noise
 good_minus_bad,easy_good_minus_bad,easy,,,,5,judge_correct,0.6,0.4,0.8,0.0,20,low_noise_minus_high_noise
 hard_minus_easy,good,,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,0,em,-0.1,-0.25,0.0,0.2581,20,
 hard_minus_easy,good,,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,0,f1,-0.09515692443230397,-0.2700282667936902,0.06453742842980861,0.2618,20,
@@ -90,26 +90,26 @@ hard_minus_easy,good,,good,Low noise,All BM25-findable gold passages retained; r
 hard_minus_easy,good,,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,5,f1,0.016268604167779574,-0.13968578435557444,0.18392978860220235,0.845,20,
 hard_minus_easy,good,,good,Low noise,All BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,0.0,-0.25,0.25,1.0,20,
 hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,0,em,0.0,0.0,0.0,1.0,20,
-hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,0,f1,0.027305433534904604,-0.04801953617503185,0.09109660022181205,0.4394,20,
-hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,0,judge_correct,-0.1,-0.25,0.0,0.2586,20,
+hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,0,f1,-0.016388540099746995,-0.0914518695026238,0.04671243548118542,0.653,20,
+hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,0,judge_correct,-0.15,-0.3,0.0,0.1061,20,
 hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,em,0.0,0.0,0.0,1.0,20,
-hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,f1,0.07716722739820565,-0.0005376520445134515,0.17000140290717733,0.0745,20,
-hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,judge_correct,0.15,0.0,0.3,0.1052,20,
+hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,f1,0.07839490928015518,0.0020000000000000005,0.17104825657038772,0.0667,20,
+hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,1,judge_correct,0.1,-0.1,0.3,0.4325,20,
 hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,em,0.0,0.0,0.0,1.0,20,
-hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,f1,-0.024493124272226656,-0.12204583405854437,0.06679392322134256,0.6101,20,
+hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,f1,-0.032631475454056105,-0.12219630578501543,0.053203451193370555,0.4712,20,
 hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,3,judge_correct,-0.15,-0.4,0.1,0.3229,20,
 hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,em,0.0,0.0,0.0,1.0,20,
-hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,f1,0.0430230678456485,-0.013665135113118954,0.1059477134025521,0.1539,20,
-hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,0.05,-0.15,0.25,0.8214,20,
+hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,f1,0.04853237335495401,-0.009360936748436742,0.11257366393334137,0.1142,20,
+hard_minus_easy,medium,,medium,Medium noise,Half of BM25-findable gold passages retained; remaining slots are distractors.,5,judge_correct,0.1,-0.15,0.35,0.528,20,
 hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,0,em,0.0,0.0,0.0,1.0,20,
-hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,0,f1,0.03213001839269588,-0.035546920878310316,0.09851746271814729,0.3361,20,
-hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,0,judge_correct,-0.05,-0.2,0.1,0.7591,20,
+hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,0,f1,0.03856941233208981,-0.027316368553691073,0.1040313491444323,0.2423,20,
+hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,0,judge_correct,0.0,-0.15,0.15,1.0,20,
 hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,em,0.05,0.0,0.15,0.6281,20,
-hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,f1,0.06032650694426798,-0.05764236111111108,0.19206836518181583,0.3307,20,
-hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,judge_correct,0.05,-0.15,0.25,0.8209,20,
+hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,f1,0.04192629350590811,-0.07909964402427629,0.17693021950159368,0.5112,20,
+hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,1,judge_correct,0.0,-0.25,0.25,1.0,20,
 hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,em,0.05,0.0,0.15,0.6281,20,
-hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,f1,0.06260010651376875,-0.03364119731470301,0.18616375910090321,0.2619,20,
+hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,f1,0.05770225705140315,-0.03744676365169723,0.1816423666729644,0.301,20,
 hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,3,judge_correct,0.0,-0.25,0.25,1.0,20,
 hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,em,0.05,0.0,0.15,0.6281,20,
-hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,f1,0.02515088951213239,-0.10142944730001183,0.1629959383753501,0.6958,20,
+hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,f1,0.02661628791301467,-0.10000379280744555,0.16350721034381488,0.6774,20,
 hard_minus_easy,bad,,bad,High noise,15% of BM25-findable gold passages retained (at least one); remaining slots are distractors.,5,judge_correct,0.05,-0.15,0.25,0.8196,20,
