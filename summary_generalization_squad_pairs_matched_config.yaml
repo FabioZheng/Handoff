@@ -1,9 +1,17 @@
-# Question conditioning vs summary generalization on SQuAD same-passage A/B pairs.
+# LENGTH-MATCHED control for the same-passage conditioning experiment.
 #
-# Supersedes the generated-Wikipedia variant of Experiment 5, which was
-# confounded (obscurity-selected questions, whole-article passages ~10x the
-# summary budget, unstratified gold position -> a degenerate generic arm).
-# Dataset is built and validated by src/build_squad_same_passage.py.
+# Identical to summary_generalization_squad_pairs_config.yaml except that both
+# arms are given the same explicit word budget. Without it the arms self-select
+# very different lengths (conditioned ~600 chars, generic ~3,800 on the same
+# context), so a held-out accuracy gap is not separable from "one arm simply
+# wrote more" -- summary length is an uncontrolled mediator of the treatment.
+# Here it becomes a controlled variable, and the question block remains the
+# only arm-level difference (prompt_difference_selftest still passes).
+#
+# 400 words against the ~1,300-word context is roughly 3:1 compression, close
+# to the generic arm's natural output, so neither arm is handicapped relative
+# to what it would have written unprompted.
+
 model:
   id: "meta-llama/llama-3.1-8b-instruct"
   provider_order: null
@@ -74,6 +82,10 @@ leakage_filter:
   max_tokens: 32
   f1_known_threshold: 0.6
 
+# Applied identically to both arms; see length_directive() in
+# src/run_summary_generalization.py.
+length_target_words: 400
+
 modes: [conditioned, generic]
 depths: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 max_depth: 10
@@ -84,8 +96,8 @@ analysis:
 
 outputs:
   data_root: data/squad_same_passage
-  run_root: runs/squad_same_passage
-  result_root: results/squad_same_passage
+  run_root: runs/squad_same_passage_matched
+  result_root: results/squad_same_passage_matched
 
 judge:
   enabled: true

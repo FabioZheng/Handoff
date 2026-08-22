@@ -24,6 +24,7 @@ from __future__ import annotations
 import argparse
 import collections
 import csv
+import hashlib
 import json
 import random
 import re
@@ -39,6 +40,7 @@ import data as data_mod  # noqa: E402
 from data import Paragraph, Question  # noqa: E402
 from judge import make_judge_client  # noqa: E402
 from llm import LLMClient, load_config  # noqa: E402
+from negative_verifier import screen, verifier_config  # noqa: E402
 
 STOPWORDS = {"a", "an", "and", "are", "as", "at", "be", "by", "did", "do", "does", "for", "from",
              "how", "in", "is", "it", "of", "on", "or", "that", "the", "to", "was", "were", "what",
@@ -178,7 +180,42 @@ def as_question(item: dict, context: str, title: str) -> Question:
                     decomposition=[], gold_pids=[1], gold_sentences=[], n_hops=1)
 
 
-def build(cfg: dict, n: int) -> tuple[list[dict], dict]:
+def verify_distractors(cfg: dict, clean: list[dict], source: list[dict],
+                       rng: random.Random) -> tuple[dict[str, list[dict]], list[dict], LLMClient | None]:
+    """Require every candidate distractor to be irrelevant to both A and B."""
+    scan_k = int(verifier_config(cfg)["candidate_scan_k"])
+    candidates_by_pair: dict[str, list[dict]] = {}
+    audit_jobs: list[dict] = []
+    for cand in clean:
+        pair_id = f"{cand['A']['qid']}__{cand['B']['qid']}"
+        pool = [d for d in source if d["title"] != cand["title"]]
+        sampled = rng.sample(pool, min(scan_k, len(pool)))
+        candidates_by_pair[pair_id] = sampled
+        for distractor in sampled:
+            candidate_id = hashlib.sha256(distractor["context"].encode("utf-8")).hexdigest()[:16]
+            for side in ("A", "B"):
+                audit_jobs.append({
+                    "pair_id": pair_id, "query_side": side,
+                    "target_qid": cand[side]["qid"],
+                    "question": cand[side]["question"], "golds": cand[side]["golds"],
+                    "candidate_id": candidate_id, "candidate_title": distractor["title"],
+                    "text": distractor["context"],
+                })
+    audited, client = screen(audit_jobs, cfg)
+    verdicts = {(r["pair_id"], r["candidate_id"], r["query_side"]): r["is_irrelevant"]
+                for r in audited}
+    eligible: dict[str, list[dict]] = {}
+    for pair_id, candidates in candidates_by_pair.items():
+        eligible[pair_id] = []
+        for distractor in candidates:
+            candidate_id = hashlib.sha256(distractor["context"].encode("utf-8")).hexdigest()[:16]
+            if (verdicts.get((pair_id, candidate_id, "A"), False)
+                    and verdicts.get((pair_id, candidate_id, "B"), False)):
+                eligible[pair_id].append(distractor)
+    return eligible, audited, client
+
+
+def build(cfg: dict, n: int) -> tuple[list[dict], dict, list[dict], LLMClient | None]:
     ds = cfg["dataset"]
     rng = random.Random(ds["sample_seed"])
     cands = candidate_pairs(cfg, rng)
@@ -218,11 +255,20 @@ def build(cfg: dict, n: int) -> tuple[list[dict], dict]:
     used_contexts = {c["context"] for c in clean}
     distract_source = [c for c in cands if c["context"] not in used_contexts]
     width = ds["context_passages"]
+    eligible, negative_audit, negative_client = verify_distractors(
+        cfg, clean, distract_source, rng)
+    minimum = min(len(rows) for rows in eligible.values())
+    if minimum < width - 1:
+        raise SystemExit(
+            f"only {minimum} jointly irrelevant distractors for at least one pair; "
+            "raise negative_verification.candidate_scan_k")
+    print(f"[squad_pairs] negative verification: {len(negative_audit)} A/B verdicts; "
+          f"minimum {minimum} jointly irrelevant candidates per pair")
 
     pairs = []
     for index, cand in enumerate(clean):
-        pool = [d for d in distract_source if d["title"] != cand["title"]]
-        distractors = rng.sample(pool, width - 1)
+        pair_id = f"{cand['A']['qid']}__{cand['B']['qid']}"
+        distractors = eligible[pair_id][:width - 1]
         # Stratified gold position: each of the ten slots is used equally often.
         gold_slot = index % width
         passages = [{"text": d["context"], "role": "distractor", "source_title": d["title"]}
@@ -230,7 +276,7 @@ def build(cfg: dict, n: int) -> tuple[list[dict], dict]:
         passages.insert(gold_slot, {"text": cand["context"], "role": "gold_AB",
                                     "source_title": cand["title"]})
         pairs.append({
-            "pair_id": f"{cand['A']['qid']}__{cand['B']['qid']}",
+            "pair_id": pair_id,
             "question_A": cand["A"]["question"], "golds_A": cand["A"]["golds"], "qid_A": cand["A"]["qid"],
             "question_B": cand["B"]["question"], "golds_B": cand["B"]["golds"], "qid_B": cand["B"]["qid"],
             "title_A": cand["title"], "title_B": cand["title"],
@@ -239,12 +285,12 @@ def build(cfg: dict, n: int) -> tuple[list[dict], dict]:
             "context_chars": sum(len(p["text"]) for p in passages),
             "passages": passages,
             "context_note": (f"One shared SQuAD passage ({cand['title']}) answers both questions, "
-                             f"placed at P{gold_slot + 1} among {width - 1} unrelated SQuAD "
-                             "distractor passages of matched length."),
+                             f"placed at P{gold_slot + 1} among {width - 1} length-matched "
+                             "SQuAD passages LLM-screened irrelevant to both A and B."),
         })
         assert len(passages) == width
         assert sum(p["role"] == "gold_AB" for p in passages) == 1
-    return pairs, c1
+    return pairs, c1, negative_audit, negative_client
 
 
 def main() -> int:
@@ -259,7 +305,7 @@ def main() -> int:
     if out.exists() and not args.force:
         raise SystemExit(f"{out} exists; pass --force to rebuild")
 
-    pairs, c1 = build(cfg, n)
+    pairs, c1, negative_audit, negative_client = build(cfg, n)
     chars = [p["context_chars"] for p in pairs]
     gold_chars = [len(next(x for x in p["passages"] if x["role"] == "gold_AB")["text"]) for p in pairs]
     report = {
@@ -276,6 +322,11 @@ def main() -> int:
         "max_question_jaccard": max(p["question_jaccard"] for p in pairs),
         "c1_questions_probed": c1["candidates_run"], "c1_questions_leaked": c1["leaked_excluded"],
         "c1_method": c1["known_method"],
+        "negative_verifier_model": verifier_config(cfg)["model_id"],
+        "negative_verdicts": len(negative_audit),
+        "negative_candidate_passages": len(negative_audit) // 2,
+        "selected_distractor_placements": n * (cfg["dataset"]["context_passages"] - 1),
+        "selected_distractors_screened_against_both": n * (cfg["dataset"]["context_passages"] - 1),
     }
     out.parent.mkdir(parents=True, exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
@@ -285,7 +336,15 @@ def main() -> int:
     with open(rpath, "w", encoding="utf-8", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(report))
         w.writeheader(); w.writerow(report)
+    apath = out.parent / f"negative_verification_n{n}.csv"
+    with open(apath, "w", encoding="utf-8", newline="") as fh:
+        fields = list(dict.fromkeys(key for row in negative_audit for key in row))
+        w = csv.DictWriter(fh, fieldnames=fields)
+        w.writeheader(); w.writerows(negative_audit)
     print("[squad_pairs:construction] " + json.dumps(report))
+    if negative_client is not None:
+        print("[squad_pairs:negative-verification cost] "
+              + json.dumps(negative_client.ledger.summary()))
     print(f"[squad_pairs] wrote {len(pairs)} pairs -> {out}")
     return 0
 

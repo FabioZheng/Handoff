@@ -1,26 +1,21 @@
-"""Test whether question conditioning narrows summaries over repeated handoffs.
+"""Question conditioning on two SQuAD questions from one shared passage.
 
-Each example pairs two low-overlap SQuAD questions from different articles.
-Their two gold passages and eight real SQuAD distractor passages form one fixed
-top-10 context.  The conditioned chain sees only question A at every handoff;
-the generic chain sees no question.  Fresh answerers test both A and held-out B
-at depths 0/1/3/5.  Thus B is unrelated to A but answerable from the same
-original retrieved context.
+Each prebuilt example contains one gold passage that answers both A and B plus
+nine passages screened irrelevant to both questions. The conditioned chain sees
+only A; the generic chain sees neither question. Both are evaluated at depths
+0 through 10. The obsolete constructor that paired separate passages is not
+supported by this runner.
 """
 from __future__ import annotations
 
 import argparse
 import csv
 import json
-import random
-import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
-import pandas as pd
-import requests
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -34,9 +29,6 @@ from run_chain import (  # noqa: E402
     RECOMPRESS_INSTRUCTION,
 )
 from score import bootstrap_ci, extract_short_answer, paired_bootstrap_delta, score_against_golds  # noqa: E402
-
-STOPWORDS = {"a", "an", "and", "are", "as", "at", "be", "by", "did", "do", "does", "for", "from", "how", "in", "is", "it", "of", "on", "or", "that", "the", "to", "was", "were", "what", "when", "where", "which", "who", "why", "with"}
-
 
 def read_jsonl(path: Path) -> list[dict]:
     return [] if not path.exists() else [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x]
@@ -58,192 +50,6 @@ def write_csv(path: Path, rows: list[dict]) -> None:
         writer = csv.DictWriter(fh, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
-
-
-def ensure_parquet(cfg: dict) -> Path:
-    path = ROOT / cfg["dataset"]["local_parquet"]
-    if path.exists() and path.stat().st_size:
-        return path
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_suffix(".part")
-    print("[generalization:data] downloading SQuAD validation parquet (no LLM calls)")
-    with requests.get(cfg["dataset"]["parquet_url"], stream=True, timeout=300) as response:
-        response.raise_for_status()
-        with open(tmp, "wb") as fh:
-            for chunk in response.iter_content(1 << 20):
-                fh.write(chunk)
-    tmp.replace(path)
-    return path
-
-
-def tokens(text: str) -> set[str]:
-    return {x for x in re.findall(r"[a-z0-9]+", text.lower()) if x not in STOPWORDS and len(x) > 1}
-
-
-def jaccard(a: str, b: str) -> float:
-    x, y = tokens(a), tokens(b)
-    return len(x & y) / len(x | y) if x | y else 0.0
-
-
-def normalize_answers(value) -> list[str]:
-    texts = value.get("text", []) if isinstance(value, dict) else value["text"]
-    return list(dict.fromkeys(str(x).strip() for x in list(texts) if str(x).strip()))
-
-
-def construct_pairs(cfg: dict, n: int, write: bool = True) -> list[dict]:
-    frame = pd.read_parquet(ensure_parquet(cfg))
-    records = [{"qid": str(r.id), "title": str(r.title), "question": str(r.question),
-                "context": " ".join(str(r.context).split()), "golds": normalize_answers(r.answers)}
-               for r in frame.itertuples(index=False)]
-    records = [r for r in records if r["golds"] and r["context"]]
-    for record in records:
-        record["question_tokens"] = tokens(record["question"])
-        record["answer_tokens"] = tokens(" ".join(record["golds"]))
-    rng = random.Random(cfg["dataset"]["sample_seed"])
-    order = list(range(len(records)))
-    rng.shuffle(order)
-    used: set[int] = set()
-    pairs: list[dict] = []
-    max_j = float(cfg["dataset"]["max_question_jaccard"])
-    for ai in order:
-        if ai in used:
-            continue
-        a = records[ai]
-        bi = next((candidate for candidate in order if candidate not in used and candidate != ai
-                   and records[candidate]["title"] != a["title"]
-                   and records[candidate]["context"] != a["context"]
-                   and len(a["question_tokens"] & records[candidate]["question_tokens"])
-                   / max(1, len(a["question_tokens"] | records[candidate]["question_tokens"])) <= max_j
-                   and not (a["answer_tokens"] & records[candidate]["answer_tokens"])), None)
-        if bi is None:
-            continue
-        b = records[bi]
-        distractor_pool = [r for i, r in enumerate(records) if i not in (ai, bi)
-                           and r["title"] not in (a["title"], b["title"])
-                           and r["context"] not in (a["context"], b["context"])]
-        distractors = rng.sample(distractor_pool, cfg["dataset"]["context_passages"] - 2)
-        passages = [{"text": a["context"], "role": "gold_A", "source_title": a["title"]},
-                    {"text": b["context"], "role": "gold_B", "source_title": b["title"]}]
-        passages += [{"text": d["context"], "role": "distractor", "source_title": d["title"]} for d in distractors]
-        rng.shuffle(passages)
-        pair = {"pair_id": f"{a['qid']}__{b['qid']}",
-                "question_A": a["question"], "golds_A": a["golds"], "qid_A": a["qid"],
-                "question_B": b["question"], "golds_B": b["golds"], "qid_B": b["qid"],
-                "title_A": a["title"], "title_B": b["title"],
-                "question_jaccard": jaccard(a["question"], b["question"]), "passages": passages}
-        assert len(passages) == cfg["dataset"]["context_passages"]
-        assert any(p["role"] == "gold_A" for p in passages) and any(p["role"] == "gold_B" for p in passages)
-        pairs.append(pair)
-        used.update((ai, bi))
-        if len(pairs) == n:
-            break
-    if len(pairs) < n:
-        raise RuntimeError(f"Only constructed {len(pairs)}/{n} valid pairs")
-    report = [{"pairs": len(pairs), "passages_per_pair": cfg["dataset"]["context_passages"],
-               "gold_A_present": sum(any(p["role"] == "gold_A" for p in x["passages"]) for x in pairs),
-               "gold_B_present": sum(any(p["role"] == "gold_B" for p in x["passages"]) for x in pairs),
-               "same_article_pairs": sum(x["title_A"] == x["title_B"] for x in pairs),
-               "mean_question_jaccard": round(float(np.mean([x["question_jaccard"] for x in pairs])), 4),
-               "max_question_jaccard": round(max(x["question_jaccard"] for x in pairs), 4)}]
-    if write:
-        root = ROOT / cfg["outputs"]["data_root"]
-        write_jsonl(root / f"pairs_n{n}.jsonl", pairs)
-        write_csv(root / f"construction_n{n}.csv", report)
-    print("[generalization:construction] " + json.dumps(report[0]))
-    return pairs
-
-
-def load_wikipedia_questions(cfg: dict) -> list[dict]:
-    path = ROOT / cfg["dataset"]["local_jsonl"]
-    if not path.exists():
-        raise FileNotFoundError(
-            f"Generated Wikipedia dataset missing: {path}. Build it with "
-            "python src/build_wikipedia_dataset.py"
-        )
-    rows = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x]
-    return [r for r in rows if "qid" in r]  # first line is a _manifest record
-
-
-def construct_pairs_wikipedia(cfg: dict, n: int, write: bool = True) -> list[dict]:
-    """Build conditioning pairs from the generated Wikipedia dataset.
-
-    Each of the ten source pages carries exactly two questions written against
-    its single full-article passage (src/build_wikipedia_dataset.py). Unlike
-    the SQuAD pairing above -- two *different* articles glued into one shared
-    context -- question A and question B here are genuinely about the *same*
-    passage: one is chosen to condition on, the other is the held-out probe of
-    whether that conditioning silently drops a fact the same source supports.
-    The other nine pages' full texts serve as distractors, filled by random
-    sampling to match this experiment's existing SQuAD distractor policy (the
-    BM25 hard-negative upgrade only ever applied to experiments 3/4, not this
-    one).
-    """
-    rows = load_wikipedia_questions(cfg)
-    by_page: dict[str, list[dict]] = {}
-    for row in rows:
-        by_page.setdefault(row["paragraphs"][0]["title"], []).append(row)
-    pages = sorted(by_page)
-    bad = [t for t in pages if len(by_page[t]) != 2]
-    if bad:
-        raise RuntimeError(f"expected exactly 2 questions/page, mismatch for: {bad}")
-    if n > len(pages):
-        raise RuntimeError(
-            f"only {len(pages)} source pages have two questions each; cannot build {n} pairs "
-            "(one pair per page -- generate more pages to scale this up)"
-        )
-
-    rng = random.Random(cfg["dataset"]["sample_seed"])
-    chosen_pages = list(pages)
-    rng.shuffle(chosen_pages)
-    chosen_pages = chosen_pages[:n]
-    page_text = {t: by_page[t][0]["paragraphs"][0]["text"] for t in pages}
-    n_distractors = cfg["dataset"]["context_passages"] - 1
-
-    pairs: list[dict] = []
-    for title in chosen_pages:
-        two = list(by_page[title])
-        rng.shuffle(two)  # which of the page's two questions becomes A (conditioned) vs B (held out)
-        a, b = two
-        distractor_pool = [t for t in pages if t != title]
-        if len(distractor_pool) < n_distractors:
-            raise RuntimeError(
-                f"only {len(distractor_pool)} candidate distractor pages available, need "
-                f"{n_distractors} (raise sampling.n_pages or lower context_passages)"
-            )
-        distractor_titles = rng.sample(distractor_pool, n_distractors)
-        passages = [{"text": page_text[title], "role": "gold_AB", "source_title": title}]
-        passages += [{"text": page_text[t], "role": "distractor", "source_title": t} for t in distractor_titles]
-        rng.shuffle(passages)
-        pair = {
-            "pair_id": f"{a['qid']}__{b['qid']}",
-            "question_A": a["question"], "golds_A": a["golds"], "qid_A": a["qid"],
-            "question_B": b["question"], "golds_B": b["golds"], "qid_B": b["qid"],
-            "title_A": title, "title_B": title,
-            "question_jaccard": jaccard(a["question"], b["question"]),
-            "passages": passages,
-            "context_note": (
-                f"Both questions were written against the same single gold Wikipedia "
-                f"passage ({title}), plus {n_distractors} distractor passages drawn from "
-                "the other source pages."
-            ),
-        }
-        assert len(passages) == cfg["dataset"]["context_passages"]
-        assert sum(p["role"] == "gold_AB" for p in passages) == 1
-        pairs.append(pair)
-
-    report = [{
-        "pairs": len(pairs), "passages_per_pair": cfg["dataset"]["context_passages"],
-        "source_pages_available": len(pages),
-        "same_article_pairs": sum(x["title_A"] == x["title_B"] for x in pairs),
-        "mean_question_jaccard": round(float(np.mean([x["question_jaccard"] for x in pairs])), 4),
-        "max_question_jaccard": round(max((x["question_jaccard"] for x in pairs), default=0.0), 4),
-    }]
-    if write:
-        root = ROOT / cfg["outputs"]["data_root"]
-        write_jsonl(root / f"pairs_n{n}.jsonl", pairs)
-        write_csv(root / f"construction_n{n}.csv", report)
-    print("[generalization:construction:wikipedia] " + json.dumps(report[0]))
-    return pairs
 
 
 def load_prebuilt_pairs(cfg: dict, n: int) -> list[dict]:
@@ -280,7 +86,56 @@ def render_context(pair: dict) -> str:
     return "\n\n".join(f"[P{i + 1}] {p['text']}" for i, p in enumerate(pair["passages"]))
 
 
-def compression_user_prompt(pair: dict, notes: str | None, mode: str, stage: int) -> str:
+def gold_only_pairs(pairs: list[dict], cfg: dict) -> list[dict]:
+    """Project reusable 1+N packs down to the one shared gold passage.
+
+    Shared with Experiment 6 (run_multilingual_handoffs.py imports this,
+    the design this projection was written for); Experiment 5's own
+    gold-only config (experiment_context: gold_only) reuses it unchanged so
+    both experiments strip distractors identically rather than maintaining
+    two copies of the same projection.
+    """
+    import copy
+    mode = cfg["dataset"].get("experiment_context")
+    if mode != "gold_only":
+        raise ValueError("gold_only_pairs requires dataset.experiment_context: gold_only")
+    projected: list[dict] = []
+    for source in pairs:
+        pair = copy.deepcopy(source)
+        gold = [p for p in pair["passages"] if p.get("role") == "gold_AB"]
+        if len(gold) != 1:
+            raise ValueError(f"{pair['pair_id']} has {len(gold)} shared gold passages; expected one")
+        pair["passages"] = gold
+        pair["experiment_context"] = "gold_only"
+        pair["source_context_passages"] = len(source["passages"])
+        pair["context_chars"] = len(gold[0]["text"])
+        pair["gold_position"] = 1
+        projected.append(pair)
+    lengths = [len(pair["passages"][0]["text"]) for pair in projected]
+    print(f"[generalization:context] gold-only: {len(projected)} pairs, one shared gold passage, "
+          f"0 distractors; {min(lengths)}-{max(lengths)} characters")
+    return projected
+
+
+def length_directive(cfg: dict) -> str:
+    """Optional word-budget sentence appended IDENTICALLY to both arms.
+
+    Without it the two arms self-select very different lengths (conditioned
+    ~600 characters, generic ~3,800 on the same context), so a held-out
+    accuracy gap cannot be separated from "one arm simply wrote more". Adding
+    the same target to both makes summary length a controlled variable rather
+    than an uncontrolled mediator, while leaving the question block as the
+    only arm-level difference -- prompt_difference_selftest() still holds.
+    """
+    target = cfg.get("length_target_words")
+    if not target:
+        return ""
+    return (f" Aim for about {int(target)} words: keep it close to that length, "
+            "neither much shorter nor much longer.")
+
+
+def compression_user_prompt(pair: dict, notes: str | None, mode: str, stage: int,
+                            cfg: dict | None = None) -> str:
     """Build prompts whose only arm-level difference is the question block."""
     if stage == 1:
         material = f"Source material:\n{render_context(pair)}"
@@ -288,6 +143,7 @@ def compression_user_prompt(pair: dict, notes: str | None, mode: str, stage: int
     else:
         material = f"Previous agent's notes:\n{notes}"
         instruction = RECOMPRESS_INSTRUCTION
+    instruction = instruction + length_directive(cfg or {})
     if mode == "conditioned":
         user = f"{material}\n\nQuestion the final agent must answer: {pair['question_A']}\n\n{instruction}"
     else:
@@ -296,17 +152,17 @@ def compression_user_prompt(pair: dict, notes: str | None, mode: str, stage: int
     return user
 
 
-def prompt_difference_selftest(pair: dict) -> None:
+def prompt_difference_selftest(pair: dict, cfg: dict | None = None) -> None:
     """Prove that deleting the question block makes the prompts byte-identical."""
     marker = f"\n\nQuestion the final agent must answer: {pair['question_A']}"
     for stage, notes in ((1, None), (2, "identical previous notes")):
-        conditioned = compression_user_prompt(pair, notes, "conditioned", stage)
-        generic = compression_user_prompt(pair, notes, "generic", stage)
+        conditioned = compression_user_prompt(pair, notes, "conditioned", stage, cfg)
+        generic = compression_user_prompt(pair, notes, "generic", stage, cfg)
         assert conditioned.replace(marker, "") == generic
 
 
 def compress(client, pair: dict, notes: str | None, mode: str, stage: int, cfg: dict) -> dict:
-    user = compression_user_prompt(pair, notes, mode, stage)
+    user = compression_user_prompt(pair, notes, mode, stage, cfg)
     result = client.chat([{"role": "system", "content": CHAIN_SYSTEM}, {"role": "user", "content": user}],
                          temperature=cfg["decoding"]["subagent_temperature"],
                          max_tokens=cfg["decoding"]["handoff_max_tokens"], seed=stage,
@@ -392,6 +248,18 @@ def analyse(rows: list[dict], cfg: dict, root: Path, pairs: list[dict], handoffs
                 deltas.append({"comparison": "conditioned_minus_generic", "mode": "conditioned_minus_generic", "query_type": query_type, "depth": depth, "metric": metric, **result})
     write_csv(root / "metrics.csv", metrics)
     write_csv(root / "deltas.csv", deltas)
+    plot_summary_generalization(metrics, cfg["modes"], cfg["depths"], root)
+
+
+def plot_summary_generalization(metrics: list[dict], modes: list[str], depths: list[int], root: Path) -> None:
+    """Draw the four-panel F1/judge plot from an already-built metrics list.
+
+    Deliberately takes only ``metrics`` (not raw answer rows, pairs, or
+    handoffs) so a plot can be regenerated -- e.g. after a marker-size tuning
+    change -- straight from a saved metrics.csv, without needing the original
+    run's cached handoffs/answers or its (possibly since-removed) pair
+    constructor to still be present.
+    """
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -404,9 +272,13 @@ def analyse(rows: list[dict], cfg: dict, root: Path, pairs: list[dict], handoffs
     # actually fed the answerer at that point -- the raw context at depth 0,
     # the generated summary at depth >=1 -- one scale for the whole figure so
     # area is comparable across both panels, both arms, and both metric rows.
+    # Kept deliberately small (max_area well under matplotlib's own default
+    # marker area of ~36pt^2 x a few): the first version of this encoding
+    # (max_area=900) produced markers large enough to visually dominate the
+    # line they sit on and crowd into neighbouring points.
     all_chars = [r["handoff_characters_mean"] for r in metrics if "handoff_characters_mean" in r]
     max_chars = max(all_chars) if all_chars else 1.0
-    max_area, min_area = 900.0, 15.0
+    max_area, min_area = 220.0, 6.0
     size_scale = max_area / max_chars
 
     def marker_area(record: dict) -> float:
@@ -419,7 +291,7 @@ def analyse(rows: list[dict], cfg: dict, root: Path, pairs: list[dict], handoffs
             direct = next(r for r in metrics if r["mode"] == "direct" and r["query_type"] == query_type)
             axis.scatter([0], [direct[metric]], s=marker_area(direct), color=colors["direct"],
                         edgecolors="white", linewidths=0.6, label="direct context", zorder=3)
-            for mode in cfg["modes"]:
+            for mode in modes:
                 subset = sorted([r for r in metrics if r["mode"] == mode and r["query_type"] == query_type], key=lambda r: r["depth"])
                 x = [r["depth"] for r in subset]
                 axis.plot(x, [r[metric] for r in subset], marker="", linewidth=2, color=colors[mode], label=mode, zorder=2)
@@ -429,7 +301,7 @@ def analyse(rows: list[dict], cfg: dict, root: Path, pairs: list[dict], handoffs
                 axis.set_title(title)
             if row_idx == len(plot_metrics) - 1:
                 axis.set_xlabel("Compression handoffs")
-            axis.set_xticks(cfg["depths"])
+            axis.set_xticks(depths)
             axis.grid(alpha=.25)
         axes[row_idx][0].set_ylabel(label)
     axes[0][1].legend()
@@ -446,19 +318,17 @@ def analyse(rows: list[dict], cfg: dict, root: Path, pairs: list[dict], handoffs
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default=str(ROOT / "summary_generalization_config.yaml"))
+    parser.add_argument("--config", default=str(ROOT / "summary_generalization_squad_pairs_config.yaml"))
     parser.add_argument("--n", type=int)
     parser.add_argument("--construct-only", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
     cfg = load_config(args.config)
     n = args.n or cfg["dataset"]["n_pairs"]
-    source = cfg["dataset"].get("source")
-    if source == "prebuilt_pairs":
-        pairs = load_prebuilt_pairs(cfg, n)
-    else:
-        pairs = construct_pairs(cfg, n, write=not args.dry_run)
-    prompt_difference_selftest(pairs[0])
+    pairs = load_prebuilt_pairs(cfg, n)
+    if cfg["dataset"].get("experiment_context") == "gold_only":
+        pairs = gold_only_pairs(pairs, cfg)
+    prompt_difference_selftest(pairs[0], cfg)
     print("[generalization:selftest] conditioned/generic prompts differ only by the Question A block")
     if args.construct_only:
         return 0

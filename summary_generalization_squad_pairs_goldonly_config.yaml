@@ -1,0 +1,81 @@
+# Question conditioning on SQuAD same-passage A/B pairs, gold-only context.
+#
+# Replicates Experiment 6's design correction for Experiment 5 itself: every
+# arm sees ONLY the one shared gold passage that answers both A and B -- the
+# nine screened distractors stored in pairs_n10.jsonl are stripped at runtime
+# by gold_only_pairs() (src/run_multilingual_handoffs.py), reused as-is rather
+# than reimplemented. There is also no prompt-level length request (no
+# length_target_words key below): handoff_max_tokens is a high, non-binding
+# guard only, monitored for truncation, exactly as Experiment 6 uses it.
+#
+# This isolates one variable at a time relative to the two other same-passage
+# runs already in the report:
+#   - vs. the natural-length, 9-distractor run: removes the distractors.
+#   - vs. the length-matched, 9-distractor run: removes both the distractors
+#     and the explicit length target.
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  # Matches Experiment 6: no prompt-level length request, and a high,
+  # non-binding token guard that is monitored for truncation.
+  handoff_max_tokens: 1500
+
+cost:
+  cap_usd: 2.0
+  api_call_cap: 3000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 10
+  max_retries: 4
+  backoff_base_s: 1.5
+  backoff_max_s: 30.0
+  request_timeout_s: 120
+  cache_dir: cache
+
+dataset:
+  source: "prebuilt_pairs"
+  pairs_jsonl: data/squad_same_passage/pairs_n10.jsonl
+  sample_seed: 20260821
+  n_pairs: 10
+  # The reusable file stores 1 gold + 9 screened distractors, so this must
+  # match the file's actual width for load_prebuilt_pairs()'s structural
+  # assertions; experiment_context below then projects to gold-only before
+  # any model call, same as Experiment 6.
+  context_passages: 10
+  experiment_context: "gold_only"
+
+# C1 closed-book leakage filter -- unused here (pairs_n10.jsonl was already
+# filtered when built), kept only because load_config expects the key to
+# exist for other callers; not read by this experiment_context path.
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  f1_known_threshold: 0.6
+
+modes: [conditioned, generic]
+depths: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+max_depth: 10
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+
+outputs:
+  data_root: data/squad_same_passage
+  run_root: runs/squad_same_passage_goldonly
+  result_root: results/squad_same_passage_goldonly
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0
