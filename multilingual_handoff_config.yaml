@@ -1,0 +1,87 @@
+# Experiment 6: language switching across repeated handoffs.
+#
+# Crosses question conditioning (conditioned/generic) with language schedule
+# (fixed/switching) on the corrected SQuAD same-passage dataset. The runner
+# removes all stored retrieval distractors before prompting: every input is the
+# one shared gold passage that supports both A and B. Each example receives a
+# stratified starting language. The fixed arm retains it for every handoff; the
+# switching arm cycles through six officially supported Llama 3.1 languages
+# exactly once across depths 1--6.
+
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  # Matches Experiment 5: no prompt-level length request and a high,
+  # non-binding token guard that is monitored for truncation.
+  handoff_max_tokens: 1500
+
+cost:
+  cap_usd: 3.0
+  api_call_cap: 4000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 20
+  max_retries: 4
+  backoff_base_s: 1.5
+  backoff_max_s: 30.0
+  request_timeout_s: 120
+  cache_dir: cache
+
+dataset:
+  source: "prebuilt_pairs"
+  pairs_jsonl: data/squad_same_passage/pairs_n10.jsonl
+  n_pairs: 10
+  # The reusable file contains 1 gold + 9 screened distractors so Experiment 5
+  # can construct noisy contexts. Experiment 6 validates that source pack and
+  # then projects it to the one gold_AB passage before any model call.
+  context_passages: 10
+  experiment_context: "gold_only"
+
+conditioning: [conditioned, generic]
+schedules: [fixed, switching]
+depths: [0, 1, 2, 3, 4, 5, 6]
+max_depth: 6
+
+# The official Llama 3.1 model card lists eight supported languages. This run
+# retains the same six-language schedule as the earlier noisy pilot so removal
+# of distractors is the main design correction. Earlier Hindi/Thai failures
+# occurred only under the retired 10-passage context and are not treated as
+# gold-only results. mmlu_8b_instruct is Meta's multilingual MMLU score where
+# published; there is no comparable English row or per-language corpus share.
+languages:
+  - {code: en, name: English, mmlu_8b_instruct: null}
+  - {code: de, name: German, mmlu_8b_instruct: 60.59}
+  - {code: fr, name: French, mmlu_8b_instruct: 62.34}
+  - {code: it, name: Italian, mmlu_8b_instruct: 61.63}
+  - {code: pt, name: Portuguese, mmlu_8b_instruct: 62.12}
+  - {code: es, name: Spanish, mmlu_8b_instruct: 62.45}
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+
+outputs:
+  run_root: runs/multilingual_handoff_gold_only
+  result_root: results/multilingual_handoff_gold_only
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0
+  concurrency: 20
+
+language_judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 1.0
+  concurrency: 20

@@ -5,4 +5,5 @@ pyarrow>=14.0
 numpy>=1.26
 tqdm>=4.66
 matplotlib>=3.8
+langdetect>=1.0.9
 bert-score>=0.3.13

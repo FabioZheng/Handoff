@@ -49,6 +49,14 @@ Run the full probe:
 python src/run.py --mechanisms A_full,B_freeform,C_structured,D_extractive,E_oracle
 ```
 
+Run Experiment 6 on the corrected 10-example SQuAD sample; each experimental
+input contains one shared gold passage and zero distractors (cached calls are
+reused automatically):
+
+```bash
+python src/run_multilingual_handoffs.py --config multilingual_handoff_config.yaml --n 10
+```
+
 Offline checks that need no API key (data shaping, scoring, isolation guarantee):
 
 ```bash
@@ -82,6 +90,8 @@ handoff-probe/
     run_redundant_signal_ratio.py  Experiment 4 -- fixed-context redundant-evidence signal ratio
     run_summary_generalization.py  Experiment 5 -- question conditioning and
                                     cross-question generalization
+    run_multilingual_handoffs.py    Experiment 6 -- gold-only fixed-language
+                                    vs language-switching handoff chains
     run_slack_facts.py       unwritten follow-up correcting Exp. 3/4's signal/filler confound
     run_slack_retrieval.py   unwritten follow-up correcting Exp. 3's retention-pooling defect
     plot_conditioning_comparison.py   analysis-only plot for the chain_generic replication

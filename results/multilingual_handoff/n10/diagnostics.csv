@@ -1,0 +1,5 @@
+arm,handoffs,truncations,language_matches,language_match_rate,summary_characters_mean
+conditioned_fixed,60,0,59,0.9833,1089.0
+conditioned_switching,60,0,58,0.9667,1020.1
+generic_fixed,60,0,60,1.0,1484.5
+generic_switching,60,0,58,0.9667,1292.6
