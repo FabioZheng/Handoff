@@ -20,7 +20,8 @@ Every experiment number below refers to the numbering in
 4. [Experiment 3 — retrieval quality through repeated handoffs](#experiment-3)
 5. [Experiment 4 — fixed-context redundant-evidence signal ratio](#experiment-4)
 6. [Experiment 5 — question conditioning and cross-question generalization](#experiment-5)
-7. [Cross-cutting wording inconsistency](#wording-inconsistency)
+7. [Experiment 6 — multilingual fixed vs switching handoffs](#experiment-6)
+8. [Cross-cutting wording inconsistency](#wording-inconsistency)
 
 ---
 
@@ -124,8 +125,9 @@ replace BERTScore, which scored surface-form similarity rather than whether
 the answer was actually right.
 
 **Used by:** Experiment 2 (`run_chain.py`), Experiment 4
-(`run_redundant_signal_ratio.py`), Experiment 5 (`run_summary_generalization.py`).
-Not yet wired into Experiment 1 or Experiment 3.
+(`run_redundant_signal_ratio.py`), Experiment 5 (`run_summary_generalization.py`),
+and Experiment 6 (`run_multilingual_handoffs.py`). Not yet wired into
+Experiment 1 or Experiment 3.
 
 ---
 
@@ -416,26 +418,136 @@ byte-identical string to the generic prompt.
 reuses shared `ANSWER_SYSTEM`. User message:
 `Research material:\n{material}\n\nQuestion:\n{question}\nAnswer:`
 
-### Dataset variants
+### Dataset construction
 
-Two pair-construction paths feed the prompts above, selected by
-`dataset.source` in the config -- the prompts themselves are identical
-either way:
+The only supported path is `load_prebuilt_pairs()`, using
+`summary_generalization_squad_pairs_config.yaml`. The dataset is built and
+validated ahead of time by
+[`src/build_squad_same_passage.py`](src/build_squad_same_passage.py). Each
+example takes two native SQuAD questions from one shared SQuAD passage, placed
+at a stratified slot among nine length-matched SQuAD passages. Both questions
+are independently audited for salience/independence and pass the closed-book
+C1 filter; every distractor is separately screened as irrelevant to both A and
+B. The obsolete constructors and configurations that joined questions from
+different passages have been removed.
 
-- `construct_pairs()` (default; used by `summary_generalization_config.yaml`
-  and `summary_generalization_depth10_config.yaml`): question A and B come
-  from two *different* SQuAD articles glued into one shared context, plus
-  real SQuAD distractors. This is the original design and its results
-  (`summary_generalization_v2*`) are still cited in the report as the
-  separate-passage comparison point.
-- `load_prebuilt_pairs()` (`dataset.source: prebuilt_pairs`, used by
-  `summary_generalization_squad_pairs_config.yaml`): loads a dataset built
-  and validated ahead of time by
-  [`src/build_squad_same_passage.py`](src/build_squad_same_passage.py). Each
-  example takes two native SQuAD questions from one *shared* SQuAD passage,
-  placed at a stratified slot among nine length-matched SQuAD distractors,
-  with both questions independently audited for salience/independence and
-  filtered through the project's closed-book C1 leakage check.
+---
+
+## Experiment 6 — multilingual fixed vs switching handoffs<a id="experiment-6"></a>
+
+**File:** [`src/run_multilingual_handoffs.py`](src/run_multilingual_handoffs.py).
+This experiment imports `CHAIN_SYSTEM`, `INITIAL_INSTRUCTION`, and
+`RECOMPRESS_INSTRUCTION` from Experiment 2. It crosses the presence/absence of
+Question A with a fixed-language/switching-language schedule. The same exact
+language directive is appended in every arm. Before prompt assembly, the
+runner projects each reusable 1+9 SQuAD pack to its single `gold_AB` passage;
+no distractor text reaches any Experiment 6 model call.
+
+### System prompt
+
+The compressor reuses `CHAIN_SYSTEM` verbatim:
+
+```
+You are a research handoff agent. Preserve every fact needed to answer the
+question. Your output will replace your entire input for the next agent, so
+omitted information is lost.
+```
+
+### Stage-1 user-message template
+
+```
+Source material:
+{the single shared SQuAD gold passage that supports A and B; 0 distractors}
+
+[conditioned arm only]
+Question the final agent must answer: {Question A}
+
+Write concise prose research notes that preserve all evidence needed to answer
+the question. Do not answer the question directly and do not add unsupported
+facts.
+
+{LANGUAGE_DIRECTIVE}
+```
+
+### Stage ≥2 user-message template
+
+```
+Previous agent's notes:
+{previous handoff only}
+
+[conditioned arm only]
+Question the final agent must answer: {Question A}
+
+Rewrite the previous agent's notes into concise prose research notes for
+another agent. Preserve every answer-relevant fact, qualifier, date, number,
+relationship, uncertainty, and source id. Use only the previous notes. Do not
+answer the question directly.
+
+{LANGUAGE_DIRECTIVE}
+```
+
+### Language directive
+
+`LANGUAGE_DIRECTIVE` is formatted with the language assigned to that pair and
+stage:
+
+```
+OUTPUT LANGUAGE (mandatory): {language}. Write the entire replacement handoff
+in {language}. Proper names, identifiers, numbers, and short source quotations
+may remain unchanged when translation would alter them. Do not mix in another
+language for the prose. Summarize; do not translate or rewrite the source
+passage by passage. Do not use headings or one section per passage.
+```
+
+This directive deliberately contains no sentence, word, paragraph, or other
+output-length target. The 1,500-token API limit in the configuration is only a
+non-binding runaway guard and is not part of the model prompt.
+
+At stage 1, the fixed and switching schedules receive the same assigned
+starting language and byte-identical prompts; the stored stage-1 handoff is
+copied between schedules. At later stages, fixed keeps that language while
+switching advances cyclically through English, German, French, Italian,
+Portuguese, and Spanish. Starting language is stratified by passage.
+
+### Final answer
+
+The shared `ANSWER_SYSTEM` is used with the original English question:
+
+```
+Research material:
+{direct English context at depth 0, or the handoff at the requested depth}
+
+Question:
+{Question A or Question B}
+Answer:
+```
+
+### Language-compliance judge
+
+The saved audit includes both deterministic predominant-language detection and
+the following different-family LLM audit. The deterministic detector is the
+reported primary compliance metric because the LLM audit was overly
+conservative on clearly correct French prose.
+
+System:
+
+```
+You are a strict language-identification auditor. Reply with exactly MATCH or
+MISMATCH.
+```
+
+User:
+
+```
+Expected language: {requested_language}
+
+Text:
+{handoff_text}
+
+Reply MATCH if the prose is predominantly in the expected language. Allow
+proper names, numbers, identifiers, and short untranslated quotations.
+Otherwise reply MISMATCH.
+```
 
 ---
 

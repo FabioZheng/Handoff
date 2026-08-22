@@ -14,10 +14,10 @@ The current synthesis is:
 1. **Compression can help the immediate task when it removes noise.** In the initial MuSiQue pilot, a free-form handoff beat direct full-context answering by 26.4 F1 points. In the longer chains, noisy full contexts often improved after early summaries, whereas compact HotpotQA gold-only evidence showed the clearest serial loss (−10.7 F1 by depth 10).
    **Metric caveat added 20 August 2026:** that −10.7 F1 result is **0.000** under an LLM judge scoring answer correctness against the gold (0.900 at both depth 0 and depth 10). Token F1 penalises correct-but-reworded answers, which repeated compression reliably produces. Read as "the asserted fact survives ten handoffs, but its surface form drifts from the gold string." No serial-loss claim in this report should now be made on token F1 alone.
 2. **BM25 rank is not a relevance label.** The initial hard/easy result was driven partly by topic-adjacent candidate passages. After a conservative independent LLM relevance screen removes any passage judged useful for the target answer, hard–easy effects at depths 3–5 no longer exclude zero in either experiment. This is evidence that the original contrast mixed distractor difficulty with weak evidence; the screened rerun is labelled *LLM-screened*, not human-verified.
-3. **Question conditioning is a short-horizon specialization tool, not a reusable-handoff default — and its size depends on whether the compressor can drop a whole document.** With A and B on **separate** gold passages, conditioning improved its target by +29.5 F1 at the first handoff and +21.8 at the second, indistinguishable from zero from depth 3 on, while damaging an unrelated but answerable question at every depth (−49.7 F1 at depth 10; the LLM judge strengthens this, −40 to −45 points at every depth, all p < 0.001). A controlled rebuild in which **one shared passage answers both questions** (§5, 20 pairs, length-matched, position-stratified, leakage-filtered) finds the target benefit essentially gone (+0.06 F1 at depth 1, n.s.) while the held-out cost stays negative at every depth on both metrics (−0.11 to −0.20) but not significant at n=20. Read together: conditioning pays when it lets the compressor discard entire irrelevant documents, not when it merely re-weights within one passage — and the held-out cost appears in both designs. For five or more handoffs with a potentially changing downstream task, generic notes remain the safer default.
-   **Withdrawn 21 August 2026:** an earlier self-generated-Wikipedia variant of this comparison reported a large, durable target benefit and no held-out damage. It was confounded — its generic arm hit the token cap on 10/10 summaries and retained the gold fact 0/10 times — and has been deleted and replaced by the rebuild above. No conclusion in this report now rests on it.
+3. **Question conditioning narrows a summary by two distinct mechanisms, and only one of them needs noise to work.** Three designs isolate them. (a) *Separate passages* (20 pairs, A and B each with their own gold document plus 8 distractors): conditioning gets +0.295 F1 on the target at depth 1 (p=0.0009), decaying to non-significant by depth 3, while the held-out question is damaged at every depth (-0.392 to -0.497 F1, p<=0.0023) -- consistent with conditioning discarding a whole competing document. (b) *Same passage, 9 distractors* (20 pairs, one shared gold passage): removing the competing document removes the effect entirely -- every target and held-out interval spans zero at every depth. (c) *Same passage, gold-only, no length request* (10 pairs, replicating Experiment 6's correction): with no distractors and no competing document, a **different, larger, more durable** held-out effect reappears -- F1 -0.60 to -0.43 at every depth 1-10, p<=0.038 throughout, both metrics -- while the target shows no benefit at all (every interval spans zero). With nothing to filter, generic already keeps both facts almost losslessly (held-out F1 0.85-0.95 vs a 0.95 direct ceiling); conditioning drops the held-out fact anyway, for no compression reason, simply because it was told which question mattered. Document-competition narrowing and this task-induced narrowing are not the same mechanism appearing and disappearing -- they are two separate effects, and removing noise from the design reveals the second one rather than eliminating the first.
 4. **Withholding the question from every compressor is far more damaging than repeated compression itself.** The matched question-omission replication (same model, questions, contexts, depths, seeds, system prompt, and handoff instructions as the main serial chain — the sole difference is that no compressor ever sees the question) degrades at every depth, in every evidence condition, including full context — the one condition that *improved* under question-conditioned compression. MuSiQue full context goes from +0.080 F1 at depth 10 (conditioned) to **−0.272 F1** (question omitted) on the identical question set.
-5. **These are directional pilots, not final effect sizes.** The Llama 3.3 70B and Qwen3 8B chain runs agree that dataset and context composition matter, but most low-cost experiments use 20 questions and one seed. The strongest next step is replication at larger sample sizes with independently sourced redundant evidence.
+5. **The corrected gold-only multilingual pilot no longer tests document retrieval, and it finds no robust language-switching effect.** Experiment 6 gives every arm only the one SQuAD passage that supports A and B—zero distractors—and restores Experiment 5's length-neutral prompt. At depth 6, switching-minus-fixed target F1 is −0.181 when conditioned and +0.061 when generic; held-out F1 is +0.183 and −0.017. Every F1 and LLM-judge interval includes zero. At stage 1, generic exceeds conditioned on B (0.400 F1 / 0.800 judge vs 0.200 / 0.500); generic fixed also has higher B judge accuracy at depth 3 (0.900 vs 0.400; conditioned-minus-generic −0.500 [−0.800, −0.200]). The prompt asks for no target length: observed handoffs average 583–804 characters (87–122 words) across arms, with zero API truncations and 237/240 requested-language matches.
+6. **These are directional pilots, not final effect sizes.** The Llama 3.3 70B and Qwen3 8B chain runs agree that dataset and context composition matter, but most low-cost experiments use 20 questions and one seed. The strongest next step is replication at larger sample sizes with independently sourced redundant evidence.
 
 ## Experiment inventory
 
@@ -29,12 +29,12 @@ The current synthesis is:
 | Serial handoff degradation (replication) | MuSiQue + HotpotQA | 10 per dataset | Qwen3 8B, non-thinking | 0/1/3/5 | Same no-/medium-/high-noise inputs as above | Low-cost one-seed replication |
 | Retrieval-quality propagation | MS MARCO QA v2.1 | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | Low noise: all retriever-found gold retained + filler; medium noise: half retained + filler; high noise: 15% retained + filler. Every context has ten passages. | Noise level × BM25-top hard or bottom easy candidate distractors |
 | Redundant-evidence signal-ratio propagation | SQuAD same-article packs | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | No noise: 10 answer-sufficient gold / 0 distractor; medium: 5 / 5; high: 1 / 9 | Signal/noise ratio × BM25-top hard or bottom easy candidate distractors |
-| Cross-question generalization v2, depth-10 extension | SQuAD | 20 paired contexts | Llama 3.1 8B Instruct | 0–10 | High noise: Question A gold + unrelated Question B gold + 8 distractors (both questions remain answerable) | Question A present vs absent; evaluate A and unrelated B at every depth |
-| Cross-question generalization, same-passage A/B **(replaces a withdrawn Wikipedia variant — see §5)** | SQuAD same-passage pairs | 20 paired contexts | Llama 3.1 8B Instruct | 0–10 | High noise: one shared gold SQuAD passage (answers both A and B) at a stratified position + 9 length-matched SQuAD distractors | Question A present vs absent; evaluate A and B at every depth |
+| Cross-question generalization | SQuAD | 20 pairs (separate passages) + 20 pairs (same passage, distractors) + 10 pairs (same passage, gold-only) | Llama 3.1 8B Instruct | 0–10 | Separate: A's gold + B's gold + 8 distractors. Same-passage: 1 shared gold + 9 distractors. Gold-only: the shared passage alone, 0 distractors | Question A present vs absent; evaluate A and B at every depth; document competition vs distractor noise vs neither |
+| Multilingual fixed/switching handoffs | Same corrected SQuAD A/B questions | 10 passages / 20 question IDs | Llama 3.1 8B Instruct | 0–6 | **Gold-only:** one shared passage answering A and B, 0 distractors | Conditioned/generic × fixed/switching language; evaluate A and B |
 
 ## 1. Single-handoff mechanism pilot
 
-> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable (validation) · **Prompts:** [PROMPTS.md § Experiment 1](PROMPTS.md#experiment-1) — `ANSWER_SYSTEM`, `SUBAGENT_SYSTEM`, `FREEFORM_INSTRUCTION`, `STRUCTURED_INSTRUCTION`, `EXTRACTIVE_INSTRUCTION` (`src/handoffs.py`)
+> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable (validation) · **Prompts:** [PROMPTS.md § Experiment 1](../PROMPTS.md#experiment-1) — `ANSWER_SYSTEM`, `SUBAGENT_SYSTEM`, `FREEFORM_INSTRUCTION`, `STRUCTURED_INSTRUCTION`, `EXTRACTIVE_INSTRUCTION` (`src/handoffs.py`)
 
 ### Design
 
@@ -62,7 +62,7 @@ Reported API cost: **$0.0151**.
 
 ## 2. Repeated handoff degradation
 
-> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable + HotpotQA (distractor, validation) · **Prompts:** [PROMPTS.md § Experiment 2](PROMPTS.md#experiment-2) — `QUESTION_CONDITIONED_SYSTEM`/`_INITIAL_INSTRUCTION`/`_RECOMPRESS_INSTRUCTION` + shared `ANSWER_SYSTEM` (`src/run_chain.py`)
+> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable + HotpotQA (distractor, validation) · **Prompts:** [PROMPTS.md § Experiment 2](../PROMPTS.md#experiment-2) — `QUESTION_CONDITIONED_SYSTEM`/`_INITIAL_INSTRUCTION`/`_RECOMPRESS_INSTRUCTION` + shared `ANSWER_SYSTEM` (`src/run_chain.py`)
 
 ### Design
 
@@ -115,7 +115,7 @@ Reconciled cost was **$0.0443** across Qwen-specific leakage filtering, 300 summ
 
 ### Matched question-omission replication
 
-> **Model:** `meta-llama/llama-3.3-70b-instruct` (same as above) · **Dataset:** same as above, same 30-question sample · **Prompts:** [PROMPTS.md § Experiment 2](PROMPTS.md#experiment-2), question-conditioned prompt set with the question block deleted — see `initial_compress()`/`recompress()` in `src/run_chain.py`
+> **Model:** `meta-llama/llama-3.3-70b-instruct` (same as above) · **Dataset:** same as above, same 30-question sample · **Prompts:** [PROMPTS.md § Experiment 2](../PROMPTS.md#experiment-2), question-conditioned prompt set with the question block deleted — see `initial_compress()`/`recompress()` in `src/run_chain.py`
 
 ![Question-conditioned vs question-omitted, matched chains](chain_generic/conditioning_comparison.png)
 
@@ -140,7 +140,7 @@ Cost: **$0.9564** (7,000 live calls, 20 cached) for the original chain, plus **$
 
 ## 3. Retrieval quality through repeated handoffs
 
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** MS MARCO QA v2.1 (validation, via Hugging Face parquet mirror) · **Prompts:** [PROMPTS.md § Experiment 3](PROMPTS.md#experiment-3) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_retrieval_quality.py`)
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** MS MARCO QA v2.1 (validation, via Hugging Face parquet mirror) · **Prompts:** [PROMPTS.md § Experiment 3](../PROMPTS.md#experiment-3) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_retrieval_quality.py`)
 
 ### Design
 
@@ -171,7 +171,7 @@ Empirical recall-at-10 against BM25-findable gold:
 
 ![Retrieval quality propagation with LLM-judge correctness](retrieval_quality/n20/retrieval_quality.png)
 
-The combined figure reports token F1 (left), F1 change from the direct answer (centre), and LLM-judge correctness with bootstrap intervals (right). The judge is `openai/gpt-4o-mini`, temperature 0, and scores only whether the predicted answer conveys the gold fact; EM/F1 remain the primary deterministic measures.
+The combined figure reports token F1 (left) and LLM-judge correctness with bootstrap intervals (right). A depth-0-normalized panel was dropped: it only rescaled the same F1 curve already shown at left and added no information. The judge is `openai/gpt-4o-mini`, temperature 0, and scores only whether the predicted answer conveys the gold fact; EM/F1 remain the primary deterministic measures.
 
 | Depth | Low-noise F1 | Medium-noise F1 | High-noise F1 |
 |---:|---:|---:|---:|
@@ -202,7 +202,7 @@ Pilot cost: **$0.006587** (480 live calls, 60 cached).
 
 ## 4. Fixed-context redundant-evidence signal ratio
 
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD (validation) · **Prompts:** [PROMPTS.md § Experiment 4](PROMPTS.md#experiment-4) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_redundant_signal_ratio.py`)
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD (validation) · **Prompts:** [PROMPTS.md § Experiment 4](../PROMPTS.md#experiment-4) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_redundant_signal_ratio.py`)
 
 ### Design
 
@@ -222,7 +222,7 @@ This experiment holds the task fixed: every relevant passage independently conta
 
 ![Answer-sufficient signal ratio and LLM-judge correctness through handoffs](redundant_signal_ratio/n20/redundant_signal_ratio.png)
 
-The combined figure reports token F1 (left), F1 retained from depth 0 (centre), and LLM-judge correctness with bootstrap intervals (right). The judge uses the same independent `openai/gpt-4o-mini` rubric as Experiment 3.
+The combined figure reports token F1 (left) and LLM-judge correctness with bootstrap intervals (right). A depth-0-normalized panel was dropped for the same reason as Experiment 3's: it only rescaled the same F1 curve and added no information. The judge uses the same independent `openai/gpt-4o-mini` rubric as Experiment 3.
 
 | Noise level and exact input composition | F1 depth 0 | F1 depth 5 | Judge depth 0 | Judge depth 5 |
 |---|---:|---:|---:|---:|
@@ -252,9 +252,15 @@ Pilot cost: **$0.009382** (357 live calls, 183 cached).
 
 ## 5. Question conditioning and cross-question generalization
 
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD (validation), two low-overlap questions paired per context · **Prompts:** [PROMPTS.md § Experiment 5](PROMPTS.md#experiment-5) — defines no new text, reuses Experiment 2's question-conditioned `CHAIN_SYSTEM`/`INITIAL_INSTRUCTION`/`RECOMPRESS_INSTRUCTION` verbatim, imported from `src/run_chain.py`
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD validation, three A/B pairing designs (below) · **Prompts:** [PROMPTS.md § Experiment 5](../PROMPTS.md#experiment-5), reusing the question-conditioned chain prompt from Experiment 2
 
-### Corrected v2 design
+Three designs are reported, in the order they were run. Each changes exactly one thing about how A and B relate to their context, isolating a different candidate explanation for "does conditioning on A cost B":
+
+1. **Separate-passage** — A and B have two *different* gold passages, glued into one context with 8 distractors. A generic summary must retain two competing answerable documents at once.
+2. **Same-passage, with distractors** — A and B share *one* gold passage, placed among 9 unrelated distractors. Conditioning can no longer discard a whole competing document; there is only one document to compress, plus noise to filter.
+3. **Same-passage, gold-only** — the same shared passage, but with the 9 distractors removed entirely and no length request, replicating Experiment 6's correction. There is now no noise to filter at all, isolating whatever narrowing happens *within* a single short passage.
+
+### Separate-passage design: two competing gold documents
 
 Each SQuAD example combines two independently labelled questions from different articles:
 
@@ -276,7 +282,7 @@ The conditioned and generic chains use the exact system prompt and handoff instr
 
 The final answerer receives whichever question is being evaluated. Summaries have the same 700-token maximum in both arms.
 
-### Results
+#### Results
 
 ![Question-only conditioning through ten handoffs](summary_generalization_v2_depth10/n20/summary_generalization.png)
 
@@ -322,69 +328,180 @@ A complete side-by-side example is available in [`summary_generalization_v2_dept
 
 Original corrected pilot cost was approximately **$0.0100**; the depth-10 extension added **$0.013471** (698 live calls, 22 cache hits). Full metrics and contrasts are in [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv) and [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv).
 
-### Same-passage A/B rerun on SQuAD (21 August 2026)
+### Same-passage design: random distractors, natural length
 
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD validation, same-passage A/B pairs built by `src/build_squad_same_passage.py` · **Config:** `summary_generalization_squad_pairs_config.yaml` · **Prompts:** identical to the paired-SQuAD run above — same `CHAIN_SYSTEM`/`INITIAL_INSTRUCTION`/`RECOMPRESS_INSTRUCTION` from `src/run_chain.py`, same `ANSWER_SYSTEM`
+Each example selects one SQuAD passage that already has two independently human-written SQuAD questions targeting distinct facts — Question A, conditioned on, and held-out Question B. No question is model-generated. The gold passage sits at a stratified position among nine unrelated SQuAD distractor passages of matched length; conditioned and generic summaries are otherwise free to choose their own length under a non-binding 1,500-token cap.
 
-#### Why this replaced the Wikipedia variant
-
-An earlier version of this comparison used the self-generated Wikipedia dataset. It was withdrawn as confounded, and its artifacts deleted, after an audit found its generic arm was crippled by construction rather than by the treatment: **10/10 generic stage-1 summaries hit the token cap** (whole Wikipedia articles are ~16,900 prompt tokens against a 700-token budget inherited from a ~1,700-token design), in 4/10 pairs the gold passage sat at P9–P10 and was never reached, and the question generator had been explicitly instructed to prefer "details that are not obvious" — so the summariser was asked to retain exactly the class of fact summarisation discards. Verbatim gold survival in generic summaries was **0/10 for both questions**, making the held-out contrast a degenerate 0-versus-0 rather than a measurement.
-
-This rebuild keeps the *scientific* question (does conditioning on A narrow a summary away from an unrelated B answerable from the same evidence?) and fixes every design defect:
-
-| Control | Wikipedia version | This rebuild |
-|---|---|---|
-| Questions | Model-authored, selected for non-obviousness | Human-written SQuAD questions, **0 model-authored** |
-| Salience / independence | Not checked | LLM-audited per pair (different model family); 3 pairs rejected |
-| Gold passage | 1 full article (~5–8.6k chars) | 1 SQuAD paragraph, 712–878 chars |
-| Context length | Unmatched, ~61k chars | Matched: 7,432–8,197 chars (10.3% spread) |
-| Gold position | Unstratified (4/10 unreachable) | **Stratified: exactly 2 pairs at each of the 10 slots** |
-| Leakage filter | Not applied | C1 closed-book on **both** A and B (85/220 questions leaked; 42/110 pairs fully clean) |
-| Budget | 700, bound 100% of the time | 1,500, non-binding (see truncation below) |
-| n | 10 | 20 |
-
-Both questions are answered by the **same** passage, as before — that is the intended contrast with the original paired-SQuAD design above, where A and B have separate gold passages.
-
-#### Pre-interpretation checks
-
-Before reading any effect, the three diagnostics that invalidated the previous run:
-
-- **Truncation:** conditioned 3/200 handoffs (1.5%), generic 1/200 (0.5%). The cap does not bind; summary length is chosen by the model (mean stage-1 length: conditioned 123 tokens, generic 823).
-- **Generic baseline non-degenerate:** generic target F1 0.65–0.70 and held-out F1 0.40–0.45 across depths, against a direct-context ceiling of 0.83/0.83. There is a real baseline to degrade.
-- **Stage-1 fact survival:** generic retains gold A 14/20 (70%) and gold B 9/20 (45%); conditioned retains A 16/20 (80%) and B 6/20 (30%).
+- **20 pairs**, each built from its own gold passage (712–878 characters); full ten-passage contexts span 7,432–8,197 characters (10.3% spread).
+- Gold position stratified exactly twice per slot across all ten positions.
+- Closed-book C1 leakage probed both questions of every candidate pair: 85/220 candidate questions leaked; 20 fully-clean pairs were kept.
+- Distractors are randomly sampled SQuAD passages of matched length, not screened for relevance to either question.
 
 #### Results
 
-![Question-only conditioning on SQuAD same-passage pairs](squad_same_passage/n20/summary_generalization.png)
-
-Dot area again encodes mean characters received at that point. Against a 7,954-character direct context, conditioned summaries shrink to 612 characters at depth 1 (927 by depth 10), while generic summaries — compressing the same ten passages with no question to focus them — stay far larger throughout, 3,784–4,491 characters. This is the visual counterpart to the stage-1 fact-survival numbers above: generic keeps more text overall but still loses the specific fact either question needs.
+![Question-only conditioning on the same-passage design with distractors](squad_same_passage/n20/summary_generalization.png)
 
 Paired conditioned-minus-generic contrasts:
 
-| Comparison | Metric | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
+| Evaluation | Metric | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
 |---|---|---:|---:|---:|---:|
-| Target (Question A) | F1 | +0.059 (p=0.61) | −0.074 (p=0.53) | −0.039 (p=0.66) | −0.092 (p=0.39) |
-| Target (Question A) | LLM judge | +0.150 (p=0.11) | −0.050 (p=0.83) | −0.050 (p=0.76) | −0.100 (p=0.53) |
-| Held-out (Question B) | F1 | −0.169 (p=0.22) | −0.136 (p=0.33) | −0.184 (p=0.24) | −0.163 (p=0.28) |
-| Held-out (Question B) | LLM judge | −0.150 (p=0.39) | −0.200 (p=0.25) | −0.200 (p=0.24) | −0.200 (p=0.24) |
+| Target A | F1 | +0.059 [−0.149, +0.284] | −0.074 [−0.297, +0.155] | −0.039 [−0.218, +0.137] | −0.092 [−0.304, +0.112] |
+| Target A | LLM judge | +0.150 [0.000, +0.300] | −0.050 [−0.250, +0.150] | −0.050 [−0.200, +0.100] | −0.100 [−0.350, +0.150] |
+| Held-out B | F1 | −0.169 [−0.442, +0.091] | −0.136 [−0.414, +0.137] | −0.184 [−0.475, +0.125] | −0.163 [−0.450, +0.125] |
+| Held-out B | LLM judge | −0.150 [−0.450, +0.150] | −0.200 [−0.500, +0.100] | −0.200 [−0.500, +0.100] | −0.200 [−0.500, +0.100] |
 
-**No effect reaches significance at n=20.** Read as directional evidence only:
+Every interval spans zero and every p-value exceeds 0.22. With one shared passage instead of two competing gold documents, conditioning no longer has a whole document it can discard — and the significant separate-passage effects above disappear. The held-out sign is still consistently negative at every depth, which the gold-only design below sharpens considerably.
 
-1. **The target benefit disappears when A and B share one passage.** The original paired-SQuAD design (separate gold passages) gave conditioning **+0.295 F1 at depth 1**, significant at p=0.0009. Here it is +0.059 and gone by depth 2. The mechanism is visible in fact survival: a generic summary of a single 800-character paragraph already keeps A's fact 70% of the time, so naming A adds little (+0.100 survival, CI [−0.100, +0.300]). Conditioning helps most when it lets the compressor *discard a whole irrelevant document* — which the separate-passage design permits and this one does not.
-2. **The held-out cost persists in direction but not in significance.** It is negative at every depth on both metrics (F1 −0.11 to −0.18; judge −0.15 to −0.20), matching the sign of the original run's significant −0.39 to −0.50, and gold-B survival drops 45% → 30% under conditioning (−0.150, CI [−0.450, +0.150]). Consistent, but every interval spans zero.
-3. **Both arms lose more on B than on A.** Held-out F1 falls from 0.833 direct to 0.40 generic / 0.23 conditioned at depth 1, while target F1 holds near 0.70. Even an unconditioned summary of a shared passage is a lossy channel for the question it was not written for.
+Run cost: **$0.031**.
 
-**Honest reading:** with a properly controlled dataset the conditioning effect is *much smaller* than either previous run suggested. The Wikipedia run's large "durable benefit" was an artifact of a broken baseline; the original paired-SQuAD run's large effects depend on A and B having separate gold passages. When they share one passage, conditioning buys little and costs something, but n=20 with one seed cannot establish the cost. Confirming it needs ≥100 pairs and a second seed.
+### Gold-only design: no distractors, no length request
 
-Cost: **$0.039** (1,218 live calls at `llama-3.1-8b-instruct` plus 240 live judge calls), plus **$0.02** for dataset construction and its leakage filtering.
+Same underlying same-passage pairing, but replicating Experiment 6's correction: every context is reduced to the one shared gold passage that answers both A and B, with the nine distractors stripped before any model call by `gold_only_pairs()` — one shared function, imported by both this experiment and Experiment 6, not two copies of the same projection. There is no prompt-level length target here either; only the same non-binding 1,500-token guard as the design above, so any difference between the two isolates the effect of removing distractor noise, not a change in length policy.
+
+- **10 pairs** — the same shared-passage pairs Experiment 6 also uses (`data/squad_same_passage/pairs_n10.jsonl`), reduced to their gold passage only: 721–866 characters, versus 7,841–8,467 characters for the ten-passage context above.
+- **Truncation:** 0/200 handoffs hit the token cap.
+- **Stage-1 exact fact survival:** conditioned retains A in 8/10 summaries and B in 3/10; generic retains A in 8/10 and B in 9/10.
+
+#### Results
+
+![Question-only conditioning, gold-only context](squad_same_passage_goldonly/n10/summary_generalization.png)
+
+Paired conditioned-minus-generic contrasts:
+
+| Evaluation | Metric | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
+|---|---|---:|---:|---:|---:|
+| Target A | F1 | +0.096 [−0.137, +0.367] | −0.092 [−0.233, 0.000] | +0.040 [−0.253, +0.333] | +0.040 [−0.180, +0.300] |
+| Target A | LLM judge | +0.100 [0.000, +0.300] | −0.200 [−0.500, 0.000] | +0.000 [−0.300, +0.300] | +0.000 [−0.300, +0.300] |
+| Held-out B | F1 | **−0.600** [−0.900, −0.300] | **−0.700** [−1.000, −0.400] | **−0.500** [−0.800, −0.200] | **−0.433** [−0.800, 0.000] |
+| Held-out B | LLM judge | **−0.600** [−0.900, −0.300] | **−0.700** [−1.000, −0.400] | **−0.500** [−0.800, −0.200] | **−0.500** [−0.900, −0.100] |
+
+Held-out B is significant at **every landmark depth on both metrics** (p ranges 0.0001–0.0379 across F1, 0.0000–0.0276 across the judge), the sharpest result in this section. Target A shows no such effect: every interval spans zero at every depth.
+
+Removing distractors, rather than adding a fair-comparison control, is what surfaces the effect. With nothing to filter, the generic arm's summary of one ~800-character paragraph is close to lossless for both facts (held-out F1 0.85–0.95 against a direct-context ceiling of 0.95, stage-1 survival 9/10) — a short passage does not force a choice. Conditioning makes that choice anyway: it does not improve target accuracy, which generic already gets right without help, but it still drops B's fact on most runs (stage-1 survival 3/10, held-out F1 0.25–0.45 across depths). This is task-induced narrowing in close to its purest form — the model discards an answerable, salient fact from a short, fully-retained passage for no compression reason, solely because it was told which question mattered.
+
+Read across all three designs: the separate-passage design's effect (significant at depths 1–2, decaying by depth 5) comes from conditioning discarding an entire competing document. The same-passage-with-distractors design removes that mechanism and the effect vanishes. The gold-only design removes distractor noise too, and a *different*, larger, and more durable held-out effect reappears — one that cannot be attributed to document competition or noise filtering, since neither is present. These are two distinct mechanisms by which conditioning narrows a summary, not one effect appearing and disappearing.
+
+Run cost: **$0.005** (597 live calls at `llama-3.1-8b-instruct`, 16 live judge calls, 404 judge calls served from cache).
+
+## 6. Multilingual fixed vs switching handoffs
+
+> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** 10 corrected SQuAD same-passage examples / 20 native question IDs, projected to gold-only · **Config:** `multilingual_handoff_config.yaml` · **Prompts:** [PROMPTS.md § Experiment 6](../PROMPTS.md#experiment-6)
+
+### Design and input composition
+
+The active experiment removes the retrieval confound. The reusable SQuAD file still stores one `gold_AB` passage plus nine screened distractors for other experiments, but `gold_only_pairs()` validates and removes all nine distractors before fingerprinting, prompting, or answering. Each Experiment 6 input is therefore one 721–866-character passage containing both answer facts.
+
+| Arm | Question visible to compressors? | Language schedule | Experimental input |
+|---|---|---|---|
+| Conditioned, fixed | Question A | One assigned language at every handoff | 1 shared gold passage / 0 distractors |
+| Conditioned, switching | Question A | A different language at every handoff | Same gold-only passage |
+| Generic, fixed | No question | One assigned language at every handoff | Same gold-only passage |
+| Generic, switching | No question | A different language at every handoff | Same gold-only passage |
+
+Depth 0 answers directly from that one English passage. At depths 1–6, the answerer sees only the latest handoff and the original English A or B question. Starting language is stratified by passage. A fixed chain keeps that language; a switching chain cycles through English → German → French → Italian → Portuguese → Spanish, rotated by starting language, so each switching chain uses all six once. Fixed and switching share the exact stored stage-1 handoff and answer; the schedule treatment begins only at stage 2.
+
+Question A is the conditioning target and B is held out. The same examples, source passage, decoding, answer budget, depths, judge, and final English answer prompt are paired across all arms. Removing distractors means generic versus conditioned now tests information selection *inside the gold passage*, not which document is found.
+
+### Prompts used
+
+The compressor system prompt is imported unchanged from Experiment 2:
+
+> You are a research handoff agent. Preserve every fact needed to answer the question. Your output will replace your entire input for the next agent, so omitted information is lost.
+
+At stage 1 the user message is `Source material:\n{one shared gold passage}`, optionally followed only in the conditioned arm by `Question the final agent must answer: {Question A}`, then:
+
+> Write concise prose research notes that preserve all evidence needed to answer the question. Do not answer the question directly and do not add unsupported facts.
+
+At later stages, `Previous agent's notes:\n{previous handoff}` replaces the source material and the instruction is:
+
+> Rewrite the previous agent's notes into concise prose research notes for another agent. Preserve every answer-relevant fact, qualifier, date, number, relationship, uncertainty, and source id. Use only the previous notes. Do not answer the question directly.
+
+Every arm then receives the same directive, formatted with its assigned language:
+
+> OUTPUT LANGUAGE (mandatory): {language}. Write the entire replacement handoff in {language}. Proper names, identifiers, numbers, and short source quotations may remain unchanged when translation would alter them. Do not mix in another language for the prose. Summarize; do not translate or rewrite the source passage by passage. Do not use headings or one section per passage.
+
+The final-answer message is `Research material:\n{material}\n\nQuestion:\n{A or B}\nAnswer:` under the shared answer persona. The complete prompt assembly and language-audit prompt are reproduced in [PROMPTS.md](../PROMPTS.md#experiment-6).
+
+### Language relevance to Llama 3.1 pretraining
+
+Meta reports Llama 3.1 as trained on more than 15T pretraining tokens from a multilingual corpus and officially supports eight languages, but it does **not** publish per-language token counts or proportions. Consequently, the experiment cannot claim an exact “pretraining relevance” share for any single language. The defensible operational proxy is official support plus Meta's published 8B-Instruct multilingual MMLU result. [Official Llama 3.1 model card](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md), [official evaluation details](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/eval_details.md).
+
+| Language | Used? | Officially supported | Meta 8B-Instruct multilingual MMLU | Role |
+|---|---:|---:|---:|---|
+| English | Yes | Yes | Not separately reported in this table | Source passages and final questions are English; also one handoff language |
+| German | Yes | Yes | 60.59 | Handoff language |
+| French | Yes | Yes | 62.34 | Handoff language |
+| Italian | Yes | Yes | 61.63 | Handoff language |
+| Portuguese | Yes | Yes | 62.12 | Handoff language |
+| Spanish | Yes | Yes | 62.45 | Handoff language |
+| Hindi | No | Yes | 50.88 | Not in the retained six-language schedule |
+| Thai | No | Yes | 50.32 | Not in the retained six-language schedule |
+
+The gold-only correction deliberately retains the same six-language schedule as the retired noisy pilot so context composition is the principal design change. Hindi and Thai failures observed under the retired 10-passage preflight are not treated as evidence about the gold-only setting. This remains a mostly high-resource Latin-script test, not a test of every supported language.
+
+### Diagnostics
+
+- **Handoffs and answers:** 240 handoffs and 500 answers (20 direct plus 4 arms × 6 depths × 20 questions); all 500 answer-judge verdicts parsed.
+- **Source and compression:** the direct input averages 810 characters / 129 words. There is no requested summary length. Across all depths, conditioned-fixed, conditioned-switching, generic-fixed, and generic-switching average 583/87, 665/101, 759/113, and 804/122 characters/words respectively; those differences are observed outcomes, not compliance targets.
+- **Budget compliance:** no handoff hit the 1,500-token API guard (0/240). It is a non-binding safety limit, not a prompt instruction.
+- **Language compliance:** deterministic predominant-language detection matches 237/240 requested languages (98.75%). The raw GPT-4o-mini audit remains available, while deterministic detection is the reported primary compliance diagnostic.
+- **Generic baseline:** B is no longer a retrieval floor. At stage 1, generic B F1/judge is 0.400/0.800 versus conditioned 0.200/0.500. Both remain below direct gold-passage answering (0.950/1.000), so compression still loses substantial within-passage evidence.
+
+### Results
+
+Each schedule is shown separately in the same 2×2 grammar as the Experiment 5
+conditioning plot: Question A/B are the columns, token F1/LLM-judge accuracy
+are the rows, and direct context/conditioned/generic are the three series.
+This avoids conflating the conditioning comparison with the language-schedule
+comparison by overlaying four tracks in each panel. Dot **area** is
+proportional to mean answer-input size.
+
+![Gold-only question conditioning with a fixed handoff language](multilingual_handoff_gold_only/n10/multilingual_handoffs_fixed_compact.png)
+
+![Gold-only question conditioning with switching handoff languages](multilingual_handoff_gold_only/n10/multilingual_handoffs_switching_compact.png)
+
+The matching smaller-marker versions remain available as
+`multilingual_handoffs_fixed_compact.png` and
+`multilingual_handoffs_switching_compact.png`; they contain the same data with
+a smaller visual scale, while preserving marker area proportional to the
+answerer's input size.
+
+**Reading the reference-style plots.** Fixed and switching share their
+stage-1 point by construction. Within each schedule, generic is generally
+stronger on held-out B—most visibly for the fixed-language judge track at
+depths 2–3—whereas target A alternates between the arms. The larger generic
+markers show why this is not a pure conditioning effect: generic often passes
+more characters to the answerer. Splitting the figures improves readability;
+it does not change the paired estimates or the conclusion that the n=10
+language-schedule contrasts are inconclusive.
+
+Paired switching-minus-fixed contrasts (95% paired-bootstrap intervals):
+
+| Evaluation | Conditioning | Metric | Depth 1 | Depth 3 | Depth 6 |
+|---|---|---|---:|---:|---:|
+| Target A | Conditioned | F1 | 0.000 [0.000, 0.000] | −0.116 [−0.416, +0.153] | −0.181 [−0.550, +0.183] |
+| Target A | Conditioned | LLM judge | 0.000 [0.000, 0.000] | −0.200 [−0.500, 0.000] | −0.100 [−0.400, +0.200] |
+| Target A | Generic | F1 | 0.000 [0.000, 0.000] | +0.055 [−0.075, +0.240] | +0.061 [−0.225, +0.332] |
+| Target A | Generic | LLM judge | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [−0.300, +0.300] |
+| Held-out B | Conditioned | F1 | 0.000 [0.000, 0.000] | −0.050 [−0.350, +0.250] | +0.183 [0.000, +0.400] |
+| Held-out B | Conditioned | LLM judge | 0.000 [0.000, 0.000] | +0.200 [0.000, +0.500] | +0.200 [0.000, +0.500] |
+| Held-out B | Generic | F1 | 0.000 [0.000, 0.000] | −0.200 [−0.600, +0.200] | −0.017 [−0.267, +0.183] |
+| Held-out B | Generic | LLM judge | 0.000 [0.000, 0.000] | 0.000 [−0.300, +0.300] | +0.100 [−0.200, +0.400] |
+
+The stage-1 zeroes are a design check: schedules are identical until stage 2. From depths 2–6, **no switching-minus-fixed F1 or LLM-judge interval excludes zero**. The depth-6 conditioning × switching interactions are also uncertain: target F1 −0.241 [−0.592, +0.089], target judge −0.100 [−0.600, +0.500], held-out F1 +0.200 [0.000, +0.600], and held-out judge +0.100 [−0.400, +0.600].
+
+The corrected conclusion is narrow: cycling among six supported languages does not produce a reliably detectable accuracy penalty or benefit relative to staying in one language. The document-selection explanation is eliminated. With no prompt-level length request, generic summaries are also longer at stage 1 (836 versus 696 characters), so its B advantage is not clean evidence of selective preservation: conditioned-minus-generic B is −0.200 F1 [−0.500, 0.000] and −0.300 judge [−0.600, 0.000]. At depth 3 the fixed-language B judge difference is larger (−0.500 [−0.800, −0.200]), whereas the F1 difference remains uncertain. This is a descriptive n=10 result, not a confirmed specialization–generalization effect.
+
+The active gold-only run used **$0.0078** for handoff generation and answering, **$0.0085** for language auditing, and **$0.0026** for answer judging. The retired noisy run remains in `results/multilingual_handoff/n10` for auditability but is no longer interpreted as Experiment 6 evidence; the active artifacts are under `multilingual_handoff_gold_only/n10`.
 
 ## Cross-experiment interpretation
 
-The results support three distinct roles for handoffs:
+The results support four distinct roles for handoffs:
 
 1. **Denoising:** one summary can remove distractors and improve answer accuracy.
 2. **Serial information loss:** repeated rewriting can progressively remove precise evidence, especially when the starting evidence is already minimal.
-3. **Task-induced narrowing:** supplying a question changes which information survives. This helps the immediate target but can permanently remove facts needed by other questions.
+3. **Task conditioning:** supplying a question changes what a compressor emphasizes, but the corrected same-passage pilot is too small to establish either target benefit or held-out harm.
+4. **Representation language:** changing language between handoffs can alter compression length and occasionally trigger refusal behavior, but this six-language pilot does not isolate a robust accuracy effect.
 
 These mechanisms can coexist. A handoff may improve the current answer by filtering noise while simultaneously making the representation less reusable for future tasks.
 
@@ -394,21 +511,25 @@ These mechanisms can coexist. A handoff may improve the current answer by filter
 - The baseline and long-chain experiments used Llama 3.3 70B, whereas the low-cost retrieval and generalization pilots used Llama 3.1 8B.
 - The repeated-chain experiment used two seeds, but the low-cost pilots used one deterministic seed.
 - SQuAD A/B contexts are simulated retrieval packs rather than outputs from a live retriever.
-- SQuAD is a heavily-pretrained public benchmark: 85/220 (39%) of the same-passage rebuild's candidate questions failed the closed-book leakage check and were discarded. The surviving 20 pairs are therefore drawn from the harder tail of SQuAD, not from SQuAD at large.
-- The same-passage rebuild is powered to detect only large effects (n=20, one seed); none of its contrasts reach significance and it should not be cited as a null result.
-- The redundant-evidence signal-ratio gold passages share an answer-bearing source paragraph. The experiment controls answer sufficiency, but not independent-source diversity.
+- SQuAD is a heavily-pretrained public benchmark: 85/220 candidate questions failed the original design's closed-book leakage check (a separate audit on the 10-pair pool used by the gold-only rerun and Experiment 6 found 84/220). The surviving pairs are drawn from SQuAD's harder tail, not from SQuAD at large.
+- Both same-passage designs use one seed; the original design (20 pairs) is underpowered for its own small, non-significant effects, and even the gold-only design's large, significant held-out effect (10 pairs) has not been checked against a second seed.
+- The original design's distractors are randomly sampled, not screened for relevance to either question; a separate, no-longer-reported build applied an LLM relevance screen instead (`negative_verification_n10.csv`) without changing the qualitative null result, before the gold-only rerun replaced screening with removing distractors entirely.
 - The redundant-evidence signal-ratio gold passages share an answer-bearing source paragraph. The experiment controls answer sufficiency, but not independent-source diversity.
 - Direct scores for Question A and B should not be compared as measures of relative difficulty. Valid causal comparisons are paired within the same question type.
 - Bootstrap intervals are exploratory and were not corrected for multiple comparisons.
+- The multilingual experiment uses only 10 passages and one deterministic seed. Language order is coupled to depth within each pair, although starting languages are stratified across pairs; order-specific and depth-specific effects cannot be fully separated.
+- Its active run covers six high-resource supported languages. Three handoffs fail deterministic language compliance; the 1,500-token safety guard did not bind. The result cannot be generalized to all supported languages or writing systems.
+- Meta does not publish per-language Llama 3.1 pretraining shares. Official support and multilingual MMLU are capability proxies, not measurements of corpus prevalence.
 
 ## Recommended next steps
 
-1. Scale the same-passage conditioning rebuild (§5) to at least 100 pairs and two seeds — at n=20 no contrast reaches significance, so the persistent negative held-out sign is directional only.
+1. Scale the gold-only same-passage design (§5) to at least 100 pairs and two seeds. It is the cleanest of the three variants tried (original distractors, LLM-screened distractors, gold-only) and already produces the report's most significant single result at n=10; confirming it holds at scale is higher priority than further distractor-realism work on the 20-pair design.
 2. Replicate it with Llama 3.3 70B or another stronger model to test whether the specialization–generalization asymmetry survives model scaling.
 3. Track explicit fact survival in summaries, separating omission at stage 1 from corruption during stages 2–5.
 4. Expand the MS MARCO retrieval pilot to at least 100 questions before interpreting the medium-noise behavior.
 5. Keep the v2 question-only prompt audit as a required self-test in all subsequent conditioning experiments, and report the truncation rate and generic-arm fact survival before interpreting any conditioning contrast — a summariser silently hitting its token cap produces a degenerate baseline that reads as a large treatment effect.
 6. Scale the corrected redundant-evidence signal-ratio experiment to 100 packs, then replace shared-source redundancy with independently sourced, answer-sufficient documents where a suitable labelled corpus permits it.
+7. Replicate gold-only Experiment 6 at n≥100 with two seeds, enforced length-matching rather than prompt-only targets, and balanced reversed or Latin-square language orders. Add Hindi/Thai only as a separately preregistered language-set expansion.
 
 ## Result artifacts
 
@@ -417,5 +538,8 @@ These mechanisms can coexist. A handoff may improve the current answer by filter
 - Serial degradation, question omitted: [`chain_generic/report.md`](chain_generic/report.md), [`chain_generic/stage_metrics.csv`](chain_generic/stage_metrics.csv), [`chain_generic/conditioning_comparison.png`](chain_generic/conditioning_comparison.png)
 - Retrieval quality: [`retrieval_quality/n20/metrics.csv`](retrieval_quality/n20/metrics.csv), [`retrieval_quality/n20/deltas.csv`](retrieval_quality/n20/deltas.csv)
 - Corrected redundant-evidence signal ratio: [`redundant_signal_ratio/n20/metrics.csv`](redundant_signal_ratio/n20/metrics.csv), [`redundant_signal_ratio/n20/deltas.csv`](redundant_signal_ratio/n20/deltas.csv), [`redundant_signal_ratio/n20/redundant_signal_ratio.png`](redundant_signal_ratio/n20/redundant_signal_ratio.png)
-- Corrected generalization, depth-10 extension: [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv), [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv), [`summary_generalization_v2_depth10/n20/summary_generalization.png`](summary_generalization_v2_depth10/n20/summary_generalization.png)
-- Generalization, SQuAD same-passage A/B rebuild: [`squad_same_passage/n20/metrics.csv`](squad_same_passage/n20/metrics.csv), [`squad_same_passage/n20/deltas.csv`](squad_same_passage/n20/deltas.csv), [`squad_same_passage/n20/summary_generalization.png`](squad_same_passage/n20/summary_generalization.png), construction report [`../data/squad_same_passage/construction_n20.csv`](../data/squad_same_passage/construction_n20.csv)
+- Generalization, separate-passage design (20 pairs): [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv), [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv), [`summary_generalization_v2_depth10/n20/summary_generalization.png`](summary_generalization_v2_depth10/n20/summary_generalization.png), example [`summary_generalization_v2_depth10/n20/example.md`](summary_generalization_v2_depth10/n20/example.md)
+- Generalization, same-passage design with distractors (20 pairs): [`squad_same_passage/n20/metrics.csv`](squad_same_passage/n20/metrics.csv), [`squad_same_passage/n20/deltas.csv`](squad_same_passage/n20/deltas.csv), [`squad_same_passage/n20/summary_generalization.png`](squad_same_passage/n20/summary_generalization.png), construction report [`../data/squad_same_passage/construction_n20.csv`](../data/squad_same_passage/construction_n20.csv)
+- Generalization, gold-only design (10 pairs): [`squad_same_passage_goldonly/n10/metrics.csv`](squad_same_passage_goldonly/n10/metrics.csv), [`squad_same_passage_goldonly/n10/deltas.csv`](squad_same_passage_goldonly/n10/deltas.csv), [`squad_same_passage_goldonly/n10/summary_generalization.png`](squad_same_passage_goldonly/n10/summary_generalization.png), shared pair pool also used by Experiment 6: construction report [`../data/squad_same_passage/construction_n10.csv`](../data/squad_same_passage/construction_n10.csv), distractor audit [`../data/squad_same_passage/negative_verification_n10.csv`](../data/squad_same_passage/negative_verification_n10.csv)
+- Retired (no longer in this report, still on disk): LLM-screened-distractor natural-length run `squad_same_passage/n10`, its length-matched control `squad_same_passage_matched/n10`
+- Multilingual handoffs, **active gold-only run**: [`multilingual_handoff_gold_only/n10/metrics.csv`](multilingual_handoff_gold_only/n10/metrics.csv), [`multilingual_handoff_gold_only/n10/deltas.csv`](multilingual_handoff_gold_only/n10/deltas.csv), [`multilingual_handoff_gold_only/n10/diagnostics.csv`](multilingual_handoff_gold_only/n10/diagnostics.csv), size-encoded [`multilingual_handoffs.png`](multilingual_handoff_gold_only/n10/multilingual_handoffs.png), compact-marker [`multilingual_handoffs_compact.png`](multilingual_handoff_gold_only/n10/multilingual_handoffs_compact.png), raw handoffs [`../runs/multilingual_handoff_gold_only/n10/handoffs.jsonl`](../runs/multilingual_handoff_gold_only/n10/handoffs.jsonl), raw answers [`../runs/multilingual_handoff_gold_only/n10/answers.jsonl`](../runs/multilingual_handoff_gold_only/n10/answers.jsonl). Retired noisy artifacts remain under `multilingual_handoff/n10`.
