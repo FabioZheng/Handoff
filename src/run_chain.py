@@ -114,7 +114,8 @@ def initial_compress(client, question, context_text: str, dataset: str, variant:
 
 
 def recompress(client, sealed: hm.SealedHandoff, cfg: dict, seed: int, stage: int,
-               question_conditioned: bool) -> hm.Handoff:
+               question_conditioned: bool, *, decoding_seed: int | None = None,
+               tag: str | None = None) -> hm.Handoff:
     if not isinstance(sealed, hm.SealedHandoff):
         raise TypeError("recompress requires a SealedHandoff; source documents are forbidden")
     system = QUESTION_CONDITIONED_SYSTEM
@@ -124,12 +125,13 @@ def recompress(client, sealed: hm.SealedHandoff, cfg: dict, seed: int, stage: in
         + (f"Question the final agent must answer: {sealed.question}\n\n" if question_conditioned else "")
         + instruction
     )
+    call_seed = seed * 1000 + stage if decoding_seed is None else decoding_seed
     result = client.chat(
         [{"role": "system", "content": system}, {"role": "user", "content": user}],
         temperature=cfg["decoding"]["subagent_temperature"],
         max_tokens=cfg["decoding"]["handoff_max_tokens"],
-        seed=seed * 1000 + stage,
-        tag=f"chain_compress_stage{stage}",
+        seed=call_seed,
+        tag=tag or f"chain_compress_stage{stage}",
     )
     return hm.Handoff(
         qid=sealed.qid,
@@ -139,6 +141,7 @@ def recompress(client, sealed: hm.SealedHandoff, cfg: dict, seed: int, stage: in
         meta={
             "stage": stage, "prompt_tokens": result.prompt_tokens,
             "completion_tokens": result.completion_tokens, "cached": result.cached,
+            "decoding_seed": call_seed,
         },
     )
 

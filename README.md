@@ -82,9 +82,10 @@ handoff-probe/
     run.py                  Experiment 1 -- single-handoff mechanism pilot
     chain_data.py            dataset adapters shared by the chain experiment
     run_chain.py             Experiment 2 -- repeated handoff degradation
-                              (also drives the Qwen replication and the
+                              (also drives the Qwen replications and the
                               question-conditioned/generic replication --
                               see chain_config.yaml, qwen_chain_config.yaml,
+                              qwen32_chain_config.yaml,
                               chain_generic_config.yaml)
     run_retrieval_quality.py Experiment 3 -- retrieval quality through repeated handoffs
     run_redundant_signal_ratio.py  Experiment 4 -- fixed-context redundant-evidence signal ratio
@@ -275,6 +276,17 @@ Narrow runs are composable and resumable:
 .venv/Scripts/python src/run_chain.py --plot-only
 ```
 
+Run the comparable-size, low-cost Qwen3 32B replication (same datasets,
+contexts, seeds, and depths as the 70B run; outputs remain isolated):
+
+```bash
+.venv/Scripts/python src/run_chain.py --config qwen32_chain_config.yaml --chain-config qwen32_chain_experiment.yaml
+```
+
+The Qwen configuration uses Qwen3's native `/no_think` directive as well as
+OpenRouter's `reasoning.effort: none`, ensuring the fixed handoff and answer
+budgets are spent on visible text rather than hidden reasoning.
+
 Configuration lives in `chain_config.yaml`. Outputs are written to:
 
 - `runs/chain/answers.jsonl`: answer-level predictions, accuracy, context size,
@@ -295,4 +307,48 @@ Offline verification of the generated-dataset adapter and plot generation:
 
 ```bash
 .venv/Scripts/python src/selftest_chain_offline.py
+```
+
+## Incremental-evidence chain
+
+`src/run_incremental_chain.py` extends the sealed chain without changing the
+existing experiments. MuSiQue supporting paragraphs arrive one at a time to
+specialists; exactly 0/1/3/5 relay-only agents are inserted between successive
+specialists. Relays call the existing `recompress()` path and accept only a
+`SealedHandoff`, so they cannot receive new evidence.
+
+Run the configured experiment:
+
+```bash
+.venv/Scripts/python src/run_incremental_chain.py \
+  --config config.yaml \
+  --experiment-config incremental_chain_config.yaml
+```
+
+Run a small smoke or a selected condition:
+
+```bash
+.venv/Scripts/python src/run_incremental_chain.py --n 2 --candidates 10 --relay-depths 0,1 --seeds 1
+.venv/Scripts/python src/run_incremental_chain.py --conditions question_conditioned --relay-depths 0,1,3,5
+.venv/Scripts/python src/run_incremental_chain.py --analyse-only
+```
+
+The experiment writes only to `data/incremental_chain`,
+`runs/incremental_chain`, and `results/incremental_chain`. Its records retain
+the existing handoff and answer fields and add packet identity, relay depth,
+introduction stage, and handoff age. Main outputs are:
+
+- `runs/incremental_chain/handoffs.jsonl`: every specialist and relay message;
+- `runs/incremental_chain/answers.jsonl`: original-evidence and final multi-hop answers;
+- `runs/incremental_chain/probe_answers.jsonl`: hidden packet-probe answers at every eligible stage;
+- `results/incremental_chain/stage_metrics.csv`: final QA by relay depth;
+- `results/incremental_chain/probe_metrics.csv`: hidden-probe accuracy by handoff age;
+- `results/incremental_chain/future_query_regret.csv`: original-evidence minus final-handoff probe scores;
+- `results/incremental_chain/survival_by_age.csv`: exact fact survival by age;
+- `results/incremental_chain/incremental_chain.png` and `report.md`.
+
+Offline controls and schema/plot checks:
+
+```bash
+.venv/Scripts/python src/selftest_incremental_chain_offline.py
 ```

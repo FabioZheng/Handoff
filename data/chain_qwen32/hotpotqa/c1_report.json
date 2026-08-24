@@ -1,0 +1,3556 @@
+{
+  "known_method": "llm_judge",
+  "candidates_run": 100,
+  "leaked_excluded": 39,
+  "leaked_qids": [
+    "5add8ec55542997545bbbd7e",
+    "5a8781b65542993e715abf8f",
+    "5ac1b95655429963665198fd",
+    "5a8aee2c55429970aeb70338",
+    "5a8268215542995ce29dccfb",
+    "5a8a44c65542996c9b8d5e85",
+    "5ab2383155429970612095c1",
+    "5adf32ee5542995534e8c767",
+    "5ae5e852554299546bf82fb8",
+    "5a7125165542994082a3e5d0",
+    "5a74cfed5542993748c896ea",
+    "5ae641f65542992ae0d162a3",
+    "5a8510a25542994c784ddaf0",
+    "5a7d2afd5542995f4f402221",
+    "5ac0cfb45542997d64295a58",
+    "5a712fca5542994082a3e641",
+    "5a84e4bc5542997b5ce3ff81",
+    "5a8bbb8c5542995d1e6f142e",
+    "5ae5feaf5542996de7b71ac6",
+    "5a83155c55429954d2e2ec0e",
+    "5a8d08ee55429941ae14df70",
+    "5add65355542995b365fab27",
+    "5a90b2175542990a984936ae",
+    "5ade1f1c55429939a52fe82d",
+    "5adc46665542994650320cc8",
+    "5a84be095542992a431d1a97",
+    "5abe54585542991f66106148",
+    "5a716f575542994082a3e82f",
+    "5a80799b5542992bc0c4a72e",
+    "5ae3dc205542992f92d823a1",
+    "5add5f395542990dbb2f7e50",
+    "5a74bdce55429929fddd84e1",
+    "5a8a203c55429970aeb7026d",
+    "5a8756aa5542994846c1cd69",
+    "5ade8802554299728e26c72d",
+    "5a7bcd68554299294a54aaf0",
+    "5ab85a1155429934fafe6d7c",
+    "5ab928c255429934fafe6e6e",
+    "5adf9b415542995ec70e904c"
+  ],
+  "survived": 61,
+  "survival_rate": 0.61,
+  "leak_rate": 0.39,
+  "n_target": 30,
+  "kept": 30,
+  "target_met": true,
+  "closed_book_mean_em": 0.18666666666666668,
+  "closed_book_mean_f1": 0.27273663957874483,
+  "attempts": {
+    "5a7c221f554299683c1c62d2": [
+      {
+        "sample": 0,
+        "pred": "Keene State College is not the name of the region; the correct answer is **Keene**",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 90,
+        "completion_tokens": 23,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Peterborough",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 87,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Keene",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 87,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5add8ec55542997545bbbd7e": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ae0850055429945ae959396": [
+      {
+        "sample": 0,
+        "pred": "Andrew Preston",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 55,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Andrew Preston",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 55,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Andrew Preston",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8781b65542993e715abf8f": [
+      {
+        "sample": 0,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8bcad45542995e66a47512": [
+      {
+        "sample": 0,
+        "pred": "Chu",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Chu",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Chu",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ac1b95655429963665198fd": [
+      {
+        "sample": 0,
+        "pred": "Little Boy",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Little Boy",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Little Boy",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8aee2c55429970aeb70338": [
+      {
+        "sample": 0,
+        "pred": "George Duran is a famous chef, but Ara Babajian is not primarily known as a chef",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 25,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "No",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8268215542995ce29dccfb": [
+      {
+        "sample": 0,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Canada",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a90503755429916514e7470": [
+      {
+        "sample": 0,
+        "pred": "Father of the Royal Artists",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Master of the King's Music",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Knight Bachelor",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8a44c65542996c9b8d5e85": [
+      {
+        "sample": 0,
+        "pred": "Michael Crafter",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Michael Crafter",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Michael Crafter",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ab2383155429970612095c1": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 1,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 56,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 56,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ab2c5e255429916697740ba": [
+      {
+        "sample": 0,
+        "pred": "Right Wing",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Defenseman",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Defense",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5adf32ee5542995534e8c767": [
+      {
+        "sample": 0,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Sangeet Natak Akademi",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8d12ca5542994ba4e3dbe2": [
+      {
+        "sample": 0,
+        "pred": "Dar es Salaam",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Dar es Salaam",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Dar es Salaam",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ae5e852554299546bf82fb8": [
+      {
+        "sample": 0,
+        "pred": "19th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "19th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "19th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a7a749d5542994f819ef1e0": [
+      {
+        "sample": 0,
+        "pred": "Risk Analysis",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Risk Analysis",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Risk Analysis",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5add750c5542990dbb2f7e53": [
+      {
+        "sample": 0,
+        "pred": "Most Screen Roles in a Single Film",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Most Screen Appearances by an Actor in a Single Year (2017)",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 76,
+        "completion_tokens": 18,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Most screen roles played by a living person (106)",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 17,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7125165542994082a3e5d0": [
+      {
+        "sample": 0,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 73,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 73,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Hector Berlioz",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 73,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ae657d55542995703ce8b5b": [
+      {
+        "sample": 0,
+        "pred": "83,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "87,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "84,743",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 77,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ab82fe155429919ba4e225a": [
+      {
+        "sample": 0,
+        "pred": "Cavour",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Cavour",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Vittorio Veneto",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ac2bbd0554299218029db09": [
+      {
+        "sample": 0,
+        "pred": "English",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "British",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "British",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ac1bff05542994ab5c67dfc": [
+      {
+        "sample": 0,
+        "pred": "Arturo Beltrán Leyva",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Rafael Caro Quintero",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "prompt_tokens": 67,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jesús \"El Chango\" Escárrega Montes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 18,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8f157e554299458435d54d": [
+      {
+        "sample": 0,
+        "pred": "Dallas",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Charleston, South Carolina",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Houston",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a74cfed5542993748c896ea": [
+      {
+        "sample": 0,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Matthew Good",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ae641f65542992ae0d162a3": [
+      {
+        "sample": 0,
+        "pred": "Regine",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Charice",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Regine",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8510a25542994c784ddaf0": [
+      {
+        "sample": 0,
+        "pred": "Writer",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "writer",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Writer",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 1,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a7d2afd5542995f4f402221": [
+      {
+        "sample": 0,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Ferdi Taygan",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ac0cfb45542997d64295a58": [
+      {
+        "sample": 0,
+        "pred": "Orlando-Kissimmee-Sanford, FL Metropolitan Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 13,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Orlando-Kissimmee-Sanford Metropolitan Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 16,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Orlando-Kissimmee-Sanford Metropolitan Statistical Area",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 15,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a72429355429971e9dc9375": [
+      {
+        "sample": 0,
+        "pred": "None",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Gedanken machine",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 60,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "None",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7b116a554299042af8f6c4": [
+      {
+        "sample": 0,
+        "pred": "1990",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "1990",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "1835",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7782b95542995d8318117f": [
+      {
+        "sample": 0,
+        "pred": "The 2014 Curling Skins Game was sponsored by the insurance company CAA",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 27,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Labatt Blue",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Meridian Insurance",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8f7a135542992414482adc": [
+      {
+        "sample": 0,
+        "pred": "Troezen",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Troezen",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Chalcis in Euboea",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 13,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5abcff225542993a06baf9ea": [
+      {
+        "sample": 0,
+        "pred": "Boston Celtics",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 78,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Miami Heat",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 78,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Toronto Raptors",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 78,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ab21c3b554299722f9b4cb4": [
+      {
+        "sample": 0,
+        "pred": "Douglas Rushkoff",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "George Pell",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "The author of *Bimbos of the Death Sun* was H. L. Gold",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 23,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5adbfb6855429944faac23e4": [
+      {
+        "sample": 0,
+        "pred": "1985",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "1989",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "1989",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a712fca5542994082a3e641": [
+      {
+        "sample": 0,
+        "pred": "tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 65,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 65,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "tennis",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 65,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ab5627b5542992aa134a2ff": [
+      {
+        "sample": 0,
+        "pred": "Joseph Yablonski was a labor leader in the United Mine Workers of America (UMWA), but he passed away in 197",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 32,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "6,000",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Joseph Yablonski was not the head of a union in 2014; he was a labor leader who died in 1",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 32,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ae7313c5542991e8301cbbc": [
+      {
+        "sample": 0,
+        "pred": "Alice Springs",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Canberra",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Canberra",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ade61fd554299728e26c704": [
+      {
+        "sample": 0,
+        "pred": "hip-hop",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "funk punk",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "hip hop",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ac557975542993e66e8231c": [
+      {
+        "sample": 0,
+        "pred": "Team: New York Knicks",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 71,
+        "completion_tokens": 19,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "St. John's University team",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 74,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "St. John's University Redmen",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 74,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5addd5795542990dbb2f7e9d": [
+      {
+        "sample": 0,
+        "pred": "Republic Records",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Atlantic Records",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 71,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Republic Records",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 71,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a84e4bc5542997b5ce3ff81": [
+      {
+        "sample": 0,
+        "pred": "the Ottoman Empire",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "France",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "France",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8c8828554299653c1aa0ae": [
+      {
+        "sample": 0,
+        "pred": "Edward Fitzalan-Howard, 17th Duke of Norfolk",
+        "em": 0.0,
+        "f1": 0.8333333333333334,
+        "prompt_tokens": 69,
+        "completion_tokens": 17,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Charles Fitzalan-Howard, 17th Duke of Norfolk",
+        "em": 0.0,
+        "f1": 0.8333333333333334,
+        "prompt_tokens": 69,
+        "completion_tokens": 17,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "James Fitzalan-Howard, 17th Duke of Norfolk",
+        "em": 0.0,
+        "f1": 0.8333333333333334,
+        "prompt_tokens": 69,
+        "completion_tokens": 18,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8313a755429954d2e2ec06": [
+      {
+        "sample": 0,
+        "pred": "Mischa Barton's first major film role was the protagonist in the 2001 movie *The Faculty*, written by **Kevin",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 32,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "James V. Hart",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Mischa Barton's first major film role was the protagonist of the movie *The New Guy*, written by **Adam Herz**",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 32,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8bbb8c5542995d1e6f142e": [
+      {
+        "sample": 0,
+        "pred": "Pakistan",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 1,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Pakistan",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Pakistan",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ae5feaf5542996de7b71ac6": [
+      {
+        "sample": 0,
+        "pred": "Bishop Leofric",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 72,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Bishop Leofric",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 72,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Bishop Leofric",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 75,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a81d69055429903bc27b9de": [
+      {
+        "sample": 0,
+        "pred": "2003",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "2003",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "2009",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a83155c55429954d2e2ec0e": [
+      {
+        "sample": 0,
+        "pred": "Christmas radio stations",
+        "em": 0.0,
+        "f1": 0.3333333333333333,
+        "prompt_tokens": 61,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "adult contemporary radio stations",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "prompt_tokens": 62,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Adult contemporary radio stations",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "prompt_tokens": 65,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8d08ee55429941ae14df70": [
+      {
+        "sample": 0,
+        "pred": "universities in the United States",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Universities in the United States",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "universities",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 60,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5add65355542995b365fab27": [
+      {
+        "sample": 0,
+        "pred": "Mitchell Reynolds was a stand-up comedian in the series *Upload*",
+        "em": 0.0,
+        "f1": 0.2222222222222222,
+        "prompt_tokens": 63,
+        "completion_tokens": 14,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Mitchell Reynolds was a stand-up comedian",
+        "em": 0.0,
+        "f1": 0.33333333333333337,
+        "prompt_tokens": 60,
+        "completion_tokens": 14,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Stand-up comedian",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 60,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8b7dab5542997f31a41d4c": [
+      {
+        "sample": 0,
+        "pred": "Arrowhead Stadium and Busch Stadium",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "prompt_tokens": 79,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Arrowhead Stadium and Busch Stadium",
+        "em": 0.0,
+        "f1": 0.28571428571428575,
+        "prompt_tokens": 79,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "The Pro Bowl in 1973 took place at Arrowhead Stadium, which is part of the Truman Sports Complex along with Busch Stadium",
+        "em": 0.0,
+        "f1": 0.09090909090909091,
+        "prompt_tokens": 79,
+        "completion_tokens": 32,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a712af15542994082a3e614": [
+      {
+        "sample": 0,
+        "pred": "The show is \"The Big Bang Theory.\"",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 13,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "The show is \"The Daily Show.\"",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Jeopardy!",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ae074aa5542993d6555eb54": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ab2979c554299449642c919": [
+      {
+        "sample": 0,
+        "pred": "Bristol Pawn Shop in Bristol, Rhode Island",
+        "em": 0.0,
+        "f1": 0.42857142857142855,
+        "prompt_tokens": 61,
+        "completion_tokens": 14,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Pawn Shop of America in Atlanta, Georgia",
+        "em": 0.0,
+        "f1": 0.42857142857142855,
+        "prompt_tokens": 61,
+        "completion_tokens": 13,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Whitby, New Hampshire",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ae056c755429945ae959319": [
+      {
+        "sample": 0,
+        "pred": "Jay Russell",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Jay Russell",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Miloš Forman",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a90b2175542990a984936ae": [
+      {
+        "sample": 0,
+        "pred": "Mariaan de Swardt",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Mariaan de Swardt",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Mariaan de Swardt",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5adfd56655429925eb1afaac": [
+      {
+        "sample": 0,
+        "pred": "Tony Blackburn",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 81,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Ken Dodd",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 80,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Kenneth Stanley Arnold (better known as Chris Denning)",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 81,
+        "completion_tokens": 16,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5add67915542992200553af8": [
+      {
+        "sample": 0,
+        "pred": "The Hitman",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "The Iceman",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "The Iceman",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8be8215542995e66a47518": [
+      {
+        "sample": 0,
+        "pred": "Scherrer AG",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Nestlé",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Schindler Group",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 70,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ade1f1c55429939a52fe82d": [
+      {
+        "sample": 0,
+        "pred": "John McClane",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "John McClane",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "John McClane",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 72,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a808f96554299485f598655": [
+      {
+        "sample": 0,
+        "pred": "the 1913 Tercentenary of the Romanov Dynasty",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 18,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "the 1941 Soviet victory over Nazi Germany",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 15,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "the 1913 tercentenary of the Romanov dynasty",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 18,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8f186055429918e830d186": [
+      {
+        "sample": 0,
+        "pred": "Dungeons & Dragons 3.5 edition",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 13,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Dungeons & Dragons 3.5 Edition",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 13,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Open Game License (OGL) games like Pathfinder",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 17,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5adc46665542994650320cc8": [
+      {
+        "sample": 0,
+        "pred": "1943",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "1945",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "1943",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ae33fa95542990afbd1e0f2": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 72,
+        "completion_tokens": 2,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a9084e75542990a98493667": [
+      {
+        "sample": 0,
+        "pred": "Les Ottolenghi was previously the Chief Information Officer at the Bellagio Casino in Paradise, Nevada",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 26,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Les Ottolenghi was previously the Chief Information Officer at the **Bellagio Casino** in Paradise, Nevada",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 28,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Les Ottolenghi was previously the Chief Information Officer at Caesars Palace in Paradise, Nevada",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 25,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7a03225542996c55b2dcd5": [
+      {
+        "sample": 0,
+        "pred": "Chesapeake and Ohio Railway",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Chesapeake and Ohio Railway (C&O)",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "The Chicago, Milwaukee, St. Paul and Pacific Railroad",
+        "em": 0.0,
+        "f1": 0.22222222222222224,
+        "prompt_tokens": 66,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a74c85055429916b0164218": [
+      {
+        "sample": 0,
+        "pred": "Tony Benn",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Tony Benn",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "John F. Kennedy Jr",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a84be095542992a431d1a97": [
+      {
+        "sample": 0,
+        "pred": "Diamond v. Chakrabarty",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 71,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Diamond v. Chakrabarty",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Diamond v. Chakrabarty",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ae0132d55429925eb1afc00": [
+      {
+        "sample": 0,
+        "pred": "The Long Island Rail Road",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Long Island Rail Road",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "The Long Island Rail Road",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 75,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5abe54585542991f66106148": [
+      {
+        "sample": 0,
+        "pred": "Abraham Lincoln",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Abraham Lincoln",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "James A. Garfield",
+        "em": 0.0,
+        "f1": 0.8,
+        "prompt_tokens": 65,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a716f575542994082a3e82f": [
+      {
+        "sample": 0,
+        "pred": "Joseph Campbell",
+        "em": 0.0,
+        "f1": 0.8,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Joseph Campbell",
+        "em": 0.0,
+        "f1": 0.8,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Joseph Campbell",
+        "em": 0.0,
+        "f1": 0.8,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5abece075542997ec76fd36d": [
+      {
+        "sample": 0,
+        "pred": "Tony Laird",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Tony Dunne",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Peter Shand Kydd was related to Lord Kinnoull, an early member of the Clermont Club",
+        "em": 0.0,
+        "f1": 0.10526315789473684,
+        "prompt_tokens": 62,
+        "completion_tokens": 29,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a80799b5542992bc0c4a72e": [
+      {
+        "sample": 0,
+        "pred": "panzer division",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 83,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "The German general led a **Panzer (armor) division** during the Battle of Boulogne",
+        "em": 0.0,
+        "f1": 0.18181818181818182,
+        "prompt_tokens": 83,
+        "completion_tokens": 25,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "panzer division",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 83,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5adfe6c455429906c02daa85": [
+      {
+        "sample": 0,
+        "pred": "Lafontaine",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Lindt & Sprüngli",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Georges",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7b5aff55429931da12ca6d": [
+      {
+        "sample": 0,
+        "pred": "Visvesvaraya Technological University",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 66,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Visvesvaraya Technological University",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 66,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Visvesvaraya Technological University",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 66,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7264ed5542990c210a411a": [
+      {
+        "sample": 0,
+        "pred": "Expand or die",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 79,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Drang nach Osten",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 79,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Living space for the German people",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 79,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8b8a745542995d1e6f13e4": [
+      {
+        "sample": 0,
+        "pred": "Fenerbahçe",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Eyüp",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Fenerbahçe District",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 65,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ae3dc205542992f92d823a1": [
+      {
+        "sample": 0,
+        "pred": "Basilica of Santa Maria del Fiore (Cathedral of Florence)",
+        "em": 0.0,
+        "f1": 0.1818181818181818,
+        "prompt_tokens": 70,
+        "completion_tokens": 27,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "minor basilica",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 70,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "UNESCO World Heritage Site",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 73,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7458ff55429979e2882918": [
+      {
+        "sample": 0,
+        "pred": "films directed by Mel Brooks",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "movies",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "movies",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5add5f395542990dbb2f7e50": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5adc54085542994650320cce": [
+      {
+        "sample": 0,
+        "pred": "1903",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 79,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "The newspaper adopted its current name in 1896",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 79,
+        "completion_tokens": 17,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "1964",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 82,
+        "completion_tokens": 4,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a74bdce55429929fddd84e1": [
+      {
+        "sample": 0,
+        "pred": "Vladimir Arnold",
+        "em": 0.0,
+        "f1": 0.8,
+        "prompt_tokens": 55,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Vladimir Arnold",
+        "em": 0.0,
+        "f1": 0.8,
+        "prompt_tokens": 55,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Vladimir Arnold",
+        "em": 0.0,
+        "f1": 0.8,
+        "prompt_tokens": 55,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a8a203c55429970aeb7026d": [
+      {
+        "sample": 0,
+        "pred": "Dutch Shepherd",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Dutch Shepherd",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 3,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Dutch Shepherd",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a771d6155429966f1a36c6d": [
+      {
+        "sample": 0,
+        "pred": "James Longstreet",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "John M. Schofield",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Philip H. Sheridan",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5abd69ce5542993062266c7f": [
+      {
+        "sample": 0,
+        "pred": "2001",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "2001",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 62,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "She played the role of Louise \"Mafia Chick\" Wimple",
+        "em": 0.0,
+        "f1": 0.11111111111111112,
+        "prompt_tokens": 62,
+        "completion_tokens": 18,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ae277575542996483e649b2": [
+      {
+        "sample": 0,
+        "pred": "Cinema City Entertainment",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 78,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Cinema Cosmos",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 78,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Cinema Kompani",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 78,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a871a5e5542996432c5721e": [
+      {
+        "sample": 0,
+        "pred": "Jim Stark in *Rebel Without a Cause",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 16,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Jim Stark in *Rebel Without a Cause*",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 69,
+        "completion_tokens": 12,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Brando Pantoliano",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 66,
+        "completion_tokens": 9,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a8756aa5542994846c1cd69": [
+      {
+        "sample": 0,
+        "pred": "14th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "15th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "the 13th century",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 59,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7fb23f5542994857a767be": [
+      {
+        "sample": 0,
+        "pred": "Clementines have less of the organic material with the chemical formula **C₁₂H₂₂O₁₁** than oranges",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 67,
+        "completion_tokens": 27,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "C₁₂H₂₂O₁₁",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 13,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Clementines have less of the organic material with the chemical formula **C₁₂H₂₀O₁₀** (limonin)",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 32,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ab9753055429970cfb8eb0b": [
+      {
+        "sample": 0,
+        "pred": "Action-comedy",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Action-comedy",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 61,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Action comedy",
+        "em": 0.0,
+        "f1": 0.3333333333333333,
+        "prompt_tokens": 61,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a904b0c5542995651fb510e": [
+      {
+        "sample": 0,
+        "pred": "Joan Jett",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 72,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Joan Jett",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 72,
+        "completion_tokens": 8,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Joni Mitchell",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 72,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ade8802554299728e26c72d": [
+      {
+        "sample": 0,
+        "pred": "Rolex",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Nikon",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Nikon",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 64,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ab56ed0554299637185c597": [
+      {
+        "sample": 0,
+        "pred": "Southampton",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Northampton",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Westhampton",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 63,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7271525542997f827839d0": [
+      {
+        "sample": 0,
+        "pred": "red, white, and blue",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 65,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Red, white, and blue",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 65,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Red, white, and green",
+        "em": 0.0,
+        "f1": 0.6,
+        "prompt_tokens": 65,
+        "completion_tokens": 11,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5a7bcd68554299294a54aaf0": [
+      {
+        "sample": 0,
+        "pred": "Mark Steven Johnson",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Robert Thornby",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Robert Thornby",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 58,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ab85a1155429934fafe6d7c": [
+      {
+        "sample": 0,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Yes",
+        "em": 1.0,
+        "f1": 1.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 6,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5a85441f5542997175ce1faa": [
+      {
+        "sample": 0,
+        "pred": "Australia",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Australia",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Australia",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 57,
+        "completion_tokens": 5,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ],
+    "5ab928c255429934fafe6e6e": [
+      {
+        "sample": 0,
+        "pred": "Salome*, *Elektra*, *Der Rosenkavalier",
+        "em": 0.0,
+        "f1": 0.6666666666666666,
+        "prompt_tokens": 69,
+        "completion_tokens": 16,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "Salome,\" \"Elektra,\" and \"Der Rosenkavalier",
+        "em": 0.0,
+        "f1": 0.5714285714285715,
+        "prompt_tokens": 66,
+        "completion_tokens": 21,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 2,
+        "pred": "Der Rosenkavalier, Salome, Elektra, and Ariadne auf Naxos",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 69,
+        "completion_tokens": 22,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5adf9b415542995ec70e904c": [
+      {
+        "sample": 0,
+        "pred": "Newfoundland",
+        "em": 0.0,
+        "f1": 0.5,
+        "prompt_tokens": 61,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      },
+      {
+        "sample": 1,
+        "pred": "He acts as a missionary to the Inuit of Labrador",
+        "em": 0.0,
+        "f1": 0.18181818181818182,
+        "prompt_tokens": 61,
+        "completion_tokens": 18,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Newfoundland, Canada",
+        "em": 0.0,
+        "f1": 0.4,
+        "prompt_tokens": 61,
+        "completion_tokens": 10,
+        "cached": false,
+        "judge_correct": true,
+        "known": true
+      }
+    ],
+    "5ac3959855429939154137f0": [
+      {
+        "sample": 0,
+        "pred": "Cleo Demetriou played the role of Georgia in the series *So Awkward*",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 71,
+        "completion_tokens": 19,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 1,
+        "pred": "Patience Williams",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      },
+      {
+        "sample": 2,
+        "pred": "Lola Hart",
+        "em": 0.0,
+        "f1": 0.0,
+        "prompt_tokens": 68,
+        "completion_tokens": 7,
+        "cached": false,
+        "judge_correct": false,
+        "known": false
+      }
+    ]
+  }
+}

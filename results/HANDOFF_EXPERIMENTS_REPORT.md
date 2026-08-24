@@ -113,6 +113,33 @@ The same dataset and evidence-variant design was rerun with Qwen3 8B in non-thin
 
 Reconciled cost was **$0.0443** across Qwen-specific leakage filtering, 300 summary calls, 240 answer calls, and a compatibility smoke call. The raw outputs and full table are in [`chain_qwen/report.md`](chain_qwen/report.md).
 
+### Comparable-size Qwen3 32B replication
+
+> **Model:** `qwen/qwen3-32b` (non-thinking, via OpenRouter `reasoning.effort: none` and Qwen's native `/no_think` control) · **Dataset:** MuSiQue-Answerable + HotpotQA (distractor, validation) · **Prompts:** identical to Experiment 2 apart from the documented Qwen control token · **Design:** 30 model-specific C1-filtered questions/dataset, three evidence variants, depths 0–10, two summary seeds
+
+![Qwen3 32B repeated-handoff replication](chain_qwen32/degradation.png)
+
+This is the full repeated-handoff design rerun with a 32.8B-parameter Qwen3
+model. Qwen3 defaults to hidden reasoning, so the client appends the model's
+documented `/no_think` directive to the system prompt and includes the final
+request text in the cache key. That keeps the fixed answer and handoff budgets
+comparable to the non-reasoning Llama condition. The model-specific C1 filter
+means the exact retained question IDs can differ from the Llama run, while the
+dataset sampling protocol, prompts, depths, and evidence variants are held
+fixed.
+
+At depth 10, no context condition has a reliable negative F1 change. HotpotQA
+is broadly flat: gold-only −0.063 (95% CI −0.154 to +0.019), medium −0.010
+(−0.095 to +0.070), and full +0.033 (−0.075 to +0.144). MuSiQue gold-only is
+−0.046 (−0.159 to +0.043) and medium is −0.071 (−0.170 to +0.013). In contrast,
+MuSiQue full context improves by **+0.182 F1** (+0.064 to +0.312) and **+0.167
+judge accuracy** (+0.017 to +0.317), consistent with repeated summaries
+removing distractors rather than accumulating answer-critical loss.
+
+The primary-model run cost **$0.3866** for 7,343 live and 697 cached calls; the
+independent `gpt-4o-mini` judge added **$0.0088**. Full answer-level records,
+bootstrap tables, and the figure are in [`chain_qwen32/report.md`](chain_qwen32/report.md).
+
 ### Matched question-omission replication
 
 > **Model:** `meta-llama/llama-3.3-70b-instruct` (same as above) · **Dataset:** same as above, same 30-question sample · **Prompts:** [PROMPTS.md § Experiment 2](../PROMPTS.md#experiment-2), question-conditioned prompt set with the question block deleted — see `initial_compress()`/`recompress()` in `src/run_chain.py`

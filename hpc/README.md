@@ -110,6 +110,13 @@ dedicated eight-hour job:
 ssh bunya 'read -r OPENROUTER_API_KEY && export OPENROUTER_API_KEY && cd ~/handoff && sbatch --export=ALL,OPENROUTER_API_KEY hpc/chain.slurm' <<< "$OPENROUTER_API_KEY"
 ```
 
+For the comparable-size Qwen3 32B replication, use its separate configuration
+and output directories:
+
+```bash
+ssh bunya 'read -r OPENROUTER_API_KEY && export OPENROUTER_API_KEY && cd ~/handoff && sbatch --export=ALL,OPENROUTER_API_KEY hpc/chain_qwen32.slurm' <<< "$OPENROUTER_API_KEY"
+```
+
 The job runs `src/selftest_chain_offline.py` before issuing model calls and is
 fully cache-backed/resumable. Its configured dry-run estimate is 4,020 calls,
 of which 120 reuse the existing cache, at approximately $0.26-$0.54.

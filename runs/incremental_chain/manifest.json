@@ -1,0 +1,45 @@
+{
+  "experiment": "incremental_evidence_chain_v1",
+  "model": {
+    "id": "meta-llama/llama-3.3-70b-instruct",
+    "provider_order": null,
+    "require_parameters": false
+  },
+  "decoding": {
+    "top_p": 1.0,
+    "orchestrator_temperature": 0.0,
+    "answer_max_tokens": 64,
+    "subagent_temperature": 0.7,
+    "handoff_max_tokens": 700
+  },
+  "dataset": {
+    "local_parquet": "data/raw/musique_validation.parquet",
+    "parquet_url": "https://huggingface.co/datasets/dgslibisey/MuSiQue/resolve/refs%2Fconvert%2Fparquet/default/validation/0000.parquet",
+    "answerable_only": true
+  },
+  "sampling_seed": 20260811,
+  "packets": {
+    "minimum_count": 2
+  },
+  "evidence_order": {
+    "mode": "counterbalanced",
+    "seed": 20260824
+  },
+  "conditions": {
+    "question_conditioned": {
+      "question_visible": true
+    },
+    "question_omitted": {
+      "question_visible": false
+    }
+  },
+  "configured_relay_depths": [
+    0,
+    1,
+    3,
+    5
+  ],
+  "specialist_system": "You are a research handoff agent. Preserve every fact needed to answer the question. Your output will replace your entire input for the next agent, so omitted information is lost.",
+  "specialist_instruction": "Update the research notes for the next agent by integrating the new evidence packet with the previous notes. Preserve every answer-relevant fact, qualifier, date, number, relationship, uncertainty, and source id. Use only the supplied notes and packet. Do not answer the question directly and do not add unsupported facts.",
+  "relay_instruction": "Rewrite the previous agent's notes into concise prose research notes for another agent. Preserve every answer-relevant fact, qualifier, date, number, relationship, uncertainty, and source id. Use only the previous notes. Do not answer the question directly."
+}

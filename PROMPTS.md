@@ -285,7 +285,8 @@ Reuses shared `ANSWER_SYSTEM` (see above). User message:
 at depth 0 (`answer_context()`, `run_chain.py:145`), or the same shared
 `orchestrator_answer()` template at depth ≥1.
 
-**Also drives:** the Qwen3-8B replication (`chain_qwen`) and the generic /
+**Also drives:** the Qwen3-8B (`chain_qwen`) and Qwen3-32B (`chain_qwen32`)
+replications, plus the generic /
 question-omitted replication (`chain_generic`) — same prompt constants, just a
 different `question_conditioned` flag and model config.
 

@@ -83,6 +83,9 @@ def make_judge_client(cfg: dict, dry_run: bool = False) -> tuple[LLMClient, dict
     judge_cfg = copy.deepcopy(cfg)
     judge_cfg["model"]["id"] = spec["model_id"]
     judge_cfg["model"]["reasoning"] = None
+    # Model-native prompt controls (for example Qwen3's ``/no_think``) are
+    # properties of the system under test, never of the independent judge.
+    judge_cfg["model"].pop("system_suffix", None)
     judge_cfg["cost"] = {
         "cap_usd": float(spec["cap_usd"]),
         "warn_at_fraction": cfg.get("cost", {}).get("warn_at_fraction", 0.8),

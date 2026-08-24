@@ -205,6 +205,30 @@ def estimate_tokens(text: str) -> int:
     return max(1, int(len(text) / 3.7))
 
 
+def apply_model_message_controls(messages: list[dict], cfg: dict) -> list[dict]:
+    """Return request messages with an explicitly configured model directive.
+
+    Most models need no prompt-level control.  A few, such as Qwen3, expose
+    a model-native switch in the chat template; setting ``model.system_suffix``
+    records that switch in the actual request and therefore in the cache key.
+    The caller's message list is never mutated.
+    """
+    suffix = str(cfg.get("model", {}).get("system_suffix") or "").strip()
+    if not suffix:
+        return messages
+    adjusted = [dict(message) for message in messages]
+    for message in adjusted:
+        if message.get("role") == "system":
+            content = message.get("content", "")
+            if not isinstance(content, str):
+                raise TypeError("model.system_suffix requires string system-message content")
+            message["content"] = f"{content.rstrip()}\n{suffix}"
+            return adjusted
+    # Keep a request valid and make the control explicit even for a caller that
+    # did not otherwise need a system prompt.
+    return [{"role": "system", "content": suffix}, *adjusted]
+
+
 class LLMClient:
     def __init__(self, cfg: dict, dry_run: bool = False) -> None:
         self.cfg = cfg
@@ -354,6 +378,7 @@ class LLMClient:
         response_format: dict | None = None,
         tag: str = "",
     ) -> LLMResult:
+        messages = apply_model_message_controls(messages, self.cfg)
         params = {
             "temperature": float(temperature),
             "top_p": float(self.cfg["decoding"]["top_p"]),

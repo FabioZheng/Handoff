@@ -1,0 +1,73 @@
+# Full, comparable-size Qwen replication of the serial handoff-degradation
+# experiment. Qwen3 32B is smaller than Llama 3.3 70B but remains in the same
+# mid-capability class while being much cheaper through OpenRouter.
+model:
+  id: "qwen/qwen3-32b"
+  # Let OpenRouter select a healthy low-cost provider. The exact provider and
+  # charged cost are persisted for every live call in the cache/ledger.
+  provider_order: null
+  require_parameters: false
+  # Keep the generation setting aligned with the existing direct prose-handoff
+  # experiment: no hidden reasoning-token budget and only the visible summary.
+  reasoning:
+    effort: "none"
+  # Qwen3 defaults to thinking, and the gateway-level switch is not honoured
+  # consistently by every routed provider. This model-native directive is
+  # appended to every system prompt by LLMClient and is part of the cache key.
+  system_suffix: "/no_think"
+
+dataset:
+  # run_chain selects the datasets below; this retained section lets the shared
+  # C1 filtering configuration remain compatible with the rest of the runner.
+  name: "musique"
+  split: "validation"
+  parquet_url: "https://huggingface.co/datasets/dgslibisey/MuSiQue/resolve/refs%2Fconvert%2Fparquet/default/validation/0000.parquet"
+  local_parquet: "data/raw/musique_validation.parquet"
+  answerable_only: true
+
+sampling:
+  seed: 20260811
+  n_target: 30
+  n_candidates: 100
+  id_list: "data/chain_qwen32/sampled_ids.json"
+
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  f1_known_threshold: 0.6
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  answer_max_tokens: 64
+  subagent_temperature: 0.7
+  handoff_max_tokens: 700
+
+seeds: [1, 2]
+
+cost:
+  # Qwen3 32B is listed by OpenRouter at about $0.08/M input and $0.28/M
+  # output. This cap comfortably covers the full replication while preventing
+  # an unbounded spend if provider behaviour changes.
+  cap_usd: 2.00
+  api_call_cap: 14000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 8
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  request_timeout_s: 180
+  cache_dir: "cache"
+
+# Retain the original experiment's auditable semantic complement to EM/F1.
+# This is deliberately a different model family from the Qwen system under
+# test and has its own capped ledger.
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 1.00
+  concurrency: 12
