@@ -1,0 +1,101 @@
+# Experiment 5, paraphrase-only control: is repeated REWRITING lossy, or is the
+# loss caused by compression and task-relevance selection?
+#
+# The two original arms cannot answer that, because both of them summarise:
+# `conditioned` compresses while filtering for Question A, `generic` compresses
+# without a question. Neither isolates the act of rewriting. This config adds
+# the two arms that do, holding everything else fixed:
+#
+#   passthrough  no model call at all -- the incoming message is forwarded
+#                unchanged. Zero rewriting, zero compression. Any movement
+#                across depth here is answerer noise, and it sets the flat
+#                reference every other arm is read against.
+#   paraphrase   every handoff rewrites the whole message in new words and is
+#                explicitly told NOT to condense, shorten, omit, prioritise, or
+#                select relevant content. Maximum rewriting, no compression.
+#
+# Read against each other the four arms decompose the effect:
+#   passthrough -> paraphrase   cost of rewriting alone
+#   paraphrase  -> generic      cost of adding compression
+#   generic     -> conditioned  cost of adding task-relevance selection
+#
+# Everything not named above is inherited from the gold-only design
+# (summary_generalization_squad_pairs_goldonly_config.yaml) unchanged: same
+# model, same 10 pairs, same gold-only projection, same decoding, same token
+# budgets, same depths, same judge. Output roots are separate so this run
+# cannot touch the published gold-only results.
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  # No prompt-level length request anywhere (see the absence of
+  # length_target_words below -- validate_modes() rejects combining one with
+  # the paraphrase arm). This is a high, non-binding guard, monitored for
+  # truncation. It must clear the paraphrase arm's uncompressed messages,
+  # which are expected to stay near source length rather than shrink.
+  handoff_max_tokens: 1500
+
+cost:
+  cap_usd: 2.0
+  api_call_cap: 4000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 10
+  max_retries: 4
+  backoff_base_s: 1.5
+  backoff_max_s: 30.0
+  request_timeout_s: 120
+  cache_dir: cache
+
+dataset:
+  source: "prebuilt_pairs"
+  pairs_jsonl: data/squad_same_passage/pairs_n10.jsonl
+  sample_seed: 20260821
+  n_pairs: 10
+  # Same as the gold-only config: the file stores 1 gold + 9 screened
+  # distractors, so this must match its actual width for the structural
+  # assertions in load_prebuilt_pairs(); experiment_context then projects to
+  # gold-only before any model call.
+  context_passages: 10
+  experiment_context: "gold_only"
+
+# Unused here (pairs_n10.jsonl was filtered when built); kept because
+# load_config's other callers expect the key to exist.
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  f1_known_threshold: 0.6
+
+modes: [conditioned, generic, paraphrase, passthrough]
+depths: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+max_depth: 10
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  # Cut points for the per-edge labels only. Every underlying continuous
+  # measure is stored per edge in transitions.jsonl, so these buckets can be
+  # recut without rerunning anything.
+  transition_thresholds:
+    verbatim_similarity: 0.95
+    rewritten_similarity: 0.70
+    semantic_preserved: 0.75
+
+outputs:
+  data_root: data/squad_same_passage
+  run_root: runs/squad_same_passage_paraphrase
+  result_root: results/squad_same_passage_paraphrase
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0

@@ -91,6 +91,11 @@ handoff-probe/
     run_redundant_signal_ratio.py  Experiment 4 -- fixed-context redundant-evidence signal ratio
     run_summary_generalization.py  Experiment 5 -- question conditioning and
                                     cross-question generalization
+                                    (also drives the paraphrase-only /
+                                    pass-through arms -- see
+                                    summary_generalization_paraphrase_config.yaml)
+    paraphrase_metrics.py    per-edge lexical measures for Experiment 5
+                              (no API calls, no judge)
     run_multilingual_handoffs.py    Experiment 6 -- gold-only fixed-language
                                     vs language-switching handoff chains
     run_slack_facts.py       unwritten follow-up correcting Exp. 3/4's signal/filler confound
@@ -98,6 +103,7 @@ handoff-probe/
     plot_conditioning_comparison.py   analysis-only plot for the chain_generic replication
     selftest_offline.py      checks that need no API key
     selftest_chain_offline.py  chain-experiment checks, incl. the isolation guarantee
+    selftest_summary_generalization_offline.py  Experiment 5 arm/transition checks
   data/  runs/  cache/  results/
   research/                 a separate personal research-notes / knowledge-graph
                              layer built on top of this project's findings (not
@@ -351,4 +357,70 @@ Offline controls and schema/plot checks:
 
 ```bash
 .venv/Scripts/python src/selftest_incremental_chain_offline.py
+```
+
+## Experiment 5: paraphrase-only arms and per-edge measurement
+
+Two additions to the question-conditioning experiment, both scoped to it.
+
+**Per-edge measurement.** Every run now measures each consecutive handoff edge
+`M_i -> M_{i+1}`, not just the accuracy at each depth. Lexical measures are
+deterministic and free ([`src/paraphrase_metrics.py`](src/paraphrase_metrics.py)):
+token-F1 similarity, novel/retained token rates, verbatim 5-gram copy rate, and
+length ratio. Exact fact survival reuses `mentions_answer()` from
+`run_slack_facts.py`, the same helper the other experiments use. The semantic
+half — did the rewrite preserve the meaning — is an `EQUIVALENT` /
+`MINOR_LOSS` / `MAJOR_LOSS` verdict from `add_preservation_judge()` in
+[`src/judge.py`](src/judge.py), on the same different-model-family, temperature-0,
+cached basis as the answer judge.
+
+Each edge is then bucketed: `benign_paraphrase` (wording changed, meaning held,
+fact kept, answer right), `information_loss` (meaning degraded, answer wrong),
+`critical_detail_loss` (meaning judged preserved, yet the fact or answer is
+gone), `semantic_drift` (meaning degraded but the answer survived anyway),
+`verbatim_copy`, and `unresolved`. Every underlying continuous measure is stored
+per edge, so the buckets can be recut without rerunning anything.
+
+**Two new arms.** `conditioned` and `generic` both summarise, so neither can
+say whether repeated *rewriting* is lossy or whether the loss comes from
+compression and relevance filtering. Two arms separate them:
+
+| Arm | Rewriting | Compression | Sees question A |
+|---|---|---|---|
+| `passthrough` | none (no model call) | none | no |
+| `paraphrase` | maximal, explicitly forbidden to condense | none | no |
+| `generic` | yes | yes | no |
+| `conditioned` | yes | yes | yes |
+
+Read as a ladder: `passthrough → paraphrase` is the cost of rewriting alone,
+`paraphrase → generic` adds compression, `generic → conditioned` adds
+task-relevance selection.
+
+Run the four-arm comparison (model, evidence, budgets, decoding, depths, seeds,
+and every prompt but the condition-specific instruction are matched to the
+published gold-only run; outputs go to their own roots):
+
+```bash
+.venv/Scripts/python src/run_summary_generalization.py --config summary_generalization_paraphrase_config.yaml
+```
+
+Alongside the existing `metrics.csv`, `deltas.csv`, and
+`summary_generalization.png`, a run now also writes:
+
+- `runs/<root>/transitions.jsonl`: one row per edge, with every measure, the
+  judged verdict, and a hash of the message pair it was judged from;
+- `results/<root>/transition_metrics.csv`: the same aggregated by arm and depth;
+- `results/<root>/paraphrase_transitions.png`: lexical similarity, semantic
+  preservation, held-out fact survival, and answer accuracy against depth.
+
+Transition rows are rebuilt from `handoffs.jsonl` on every run (free and
+deterministic); only the judged fields are carried over, and only when the
+message pair is byte-identical. The existing per-stage `handoffs.jsonl` rows
+gain a compact annotation subset and keep all their original fields.
+
+Offline checks for both additions, including that all four stored Experiment 5
+runs still regenerate their published `metrics.csv`/`deltas.csv` unchanged:
+
+```bash
+.venv/Scripts/python src/selftest_summary_generalization_offline.py
 ```

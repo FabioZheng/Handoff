@@ -1,0 +1,9 @@
+dataset,context_variant,condition,depth,relay_depth,n,em,em_lo,em_hi,f1,f1_lo,f1_hi,judge_correct,judge_correct_lo,judge_correct_hi,em_f1_disagree,packet_count_mean,stages_mean,handoff_characters_mean,chain_tokens_mean
+musique,question_conditioned,question_conditioned,0,0,30,0.4833,0.3167,0.65,0.6005,0.4559,0.7429,0.6667,0.5167,0.8,0.1,2.67,2.67,1639.8,2044.0
+musique,question_conditioned,question_conditioned,1,1,30,0.5167,0.3667,0.6667,0.6293,0.4967,0.7546,0.7,0.55,0.8333,0.1,2.67,4.33,1465.4,2692.0
+musique,question_conditioned,question_conditioned,3,3,30,0.5167,0.3667,0.6667,0.6344,0.503,0.7611,0.7167,0.5667,0.85,0.0667,2.67,7.67,1309.6,4107.3
+musique,question_conditioned,question_conditioned,5,5,30,0.5833,0.4167,0.75,0.6507,0.494,0.7989,0.6833,0.5167,0.8333,0.1,2.67,11.0,1301.5,5548.5
+musique,question_omitted,question_omitted,0,0,30,0.5167,0.35,0.6833,0.6241,0.4778,0.7657,0.7,0.55,0.85,0.1333,2.67,2.67,1553.5,1705.5
+musique,question_omitted,question_omitted,1,1,30,0.5333,0.3667,0.7,0.6554,0.5054,0.7936,0.7333,0.5667,0.8833,0.1333,2.67,4.33,1461.5,2404.4
+musique,question_omitted,question_omitted,3,3,30,0.55,0.3833,0.7167,0.6551,0.5189,0.7833,0.7167,0.5667,0.85,0.1333,2.67,7.67,1432.0,3887.4
+musique,question_omitted,question_omitted,5,5,30,0.4833,0.3167,0.65,0.5779,0.4294,0.7224,0.6333,0.4667,0.7833,0.1,2.67,11.0,1368.7,5241.9

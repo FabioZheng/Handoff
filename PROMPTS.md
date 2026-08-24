@@ -384,17 +384,21 @@ qid from an earlier run. Both experiments fingerprint every pack now.
 
 ## Experiment 5 — question conditioning and cross-question generalization<a id="experiment-5"></a>
 
-**File:** [`src/run_summary_generalization.py`](src/run_summary_generalization.py)
-defines **no new prompt text of its own**. It imports `CHAIN_SYSTEM`,
-`INITIAL_INSTRUCTION`, `RECOMPRESS_INSTRUCTION` directly from `run_chain.py`
-(Experiment 2's question-conditioned set, above) — deliberately, so any
-conditioning effect measured here can't be blamed on different wording from
-the main chain experiment.
+**File:** [`src/run_summary_generalization.py`](src/run_summary_generalization.py).
+The system prompt is always `CHAIN_SYSTEM`, imported unchanged from
+`run_chain.py` (Experiment 2's question-conditioned set, above) — deliberately,
+so no effect measured here can be blamed on different wording from the main
+chain experiment. The two original arms (`conditioned`, `generic`) likewise
+reuse `INITIAL_INSTRUCTION` / `RECOMPRESS_INSTRUCTION` verbatim and add **no
+new prompt text at all**. Only the `paraphrase` arm introduces its own
+instruction, below.
 
 ### What this experiment actually varies
 
-`compression_user_prompt()`, [`run_summary_generalization.py:253`](src/run_summary_generalization.py#L253):
-only whether a question block is spliced into the user message.
+`compression_user_prompt()` assembles every arm from the same template, so the
+material block, ordering, separators, and the optional length directive are
+byte-identical across arms. Exactly two things move: whether a question block
+is present, and which instruction is used.
 
 ```
 conditioned: {material}
@@ -408,10 +412,71 @@ generic:     {material}
              {instruction}
 ```
 
-A runtime self-test (`prompt_difference_selftest()`,
-[`run_summary_generalization.py:269`](src/run_summary_generalization.py#L269))
-asserts that stripping that one block out of the conditioned prompt produces a
-byte-identical string to the generic prompt.
+| Arm | Question block | Instruction | Model call |
+|---|---|---|---|
+| `conditioned` | Question A | Experiment 2's question-conditioned set | yes |
+| `generic` | none | same set, unchanged | yes |
+| `paraphrase` | none | paraphrase-only set, below | yes |
+| `passthrough` | none | none — input forwarded unchanged | **no** |
+
+`prompt_difference_selftest()` asserts at runtime that (1) deleting the
+question block from the conditioned prompt yields a byte-identical string to
+the generic prompt, (2) no question-blind arm contains either question, and
+(3) substituting the generic instruction back into any question-blind arm
+reproduces the generic prompt exactly — so a `paraphrase`-vs-`generic`
+contrast measures the instruction and nothing else.
+
+### `paraphrase` — rewrite-without-compression instruction
+
+The only new prompt text in this experiment. It exists to separate *rewriting*
+from *compression and relevance filtering*: `conditioned` and `generic` both
+summarise, so neither can tell whether repeated rewriting is itself lossy.
+
+Stage 1 (`PARAPHRASE_INITIAL_INSTRUCTION`):
+
+```
+Rewrite the source material in your own words for another agent. Restate every
+fact, qualifier, date, number, relationship, uncertainty, and source id it
+contains. This is a rewrite, not a summary: do not condense, shorten, omit,
+prioritise, or keep only what seems relevant, and do not add any fact that is
+not already present.
+```
+
+Stage ≥2 (`PARAPHRASE_RECOMPRESS_INSTRUCTION`) is the same instruction over the
+previous agent's notes, plus `Use only the previous notes.` — matching how the
+question-conditioned set differs between its own stage-1 and stage-≥2 forms.
+
+`validate_modes()` refuses to run this arm alongside `length_target_words`: a
+word budget is a compression instruction and would contradict the arm's own
+instruction, silently destroying the variable it exists to isolate.
+
+`passthrough` has no prompt because it issues no model call — it forwards its
+input unchanged (the raw context at stage 1). It is the zero-rewriting floor.
+
+### Semantic-preservation judge — did a rewrite keep the meaning?
+
+`add_preservation_judge()`, [`src/judge.py`](src/judge.py), scores each
+consecutive handoff edge `M_i -> M_{i+1}`. It is the semantic counterpart to
+the deterministic lexical measures in
+[`src/paraphrase_metrics.py`](src/paraphrase_metrics.py), and follows the same
+rules as the answer judge above: different model family from the system under
+test, temperature 0, content-hashed cache.
+
+System prompt:
+
+```
+You compare two research notes, where the second was written by rewriting the
+first. You judge only whether the rewrite preserves the information in the
+original. You never judge style, length, or writing quality.
+```
+
+User message: `Original notes:\n{M_i}\n\nRewritten notes:\n{M_i+1}\n\n` followed
+by the instruction, which asks for exactly one of `EQUIVALENT` (every fact,
+name, number, date, qualifier, relationship and uncertainty preserved despite
+different wording), `MINOR_LOSS` (main content held, one detail dropped or
+blurred), or `MAJOR_LOSS` (substantial omission, contradiction, or an added
+fact). Scored 1.0 / 0.5 / 0.0. An unparsed verdict is left **unscored** rather
+than defaulted, so a missing measurement never reads as preservation.
 
 ### Final answer
 

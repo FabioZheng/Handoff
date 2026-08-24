@@ -1,0 +1,2 @@
+dataset,condition,n,em,em_lo,em_hi,f1,f1_lo,f1_hi,judge_correct,judge_correct_lo,judge_correct_hi
+musique,original_evidence,30,0.5,0.3333,0.6667,0.6102,0.4511,0.7611,0.6667,0.5,0.8333

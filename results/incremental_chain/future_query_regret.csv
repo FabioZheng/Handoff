@@ -1,0 +1,9 @@
+condition,relay_depth,depth,n,future_query_regret_em,future_query_regret_em_lo,future_query_regret_em_hi,future_query_regret_f1,future_query_regret_f1_lo,future_query_regret_f1_hi,future_query_regret_judge_correct,future_query_regret_judge_correct_lo,future_query_regret_judge_correct_hi
+question_conditioned,0,0,30,-0.0472,-0.1333,0.0417,-0.0495,-0.1356,0.0303,-0.0903,-0.1708,-0.0167
+question_conditioned,1,1,30,-0.0847,-0.175,0.0028,-0.0678,-0.1614,0.0195,-0.0958,-0.1986,0.0028
+question_conditioned,3,3,30,-0.0444,-0.1306,0.0361,-0.038,-0.1343,0.0511,-0.0972,-0.1958,-0.0056
+question_conditioned,5,5,30,-0.0528,-0.1528,0.0403,-0.0185,-0.1169,0.0795,-0.0472,-0.1458,0.0486
+question_omitted,0,0,30,-0.0292,-0.1375,0.0736,-0.0688,-0.175,0.0273,-0.1028,-0.2069,-0.0083
+question_omitted,1,1,30,-0.0611,-0.1361,0.0056,-0.0608,-0.1559,0.0252,-0.0833,-0.1806,0.0028
+question_omitted,3,3,30,-0.025,-0.1042,0.0556,-0.027,-0.1145,0.06,-0.0806,-0.1542,-0.0069
+question_omitted,5,5,30,-0.0361,-0.1333,0.0583,-0.0351,-0.127,0.0534,-0.0764,-0.1694,0.0097
