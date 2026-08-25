@@ -21,6 +21,10 @@ research/
 obsidian/
 .obsidian/
 
-# Runner stdout/stderr, which embed absolute local paths.
+# Runner stdout/stderr. These embed absolute local paths and are pure console
+# noise — the analysable output lives in the jsonl/csv artifacts beside them.
 runs/**/*.stdout.log
 runs/**/*.stderr.log
+runs/**/*.log
+runs/**/*.err.log
+logs/
