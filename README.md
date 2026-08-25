@@ -105,11 +105,6 @@ handoff-probe/
     selftest_chain_offline.py  chain-experiment checks, incl. the isolation guarantee
     selftest_summary_generalization_offline.py  Experiment 5 arm/transition checks
   data/  runs/  cache/  results/
-  research/                 a separate personal research-notes / knowledge-graph
-                             layer built on top of this project's findings (not
-                             part of the experiment pipeline) -- profile.md,
-                             schema.md, tools/graph_to_obsidian.py; rendered
-                             into the obsidian/ vault at the repo root
 ```
 
 See [PROMPTS.md](PROMPTS.md) for the exact text of every prompt used above, and
