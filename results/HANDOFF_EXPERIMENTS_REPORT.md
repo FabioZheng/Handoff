@@ -1,743 +1,371 @@
 # Agent handoff information-loss experiments
 
-**Status:** pilot-scale evidence through 24 August 2026
-**Primary metrics:** exact match (EM) and SQuAD-style token F1  
-**Secondary metric:** LLM-judge answer correctness (`openai/gpt-4o-mini`, temperature 0, binary vs gold; a different model family from the systems under test)  
-**Judging:** deterministic string metrics remain primary; an LLM judge is reported alongside them, never in place of them
+- **Status:** pilot-scale evidence through 24 August 2026
+- **Primary metrics:** exact match (EM) and SQuAD-style token F1
+- **Secondary metric:** binary answer correctness from `openai/gpt-4o-mini` (temperature 0), a different model family from the systems under test
+- **Scope:** seven experiments on compression, repeated communication, retrieval quality, task conditioning, language switching, and incremental evidence acquisition
 
 ## Executive summary
 
-The evidence does **not** support a universal “each handoff loses a fixed amount of accuracy” rule. A handoff is both a lossy communication channel and a possible denoiser: whether it helps or harms depends on distractor load, the number of facts that must survive, and whether the next task is the one the summary was optimized for.
+The experiments do **not** support a universal rule that every handoff causes a fixed amount of accuracy loss. Handoffs can remove noise, change wording without changing the asserted fact, or selectively discard information that is irrelevant to the current task but valuable later.
 
-The current synthesis is:
+The clearest findings are:
 
-1. **Compression can help the immediate task when it removes noise.** In the initial MuSiQue pilot, a free-form handoff beat direct full-context answering by 26.4 F1 points. In the longer chains, noisy full contexts often improved after early summaries, whereas compact HotpotQA gold-only evidence showed the clearest serial loss (−10.7 F1 by depth 10).
-   **Metric caveat added 20 August 2026:** that −10.7 F1 result is **0.000** under an LLM judge scoring answer correctness against the gold (0.900 at both depth 0 and depth 10). Token F1 penalises correct-but-reworded answers, which repeated compression reliably produces. Read as "the asserted fact survives ten handoffs, but its surface form drifts from the gold string." No serial-loss claim in this report should now be made on token F1 alone.
-2. **BM25 rank is not a relevance label.** The initial hard/easy result was driven partly by topic-adjacent candidate passages. After a conservative independent LLM relevance screen removes any passage judged useful for the target answer, hard–easy effects at depths 3–5 no longer exclude zero in either experiment. This is evidence that the original contrast mixed distractor difficulty with weak evidence; the screened rerun is labelled *LLM-screened*, not human-verified.
-3. **Question conditioning narrows a summary by two distinct mechanisms, and only one of them needs noise to work.** Three designs isolate them. (a) *Separate passages* (20 pairs, A and B each with their own gold document plus 8 distractors): conditioning gets +0.295 F1 on the target at depth 1 (p=0.0009), decaying to non-significant by depth 3, while the held-out question is damaged at every depth (-0.392 to -0.497 F1, p<=0.0023) -- consistent with conditioning discarding a whole competing document. (b) *Same passage, 9 distractors* (20 pairs, one shared gold passage): removing the competing document removes the effect entirely -- every target and held-out interval spans zero at every depth. (c) *Same passage, gold-only, no length request* (10 pairs, replicating Experiment 6's correction): with no distractors and no competing document, a **different, larger, more durable** held-out effect reappears -- F1 -0.60 to -0.43 at every depth 1-10, p<=0.038 throughout, both metrics -- while the target shows no benefit at all (every interval spans zero). With nothing to filter, generic already keeps both facts almost losslessly (held-out F1 0.85-0.95 vs a 0.95 direct ceiling); conditioning drops the held-out fact anyway, for no compression reason, simply because it was told which question mattered. Document-competition narrowing and this task-induced narrowing are not the same mechanism appearing and disappearing -- they are two separate effects, and removing noise from the design reveals the second one rather than eliminating the first.
-4. **Neither rewriting alone nor adding compression accounts for the held-out damage; question-conditioned selection does.** A pass-through control (no model call, message forwarded unchanged) and a paraphrase-only control (rewrite everything, forbidden to condense or select) added to the gold-only design (§5) decompose conditioning into a ladder. Rewriting alone and adding compression each move held-out judged accuracy by at most one pair's worth of noise at every depth — every interval spans zero. Only the step that adds question-conditioned selection is significant at every depth on both metrics (judge accuracy −0.60 to −0.40, F1 −0.70 to −0.40). Per-edge measurement shows why: lexical similarity between consecutive messages collapses to near-copying after stage 1 in every arm (mean similarity 0.91–0.96 across stages 2–10), so the loss is one narrowing decision at the first compression, not accumulating rewrite damage.
-5. **Withholding the question from every compressor is far more damaging than repeated compression itself.** The matched question-omission replication (same model, questions, contexts, depths, seeds, system prompt, and handoff instructions as the main serial chain — the sole difference is that no compressor ever sees the question) degrades at every depth, in every evidence condition, including full context — the one condition that *improved* under question-conditioned compression. MuSiQue full context goes from +0.080 F1 at depth 10 (conditioned) to **−0.272 F1** (question omitted) on the identical question set.
-6. **The corrected gold-only multilingual pilot no longer tests document retrieval, and it finds no robust language-switching effect.** Experiment 6 gives every arm only the one SQuAD passage that supports A and B—zero distractors—and restores Experiment 5's length-neutral prompt. At depth 6, switching-minus-fixed target F1 is −0.181 when conditioned and +0.061 when generic; held-out F1 is +0.183 and −0.017. Every F1 and LLM-judge interval includes zero. At stage 1, generic exceeds conditioned on B (0.400 F1 / 0.800 judge vs 0.200 / 0.500); generic fixed also has higher B judge accuracy at depth 3 (0.900 vs 0.400; conditioned-minus-generic −0.500 [−0.800, −0.200]). The prompt asks for no target length: observed handoffs average 583–804 characters (87–122 words) across arms, with zero API truncations and 237/240 requested-language matches.
-7. **Incremental evidence can compensate for relay-only loss.** In the new MuSiQue chain, each specialist receives exactly one new supporting paragraph while 0/1/3/5 relay-only agents receive no evidence. Adding relays produces no reliable decline in final multi-hop F1 relative to zero relays in either question-visibility condition; the fifth relay is +0.050 F1 [−0.050, +0.152] when conditioned and −0.046 [−0.174, +0.067] when omitted. Hidden-probe regret is negative in every cell: the final handoff is, if anything, easier to query than the complete original evidence. This does **not** mean handoffs create facts. It shows that repeated, packet-specific specialist updates can re-encode or compensate for relay loss, so a raw depth effect cannot be interpreted without separating communication from evidence acquisition.
-8. **These are directional pilots, not final effect sizes.** The Llama 3.3 70B and Qwen3 8B chain runs agree that dataset and context composition matter, but most low-cost experiments use 20 questions and one seed. The strongest next step is replication at larger sample sizes with independently sourced redundant evidence.
+1. **Compression can denoise.** A free-form MuSiQue handoff improved F1 over direct full-context answering by +0.264 [95% CI +0.010, +0.525] in the initial `n=10` pilot. Longer chains also improved on some noisy full contexts.
+2. **Token drift is not necessarily factual loss.** HotpotQA gold-only F1 fell by 0.107 after ten handoffs, but judged correctness stayed at 0.900. Repeated rewriting often changes answer form while preserving meaning.
+3. **Task information is powerful but narrows reuse.** Hiding the question from compressors severely hurts noisy-context chains. Conversely, conditioning on Question A can remove facts needed for a held-out Question B, even when both facts occur in one short gold passage and no compression is necessary.
+4. **The narrowing occurs during selection, not ordinary rewriting.** Pass-through and paraphrase-only controls show no reliable held-out judge loss at the main landmark depths. Adding question-conditioned selection causes a large, persistent held-out loss.
+5. **Retrieval quality dominates weak distractor effects.** Retaining less labelled evidence reliably lowers QA performance. After candidate distractors are independently screened for relevance, BM25-hard versus BM25-easy differences no longer reliably exclude zero.
+6. **Language switching is unresolved, not harmful by default.** In the corrected gold-only multilingual pilot, every fixed-versus-switching F1 and judge interval includes zero.
+7. **New evidence can compensate for relay loss.** In the incremental-evidence chain, adding 1/3/5 relay-only agents between specialists does not reliably reduce final QA relative to zero relays. Specialist re-encoding can offset communication loss, so depth must be interpreted together with the evidence-acquisition schedule.
+
+These are pilot results. Most conditions contain 10–30 examples, and bootstrap intervals are exploratory rather than multiplicity-corrected.
+
+## How to read the report
+
+- **Change** identifies the experimental variable added relative to the preceding design.
+- **Key result** states the narrow conclusion supported by the data.
+- Bracketed ranges are paired 95% bootstrap intervals unless stated otherwise.
+- EM/F1 remain the deterministic primary metrics. The judge is a semantic complement, not a replacement.
+- An interval containing zero is treated as inconclusive, even when the point estimate is large.
+- Full prompts are in [PROMPTS.md](../PROMPTS.md); detailed tables and answer-level records are linked under [Result artifacts](#result-artifacts).
 
 ## Experiment inventory
 
-| Experiment | Dataset | Sample | Model | Handoff depths | Input context at depth 0 | Main comparison |
-|---|---|---:|---|---|---|---|
-| Single-handoff mechanisms | MuSiQue | 10 | Llama 3.3 70B Instruct | 0/1 | `A_full`/`B_freeform`: full supplied MuSiQue context; `E_oracle`: gold evidence sentences only (no noise) | Full context vs free-form handoff vs oracle evidence |
-| Serial handoff degradation | MuSiQue + HotpotQA | 30 per dataset | Llama 3.3 70B Instruct | 0–10 | No noise: gold-only; medium noise: all gold plus filler to five documents; high noise: complete dataset context | Context composition × chain depth |
-| Serial handoff degradation, question omitted | MuSiQue + HotpotQA | 30 per dataset | Llama 3.3 70B Instruct | 0–10 | Same no-/medium-/high-noise inputs as above | Same chain; only the compressor question block is omitted |
-| Serial handoff degradation (replication) | MuSiQue + HotpotQA | 10 per dataset | Qwen3 8B, non-thinking | 0/1/3/5 | Same no-/medium-/high-noise inputs as above | Low-cost one-seed replication |
-| Incremental-evidence handoff chain | MuSiQue | 30, two seeds | Llama 3.3 70B Instruct | 0/1/3/5 relays between specialists | 2–4 supporting paragraphs, delivered one per specialist; identical complete evidence and order across relay depths | Relay-only transformation separated from staged evidence acquisition; question visible vs omitted |
-| Retrieval-quality propagation | MS MARCO QA v2.1 | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | Low noise: all retriever-found gold retained + filler; medium noise: half retained + filler; high noise: 15% retained + filler. Every context has ten passages. | Noise level × BM25-top hard or bottom easy candidate distractors |
-| Redundant-evidence signal-ratio propagation | SQuAD same-article packs | 20 | Llama 3.1 8B Instruct | 0/1/3/5 | No noise: 10 answer-sufficient gold / 0 distractor; medium: 5 / 5; high: 1 / 9 | Signal/noise ratio × BM25-top hard or bottom easy candidate distractors |
-| Cross-question generalization | SQuAD | 20 pairs (separate passages) + 20 pairs (same passage, distractors) + 10 pairs (same passage, gold-only) | Llama 3.1 8B Instruct | 0–10 | Separate: A's gold + B's gold + 8 distractors. Same-passage: 1 shared gold + 9 distractors. Gold-only: the shared passage alone, 0 distractors | Question A present vs absent; evaluate A and B at every depth; document competition vs distractor noise vs neither |
-| Cross-question generalization, rewriting-vs-selection ladder | SQuAD | 10 pairs (same shared-passage pairs as the gold-only design) | Llama 3.1 8B Instruct | 0–10 | Gold-only: the shared passage alone, 0 distractors (identical to the design above) | Pass-through vs paraphrase-only vs generic vs question-conditioned; isolates rewriting from compression from question-conditioned selection |
-| Multilingual fixed/switching handoffs | Same corrected SQuAD A/B questions | 10 passages / 20 question IDs | Llama 3.1 8B Instruct | 0–6 | **Gold-only:** one shared passage answering A and B, 0 distractors | Conditioned/generic × fixed/switching language; evaluate A and B |
+| ID | Experiment | Dataset and sample | System model | Main comparison |
+|---:|---|---|---|---|
+| 1 | Single handoff mechanisms | MuSiQue, `n=10` | Llama 3.3 70B | Direct context vs free-form handoff vs oracle evidence |
+| 2 | Fixed-evidence serial chain | MuSiQue + HotpotQA, `n=30`/dataset, two seeds | Llama 3.3 70B | Context noise × depths 0–10 |
+| 2a | Qwen replications | MuSiQue + HotpotQA, `n=10` (8B) and `n=30` (32B) | Qwen3 8B/32B, non-thinking | Cross-model directional replication |
+| 2b | Question-omission replication | Same `n=30` Llama sample | Llama 3.3 70B | Identical chain with compressor question block removed |
+| 3 | Retrieval-quality propagation | MS MARCO, `n=20` | Llama 3.1 8B | Gold recall × screened BM25-hard/easy candidates |
+| 4 | Fixed-width evidence redundancy | SQuAD packs, `n=20` | Llama 3.1 8B | 10/5/1 answer-sufficient passages in ten-document contexts |
+| 5 | Cross-question generalization | SQuAD A/B pairs, `n=10–20` | Llama 3.1 8B | Question-conditioned vs generic summaries; evaluate target A and held-out B |
+| 5a | Rewriting-selection ladder | Same gold-only `n=10` pairs | Llama 3.1 8B | Pass-through → paraphrase → compression → question selection |
+| 6 | Multilingual handoffs | Same gold-only `n=10` passages | Llama 3.1 8B | Fixed vs switching language; conditioned vs generic |
+| 7 | Incremental-evidence chain | MuSiQue, `n=30`, two seeds | Llama 3.3 70B | 0/1/3/5 evidence-free relays between packet specialists |
 
 ## 1. Single-handoff mechanism pilot
 
-> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable (validation) · **Prompts:** [PROMPTS.md § Experiment 1](../PROMPTS.md#experiment-1) — `ANSWER_SYSTEM`, `SUBAGENT_SYSTEM`, `FREEFORM_INSTRUCTION`, `STRUCTURED_INSTRUCTION`, `EXTRACTIVE_INSTRUCTION` (`src/handoffs.py`)
+> **Model:** Llama 3.3 70B Instruct · **Dataset:** MuSiQue-Answerable validation, `n=10` · **Configuration:** one handoff; full supplied context vs free-form handoff vs oracle gold evidence
 
-### Design
+> **Change:** Insert one sealed evidence handoff before answering while holding retrieval fixed.
 
-The original probe isolates what happens when evidence is summarized once before a final answerer sees it. Retrieval is held constant. Five mechanisms are implemented:
+The answerer either saw the full supplied context (`A_full`), a free-form summary from a subagent (`B_freeform`), or deterministic gold evidence sentences (`E_oracle`). Structured and extractive mechanisms are implemented but were not included in this API pilot.
 
-- `A_full`: one model answers directly from all supplied evidence.
-- `B_freeform`: a subagent writes a prose handoff; a fresh answerer sees only that handoff and the question.
-- `C_structured`: the handoff is a structured claim representation.
-- `D_extractive`: the handoff contains selected verbatim evidence sentences.
-- `E_oracle`: the answerer receives deterministically derived gold evidence sentences.
+| Mechanism | EM | F1 |
+|---|---:|---:|
+| Direct full context | 0.400 | 0.484 |
+| Free-form handoff | 0.600 | 0.748 |
+| Oracle evidence | 0.600 | 0.740 |
 
-The real 10-question pilot ran `A_full`, `B_freeform`, and `E_oracle`; `C_structured` and `D_extractive` are implemented and offline-tested but were not included in this API pilot.
+> **Key result:** Free-form handoff minus direct context was **+0.264 F1** [+0.010, +0.525], `p=0.0304`. The handoff performed approximately as well as oracle evidence, consistent with useful evidence selection or denoising.
 
-### Results
+**Boundary:** `n=10`; the direction is informative, but the magnitude is unstable.
 
-| Mechanism | EM | Token F1 | Interpretation |
-|---|---:|---:|---|
-| `A_full` | 0.400 | 0.484 | Direct answer from full context |
-| `B_freeform` | 0.600 | 0.748 | Free-form handoff improved F1 by 0.264 |
-| `E_oracle` | 0.600 | 0.740 | Approximately tied with free-form handoff |
+**Audit:** reported API cost $0.0151. Prompts and mechanisms: [PROMPTS.md § Experiment 1](../PROMPTS.md#experiment-1).
 
-The paired `B_freeform − A_full` F1 contrast was +0.264 with a 95% bootstrap interval of +0.010 to +0.525 (`p = 0.0304`). Because `n = 10`, the magnitude is uncertain. The result suggests that a handoff can act as evidence selection or denoising rather than merely destroying information.
+## 2. Fixed-evidence repeated handoffs
 
-Reported API cost: **$0.0151**.
+> **Model:** Llama 3.3 70B Instruct · **Dataset:** MuSiQue-Answerable + HotpotQA distractor validation, `n=30`/dataset, two seeds · **Configuration:** fixed evidence; gold-only, five-document, or full context; depths 0–10; question shown at every compressor
 
-## 2. Repeated handoff degradation
+> **Change:** After one compressor sees the source documents, up to ten later agents receive only the sealed previous message and the original question. No new evidence enters the chain.
 
-> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable + HotpotQA (distractor, validation) · **Prompts:** [PROMPTS.md § Experiment 2](../PROMPTS.md#experiment-2) — `QUESTION_CONDITIONED_SYSTEM`/`_INITIAL_INSTRUCTION`/`_RECOMPRESS_INSTRUCTION` + shared `ANSWER_SYSTEM` (`src/run_chain.py`)
+Each dataset used gold-only evidence, a five-document medium context, and the full dataset context. Examples, evidence, order, model, budgets, and two seeds were fixed across depths.
 
-### Design
+![Repeated handoff degradation](chain/degradation.png)
 
-The same question was supplied at every compression stage:
-
-`documents → summary 1 → summary 2 → … → summary 10 → fresh answerer`
-
-Only the first compressor could see source documents. Later compressors received a sealed previous handoff and the original question. Two seeds were run. Each dataset used three evidence conditions:
-
-- **No noise (gold-only; formerly “Short”):** all and only gold documents (mean 2.7 documents for MuSiQue; 2 for HotpotQA).
-- **Medium noise (formerly “Medium”):** all gold documents plus distractors up to five documents.
-- **High noise (full; formerly “Full”):** the complete dataset context (20 MuSiQue paragraphs; 10 HotpotQA paragraphs).
-
-### Results
-
-![Repeated handoff degradation across datasets and context lengths](chain/degradation.png)
-
-Depth-10 change from direct depth 0:
-
-| Dataset | Context | Token F1 change | LLM-judge change |
+| Dataset | Context | Depth-10 F1 change | Judge change |
 |---|---|---:|---:|
-| MuSiQue | No noise (gold-only) | −0.027 | +0.017 |
-| MuSiQue | Medium noise | −0.025 | −0.033 |
-| MuSiQue | High noise (full) | +0.080 | −0.017 |
-| HotpotQA | No noise (gold-only) | **−0.107** | **+0.000** |
-| HotpotQA | Medium noise | −0.035 | −0.050 |
-| HotpotQA | High noise (full) | +0.014 | −0.033 |
+| MuSiQue | Gold-only | −0.027 | +0.017 |
+| MuSiQue | Five documents | −0.025 | −0.033 |
+| MuSiQue | Full context | +0.080 | −0.017 |
+| HotpotQA | Gold-only | **−0.107** | **0.000** |
+| HotpotQA | Five documents | −0.035 | −0.050 |
+| HotpotQA | Full context | +0.014 | −0.033 |
 
-BERTScore was replaced by an LLM judge (`openai/gpt-4o-mini`, temperature 0, binary correct/incorrect against the gold answer, deliberately a different model family from the llama systems under test). EM and token F1 remain primary and are reported unchanged alongside it.
+> **Key result:** No condition loses more than 0.05 judged accuracy over ten handoffs. The largest F1 decline—HotpotQA gold-only, −0.107—is absent under semantic judging: correctness is 0.900 at both depths 0 and 10.
 
-**The judge materially changes the headline reading of this experiment.** The single largest serial-degradation signal in the probe — HotpotQA no-noise gold-only, −10.7 token-F1 points by depth 10 — is **0.000** under the judge: 0.900 correct at depth 0 and 0.900 at depth 10. Absolute levels also sit far above F1 (HotpotQA no-noise holds ~0.90–0.92 across all ten handoffs; MuSiQue no-noise holds ~0.73–0.75). That gap is the expected signature of token F1 penalising answers that are correct but reworded or more verbose, which is exactly what repeated compression produces. Under the judge no evidence variant loses more than 5 points across ten handoffs, and MuSiQue no-noise is numerically flat-to-positive.
+Repeated handoffs cause **surface-form drift**, visible in F1, while most answer facts survive. Noisy contexts can also improve because the model has distractors to remove; HotpotQA full context shrinks from about 5,530 characters at depth 0 to 720 after one handoff and 413 by depth 10.
 
-This does not erase the F1 result, and the two should be read together: F1 says the *surface form* of answers drifts steadily away from the gold string under repeated compression, while the judge says the *fact being asserted* mostly survives. The conclusion that gold-only evidence is the most fragile condition is supported by F1 but is not corroborated by the judge at this sample size.
+**Boundary:** The judge does not prove perfect preservation; it shows that the strongest token-overlap loss is not corroborated as factual loss at `n=30`.
 
-The high-noise full-context conditions often improved after the first handoff, consistent with denoising. Summary length also collapsed rapidly: for example, HotpotQA full context averaged 5,530 characters at depth 0, 720 after one handoff, and 413 by depth 10.
+**Audit:** confirmed depth-extension cost $0.2436.
 
-The main conclusion is not that long contexts are inherently safer. Rather, high-noise full contexts provide an opportunity for useful selection, while already-minimal no-noise evidence has little redundancy and therefore exposes omissions more directly.
+### 2a. Qwen replications
 
-The confirmed incremental cost reported for extending the chains through depths 6–10 and filling missing answers was **$0.2436**.
+> **Model:** Qwen3 8B and Qwen3 32B, non-thinking · **Dataset:** MuSiQue-Answerable + HotpotQA distractor validation · **Configuration:** same three fixed-evidence contexts; 8B uses `n=10`/dataset, one seed, depths 0/1/3/5; 32B uses `n=30`/dataset, two seeds, depths 0–10
 
-### Low-cost Qwen replication
+> **Change:** Rerun the chain with non-thinking Qwen models. Model-specific leakage filtering means the retained question IDs need not match Llama's.
 
-> **Model:** `qwen/qwen3-8b` (non-thinking, `reasoning.effort: none`) · **Dataset:** same as above, 10 questions/dataset · **Prompts:** identical to Experiment 2 above — same `run_chain.py` constants, different model config (`qwen_chain_config.yaml` + `qwen_chain_experiment.yaml`)
+![Qwen3 8B replication](chain_qwen/degradation.png)
 
-![Qwen3 8B repeated-handoff replication](chain_qwen/degradation.png)
+![Qwen3 32B replication](chain_qwen32/degradation.png)
 
-The same dataset and evidence-variant design was rerun with Qwen3 8B in non-thinking mode, but with 10 questions per dataset, one seed, and depths 0/1/3/5. It broadly reproduces the dataset split in the original probe: at depth 5, HotpotQA loses F1 at every noise level (no noise −0.110, medium noise −0.086, high noise −0.108), while MuSiQue is stable-to-improved (no noise +0.127, medium noise +0.077, high noise +0.117). None of the depth-5 intervals exclude zero at this small sample size, so this is directional replication evidence rather than a conclusive cross-model comparison.
+| Model | Sample/depth | Main result |
+|---|---|---|
+| Qwen3 8B | `n=10`/dataset, one seed, depth 5 | HotpotQA F1: −0.110/−0.086/−0.108 across gold/medium/full; MuSiQue: +0.127/+0.077/+0.117. Every interval includes zero. |
+| Qwen3 32B | `n=30`/dataset, two seeds, depth 10 | No reliable negative F1 change. MuSiQue full improves **+0.182 F1** [+0.064, +0.312] and **+0.167 judge** [+0.017, +0.317]. |
 
-Reconciled cost was **$0.0443** across Qwen-specific leakage filtering, 300 summary calls, 240 answer calls, and a compatibility smoke call. The raw outputs and full table are in [`chain_qwen/report.md`](chain_qwen/report.md).
+> **Key result:** The replications support context-dependent denoising more strongly than universal serial degradation. They are not paired model comparisons because filtering is model-specific.
 
-### Comparable-size Qwen3 32B replication
+**Audit:** Qwen3 8B cost $0.0443. Qwen3 32B cost $0.3866 plus $0.0088 for judging.
 
-> **Model:** `qwen/qwen3-32b` (non-thinking, via OpenRouter `reasoning.effort: none` and Qwen's native `/no_think` control) · **Dataset:** MuSiQue-Answerable + HotpotQA (distractor, validation) · **Prompts:** identical to Experiment 2 apart from the documented Qwen control token · **Design:** 30 model-specific C1-filtered questions/dataset, three evidence variants, depths 0–10, two summary seeds
+### 2b. Matched question-omission replication
 
-![Qwen3 32B repeated-handoff replication](chain_qwen32/degradation.png)
+> **Model:** Llama 3.3 70B Instruct · **Dataset:** same MuSiQue + HotpotQA `n=30` samples as Experiment 2, two seeds · **Configuration:** identical gold-only/five-document/full contexts and depths 0–10; the final answerer sees the question, but no compressor does
 
-This is the full repeated-handoff design rerun with a 32.8B-parameter Qwen3
-model. Qwen3 defaults to hidden reasoning, so the client appends the model's
-documented `/no_think` directive to the system prompt and includes the final
-request text in the cache key. That keeps the fixed answer and handoff budgets
-comparable to the non-reasoning Llama condition. The model-specific C1 filter
-means the exact retained question IDs can differ from the Llama run, while the
-dataset sampling protocol, prompts, depths, and evidence variants are held
-fixed.
+> **Change:** Remove only the final-question block from every compressor. The final answerer still sees the question; all other settings match the main Llama experiment.
 
-At depth 10, no context condition has a reliable negative F1 change. HotpotQA
-is broadly flat: gold-only −0.063 (95% CI −0.154 to +0.019), medium −0.010
-(−0.095 to +0.070), and full +0.033 (−0.075 to +0.144). MuSiQue gold-only is
-−0.046 (−0.159 to +0.043) and medium is −0.071 (−0.170 to +0.013). In contrast,
-MuSiQue full context improves by **+0.182 F1** (+0.064 to +0.312) and **+0.167
-judge accuracy** (+0.017 to +0.317), consistent with repeated summaries
-removing distractors rather than accumulating answer-critical loss.
+![Question-conditioned vs question-omitted](chain_generic/conditioning_comparison.png)
 
-The primary-model run cost **$0.3866** for 7,343 live and 697 cached calls; the
-independent `gpt-4o-mini` judge added **$0.0088**. Full answer-level records,
-bootstrap tables, and the figure are in [`chain_qwen32/report.md`](chain_qwen32/report.md).
-
-### Matched question-omission replication
-
-> **Model:** `meta-llama/llama-3.3-70b-instruct` (same as above) · **Dataset:** same as above, same 30-question sample · **Prompts:** [PROMPTS.md § Experiment 2](../PROMPTS.md#experiment-2), question-conditioned prompt set with the question block deleted — see `initial_compress()`/`recompress()` in `src/run_chain.py`
-
-![Question-conditioned vs question-omitted, matched chains](chain_generic/conditioning_comparison.png)
-
-This is the minimal counterpart to the main serial chain: same Llama 3.3 70B model, fixed filtered question sample, all three evidence variants, depths 0–10, two seeds, system prompt, and handoff instructions. The sole difference is prompt visibility — neither the initial compressor nor any later compressor receives the final-question block; the fresh answerer still receives the question. An automated equivalence check (`prompt_difference_selftest` in the code) verifies that removing that block makes the two compressor prompts byte-identical, so the only variable is question visibility.
-
-Depth-10 change from direct depth 0, question-conditioned vs question-omitted:
-
-| Dataset | Context | Conditioned F1 | Omitted F1 | Conditioned judge | Omitted judge |
+| Dataset | Context | Conditioned F1 Δ | Omitted F1 Δ | Conditioned judge Δ | Omitted judge Δ |
 |---|---|---:|---:|---:|---:|
-| MuSiQue | No noise (gold-only) | −0.027 | −0.035 | +0.017 | −0.033 |
-| MuSiQue | Medium noise | −0.025 | −0.127 | −0.033 | −0.183 |
-| MuSiQue | High noise (full) | **+0.080** | **−0.272** | −0.017 | **−0.467** |
-| HotpotQA | No noise (gold-only) | −0.107 | −0.247 | +0.000 | −0.117 |
-| HotpotQA | Medium noise | −0.035 | −0.218 | −0.050 | −0.250 |
-| HotpotQA | High noise (full) | +0.014 | **−0.326** | −0.033 | **−0.400** |
+| MuSiQue | Gold-only | −0.027 | −0.035 | +0.017 | −0.033 |
+| MuSiQue | Five documents | −0.025 | −0.127 | −0.033 | −0.183 |
+| MuSiQue | Full context | **+0.080** | **−0.272** | −0.017 | **−0.467** |
+| HotpotQA | Gold-only | −0.107 | −0.247 | 0.000 | −0.117 |
+| HotpotQA | Five documents | −0.035 | −0.218 | −0.050 | −0.250 |
+| HotpotQA | Full context | +0.014 | **−0.326** | −0.033 | **−0.400** |
 
-Every condition is worse without the question, and the gap widens with more distractors: high-noise full-context degradation goes from mildly positive (conditioned) to the worst result in either chain (omitted). This is consistent with the denoising story in §2 — a compressor can only filter distractors *toward* a task it knows, and high-noise full context has the most distractor mass to filter. It also complements §5's finding below: §5 shows conditioning narrows a summary toward one task at the cost of others; this replication shows the opposite failure mode — a compressor with no task at all keeps too much noise and too little signal for any task.
+> **Key result:** Omitting the question is worse in all six cells, with the largest gaps in full contexts. Unlike the main chain's F1-only drift, the judge corroborates this loss.
 
-**Judge update, 2026-08-20:** this replication now has real LLM-judge scores (added as a side effect of regenerating its plot with the new size-encoding — see §2 above). Unlike the main serial-degradation result, where the judge flattened the token-F1 signal almost to zero, **here the judge corroborates F1 rather than contradicting it**: question-omitted is worse than conditioned by the judge at every single dataset/context pair, matching F1's direction throughout, and often by a larger margin (MuSiQue high noise: −0.017 conditioned vs **−0.467** omitted; HotpotQA high noise: −0.033 vs **−0.400** omitted). This is the same asymmetry noted for §5's judge update below — some findings in this report survive judged-correctness scrutiny and some don't, and this one does.
+The pattern is consistent with task-guided denoising: a compressor cannot reliably separate signal from distractors without knowing the downstream task. The complementary risk—conditioning too narrowly—is tested in Experiment 5.
 
-Cost: **$0.9564** (7,000 live calls, 20 cached) for the original chain, plus **$0.0105** (341 live, 3,439 cached) for the judge pass.
+**Audit:** generation cost $0.9564; judge pass $0.0105.
 
 ## 3. Retrieval quality through repeated handoffs
 
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** MS MARCO QA v2.1 (validation, via Hugging Face parquet mirror) · **Prompts:** [PROMPTS.md § Experiment 3](../PROMPTS.md#experiment-3) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_retrieval_quality.py`)
+> **Model:** Llama 3.1 8B Instruct · **Dataset:** MS MARCO QA v2.1 validation, `n=20`, one seed · **Configuration:** ten passages/context; all, half, or 3/22 BM25-findable gold passages; screened BM25-top hard versus BM25-bottom easy candidates; depths 0/1/3/5
 
-### Design
+> **Change:** Hold context width at ten passages while varying retained BM25-findable gold recall and screened BM25-hard versus BM25-easy candidate distractors.
 
-#### Purpose
+The active MS MARCO design retains all, half, or 3/22 of the findable gold passages across 20 queries (Recall@10 = 1.000/0.500/0.136). Of 1,200 hard/easy candidates, only those independently judged `IRRELEVANT` were eligible. This reduces relevance contamination but is not human verification.
 
-Experiment 3 tests whether an initial **retrieval-quality error** survives, widens, or is repaired by repeated handoffs. It holds context width at ten passages while varying how many BM25-findable gold passages are retained (all, half, or 15%) and independently varies candidate-distractor lexical difficulty (BM25-top hard vs BM25-bottom easy). It therefore separates a weak retrieval set at depth 0 from any additional loss caused by repeated summarisation.
+![Retrieval quality propagation](retrieval_quality/n20/retrieval_quality.png)
 
-**Revised 2026-08-20: retrieval is now real, not assumed.** MS MARCO QA v2.1 provides ten passages per query with `is_selected` relevance labels, but the original pilot treated any non-selected passage — from any query — as a valid distractor, which meant the low-retention arm's filler was often lexically unrelated to the question entirely (an “easy” candidate negative). This run replaces that with a self-contained Okapi BM25 index (`src/retrieval.py`, no external dependency) built over a 4,000-query pool:
+| Gold retention | Hard F1 d0 → d5 | Easy F1 d0 → d5 | Hard judge d0 → d5 |
+|---|---:|---:|---:|
+| All gold | 0.443 → 0.465 | 0.538 → 0.449 | 0.75 → 0.85 |
+| Half gold | 0.380 → 0.361 | 0.353 → 0.318 | 0.50 → 0.60 |
+| 3 of 22 gold | 0.189 → 0.166 | 0.157 → 0.141 | 0.15 → 0.30 |
 
-- **Gold** = a passage MS MARCO's own `is_selected` label marks relevant **and** that this code's own BM25 ranking actually retrieves for that query ("top retrieved and relevant," not relevance judged in isolation — 22/22 originally-labelled passages turned out to be BM25-findable in this sample, i.e. `gold_bm25_findable == gold_labelled_by_msmarco`).
-- **Hard candidate negative** = a passage BM25 ranks in that same query's top-50 but that is *not* gold — either the query's own non-selected passage, or another query's passage lexically on-topic enough to rank highly. These replace the previous random-unrelated-query filler.
+> **Key result:** Low-minus-high hard-arm F1 is +0.254 [+0.132, +0.387] at depth 0 and +0.299 [+0.151, +0.459] at depth 5. After screening, every hard-minus-easy comparison at depths 3 and 5 includes zero.
 
-The low-/medium-/high-noise knob keeps the original global-pool mechanic (one seeded shuffle-and-slice over every gold passage pooled across all 20 queries, not a per-query fraction — a per-query fraction breaks down when a query has only one findable gold passage, since `round(1 × 0.5) == 0` under Python's banker's rounding while the high-noise floor keeps at least one, inverting the intended ordering). Every context still has ten passages; the label refers to the *relative amount of retrieved gold retained*, not an assertion that any arm lacks distractors. Twenty questions, one seed, depths 0, 1, 3, and 5. Question text was passed at every handoff.
+Retrieval quality remains a persistent determinant of QA, but the active run does not support an independent effect of BM25 candidate difficulty. The earlier unscreened interpretation is retired.
 
-**Easy-negative matched rerun, 2026-08-21.** Each hard arm is now paired with an easy arm that keeps the same questions, gold passages, global recall target, ten-passage width, gold/distractor positions, prompts, depths, and model. The sole change is filler selection: hard fillers are eligible BM25 top-50 passages, while easy fillers are eligible passages drawn from that query's BM25 bottom-1,000 (including zero-overlap passages). `hard − easy` is bootstrapped over the same 20 question ids at each condition/depth. These are BM25-selected *candidate* distractors; neither dataset supplies an exhaustive target-question non-relevance judgment for every cross-query candidate.
+**Boundary:** Cross-query candidates lack exhaustive human non-relevance labels. `n=20`, one seed.
 
-**LLM-screened rerun, 2026-08-21.** Before selecting either arm, 1,200 candidates (30 hard and 30 easy per question) were independently screened against the target question and gold answer. Only `IRRELEVANT` verdicts were eligible: 562/600 hard and 600/600 easy candidates passed, with at least 23 screened negatives available for every question/type. The full handoff, answer, and judge run below uses these screened pools. This reduces relevance contamination, but is not a replacement for human adjudication.
-
-Empirical recall-at-10 against BM25-findable gold:
-
-| Noise level | Exact input composition across the 20 contexts | Recall@10 |
-|---|---:|---:|
-| Low noise | All 22 BM25-findable gold passages + 178 candidate distractors | 1.000 |
-| Medium noise | 11/22 gold passages + 189 candidate distractors | 0.500 |
-| High noise | 3/22 gold passages + 197 candidate distractors | 0.136 |
-
-### Results
-
-![Retrieval quality propagation with LLM-judge correctness](retrieval_quality/n20/retrieval_quality.png)
-
-The combined figure reports token F1 (left) and LLM-judge correctness with bootstrap intervals (right). A depth-0-normalized panel was dropped: it only rescaled the same F1 curve already shown at left and added no information. The judge is `openai/gpt-4o-mini`, temperature 0, and scores only whether the predicted answer conveys the gold fact; EM/F1 remain the primary deterministic measures.
-
-| Depth | Low-noise F1 | Medium-noise F1 | High-noise F1 |
-|---:|---:|---:|---:|
-| 0 | 0.443 | 0.380 | 0.189 |
-| 1 | 0.497 | 0.318 | 0.167 |
-| 3 | 0.453 | 0.302 | 0.167 |
-| 5 | 0.465 | 0.361 | 0.166 |
-
-Solid lines are BM25-top hard candidate distractors and dashed lines are BM25-bottom easy candidate distractors:
-
-| Retrieval arm | Hard F1 d0 | Easy F1 d0 | Hard F1 d5 | Easy F1 d5 |
-|---|---:|---:|---:|---:|
-| Low noise | 0.443 | 0.538 | 0.465 | 0.449 |
-| Medium noise | 0.380 | 0.353 | 0.361 | 0.318 |
-| High noise | 0.189 | 0.157 | 0.166 | 0.141 |
-
-| Retrieval arm | Hard judge d0 | Easy judge d0 | Hard judge d5 | Easy judge d5 |
-|---|---:|---:|---:|---:|
-| Low noise | 0.75 | 0.85 | 0.85 | 0.85 |
-| Medium noise | 0.50 | 0.60 | 0.60 | 0.55 |
-| High noise | 0.15 | 0.20 | 0.30 | 0.25 |
-
-With screened pools, the former counterintuitive pattern disappears: every hard-minus-easy F1 and judge comparison at depths 3 and 5 spans zero. The largest depth-5 F1 difference is medium noise, +0.043 (−0.014 to +0.106), and the largest judge difference is +0.05 (intervals include zero). The remaining low-versus-high-noise gap is therefore attributable to retained gold evidence, not a reliable advantage of BM25-hard distractors.
-
-The screened retrieval manipulation itself remains clear: the low-minus-high-noise hard-arm F1 gap is +0.254 at depth 0 (95% interval +0.132 to +0.387) and +0.299 at depth 5 (+0.151 to +0.459). What the screen removes is the prior claim that topical BM25-hard candidates are intrinsically more damaging or more helpful than BM25-bottom distractors.
-
-Pilot cost: **$0.006587** (480 live calls, 60 cached).
+**Audit:** cost $0.006587.
 
 ## 4. Fixed-context redundant-evidence signal ratio
 
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD (validation) · **Prompts:** [PROMPTS.md § Experiment 4](../PROMPTS.md#experiment-4) — local `SYSTEM`/`INITIAL`/`REWRITE` + shared `ANSWER_SYSTEM` (`src/run_redundant_signal_ratio.py`)
+> **Model:** Llama 3.1 8B Instruct · **Dataset:** SQuAD validation packs, `n=20`, one seed · **Configuration:** ten passages/context with 10 gold + 0 distractors, 5 gold + 5 distractors, or 1 gold + 9 distractors; screened hard/easy fillers; depths 0/1/3/5
 
-### Design
+> **Change:** Replace retrieval recall with a fixed-width redundancy manipulation: 10/5/1 answer-sufficient passages and 0/5/9 screened candidate distractors.
 
-#### Purpose
+The gold variants share one answer-bearing SQuAD paragraph plus different same-article material. This controls answer sufficiency, not independent-source corroboration.
 
-Experiment 4 tests **redundancy under a fixed context budget**, rather than live retrieval recall. Every retained gold passage independently contains sufficient evidence for the same answer; only the count of those answer-supporting passages changes from 10 to 5 to 1 while total width stays at ten. This asks whether redundant evidence protects a fact through repeated handoffs when distractor mass grows. It deliberately does not test independent-source corroboration: the gold passages share the same answer-bearing source paragraph.
+![Redundant evidence through handoffs](redundant_signal_ratio/n20/redundant_signal_ratio.png)
 
-This experiment holds the task fixed: every relevant passage independently contains the full answer-bearing SQuAD paragraph for the *same* question. The ten relevant documents differ through a real additional paragraph from the same Wikipedia article. Thus the three fixed-width input contexts are: **no noise** (10 answer-sufficient gold passages, 0 distractors), **medium noise** (5 gold, 5 distractors), and **high noise** (1 gold, 9 distractors). The manipulation changes the quantity of redundant answer-supporting evidence, not the number of facts required for a correct answer.
+| Composition | Hard F1 d0 → d5 | Easy F1 d0 → d5 | Hard judge d0 → d5 |
+|---|---:|---:|---:|
+| 10 gold / 0 distractor | 0.896 → 0.801 | identical | 1.00 → 0.85 |
+| 5 gold / 5 distractors | 0.887 → 0.891 | 0.921 → 0.847 | 0.95 → 1.00 |
+| 1 gold / 9 distractors | 0.787 → 0.776 | 0.778 → 0.767 | 0.90 → 0.90 |
 
-**Revised 2026-08-20:** the replaced (non-gold) documents now come from the same BM25 hard-negative mechanism introduced for §3, reusing `src/retrieval.py`. Previously, removed gold passages were replaced with a uniformly random cross-article SQuAD paragraph, filtered only to not contain an answer alias — with no requirement that it be topically related to the question at all. Now each base question's distractor pool is its own BM25 top-60 retrieval over all ~2,000 unique SQuAD paragraphs, excluding same-article and answer-alias-containing paragraphs — passages a real retriever would plausibly have surfaced for this question, not an arbitrary unrelated one. The signal-ratio manipulation (10/5/1 gold passages kept) is otherwise unchanged.
+> **Key result:** Ten-gold minus one-gold F1 is +0.109 [+0.009, +0.235] at depth 0 but only +0.025 [−0.134, +0.180] at depth 5. Screened hard-minus-easy effects also include zero at the key later depths.
 
-**Easy-negative matched rerun, 2026-08-21.** Each nontrivial signal ratio now has a companion arm that replaces hard top-60 filler with eligible paragraphs from the question's BM25 bottom-1,000. Same question, gold-document subset, count, positions, prompts, depth, model, and scoring are retained. The no-noise 10-gold/0-distractor control is identical by construction in both labels. As in §3, answer-alias exclusion and BM25 rank make these *candidate* distractors, not exhaustively dataset-verified non-relevant passages.
+At `n=20`, redundancy provides a modest direct-answer advantage but no reliable protection after five handoffs. This is a null for shared-source redundancy, not evidence against independent corroboration.
 
-**LLM-screened rerun, 2026-08-21.** Of 1,144 candidates drawn from the first 30 available hard/easy candidates per question, 540/544 hard and 600/600 easy candidates were judged `IRRELEVANT`; every question/type retained at least 13 screened candidates. The full rerun below uses only these pools and is not described as human-verified.
-
-### Results
-
-![Answer-sufficient signal ratio and LLM-judge correctness through handoffs](redundant_signal_ratio/n20/redundant_signal_ratio.png)
-
-The combined figure reports token F1 (left) and LLM-judge correctness with bootstrap intervals (right). A depth-0-normalized panel was dropped for the same reason as Experiment 3's: it only rescaled the same F1 curve and added no information. The judge uses the same independent `openai/gpt-4o-mini` rubric as Experiment 3.
-
-| Noise level and exact input composition | F1 depth 0 | F1 depth 5 | Judge depth 0 | Judge depth 5 |
-|---|---:|---:|---:|---:|
-| No noise — 10 answer-sufficient gold / 0 distractor | 0.896 | 0.801 | 1.000 | 0.850 |
-| Medium noise — 5 answer-sufficient gold / 5 distractor | 0.887 | 0.891 | 0.950 | 1.000 |
-| High noise — 1 answer-sufficient gold / 9 distractor | 0.787 | 0.776 | 0.900 | 0.900 |
-
-Solid lines are BM25-top hard candidate distractors and dashed lines are BM25-bottom easy candidate distractors:
-
-| Noise level and exact input composition | Hard F1 d0 | Easy F1 d0 | Hard F1 d5 | Easy F1 d5 |
-|---|---:|---:|---:|---:|
-| No noise — 10 answer-sufficient gold / 0 distractor | 0.896 | 0.896 | 0.801 | 0.801 |
-| Medium noise — 5 answer-sufficient gold / 5 distractor | 0.887 | 0.921 | 0.891 | 0.847 |
-| High noise — 1 answer-sufficient gold / 9 distractor | 0.787 | 0.778 | 0.776 | 0.767 |
-
-| Noise level and exact input composition | Hard judge d0 | Easy judge d0 | Hard judge d5 | Easy judge d5 |
-|---|---:|---:|---:|---:|
-| No noise — 10 answer-sufficient gold / 0 distractor | 1.00 | 1.00 | 0.85 | 0.85 |
-| Medium noise — 5 answer-sufficient gold / 5 distractor | 0.95 | 1.00 | 1.00 | 0.95 |
-| High noise — 1 answer-sufficient gold / 9 distractor | 0.90 | 0.85 | 0.90 | 0.85 |
-
-**LLM-judge update, 2026-08-21.** After screening, neither medium- nor high-noise hard-minus-easy comparison excludes zero at depths 3 or 5. At medium noise depth 5, the differences are +0.045 F1 (0.0 to +0.128) and +0.05 judge accuracy (0.0 to +0.15); at high noise they are +0.010 F1 (−0.190 to +0.220) and +0.05 judge accuracy (−0.15 to +0.25). The prior apparent hard-negative benefit was therefore not robust to relevance screening.
-
-With screened candidate negatives, no noise retains a modest depth-0 F1 lead over high noise (+0.109, +0.009 to +0.235) that vanishes by depth 5 (+0.025, −0.134 to +0.180). This restores the conservative interpretation: at n=20, the experiment does not support a reliable hard-versus-easy distractor effect once direct or useful support has been screened out.
-
-Pilot cost: **$0.009382** (357 live calls, 183 cached).
+**Audit:** cost $0.009382.
 
 ## 5. Question conditioning and cross-question generalization
 
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** SQuAD validation, three A/B pairing designs (below) · **Prompts:** [PROMPTS.md § Experiment 5](../PROMPTS.md#experiment-5), reusing the question-conditioned chain prompt from Experiment 2
+> **Model:** Llama 3.1 8B Instruct · **Dataset:** SQuAD validation A/B pairs · **Configuration:** depths 0–10; question-conditioned versus generic summaries; separate-passage `n=20`, same-passage-with-distractors `n=20`, and same-passage-gold-only `n=10`
 
-Three designs are reported, in the order they were run. Each changes exactly one thing about how A and B relate to their context, isolating a different candidate explanation for "does conditioning on A cost B":
+> **Change:** Evaluate every handoff on both the conditioning target (Question A) and a held-out but answerable Question B.
 
-1. **Separate-passage** — A and B have two *different* gold passages, glued into one context with 8 distractors. A generic summary must retain two competing answerable documents at once.
-2. **Same-passage, with distractors** — A and B share *one* gold passage, placed among 9 unrelated distractors. Conditioning can no longer discard a whole competing document; there is only one document to compress, plus noise to filter.
-3. **Same-passage, gold-only** — the same shared passage, but with the 9 distractors removed entirely and no length request, replicating Experiment 6's correction. There is now no noise to filter at all, isolating whatever narrowing happens *within* a single short passage.
+| Design | Context | Main result |
+|---|---|---|
+| Separate passages, `n=20` | A gold + B gold + 8 distractors | Early A benefit; persistent B loss |
+| Same passage + distractors, `n=20` | 1 shared A/B gold + 9 distractors | Every A/B interval includes zero |
+| Same passage, gold-only, `n=10` | 1 short shared A/B passage | No A benefit; large persistent B loss |
 
-### Separate-passage design: two competing gold documents
+### Separate-passage design
 
-Each SQuAD example combines two independently labelled questions from different articles:
+![Separate-passage conditioning](summary_generalization_v2_depth10/n20/summary_generalization.png)
 
-- Question A and its gold passage.
-- A lexically unrelated Question B and its gold passage.
-- Eight real SQuAD distractor passages.
+Conditioned summaries are 3–4 times shorter than generic summaries despite the same 700-token cap, indicating active task selection.
 
-Both A and B are therefore answerable from the same fixed simulated top-10 retrieval context. For either evaluation, the other question's gold passage is a **competing answerable document**, not a simple non-relevant distractor:
+| Evaluation | Depth 1 | Depth 5 | Depth 10 |
+|---|---:|---:|---:|
+| Target A F1 | **+0.295** [+0.125, +0.476] | +0.024 [−0.156, +0.208] | −0.076 [−0.309, +0.160] |
+| Held-out B F1 | **−0.392** [−0.600, −0.192] | **−0.323** [−0.540, −0.117] | **−0.497** [−0.700, −0.283] |
+| Target A judge | **+0.400** [+0.200, +0.600] | +0.150 [−0.050, +0.350] | −0.100 [−0.350, +0.150] |
+| Held-out B judge | **−0.400** [−0.600, −0.200] | **−0.400** [−0.600, −0.200] | **−0.450** [−0.650, −0.250] |
 
-| Evaluation target | Target-question gold | Competing gold for the other question | Candidate distractors | Total context |
+> **Key result:** Conditioning helps A for the first two handoffs, but not reliably by depth 3. Damage to B persists through depth 10 on both metrics.
+
+### Same-passage controls
+
+![Same passage with distractors](squad_same_passage/n20/summary_generalization.png)
+
+With one shared gold passage among nine distractors, every conditioned-minus-generic A/B interval includes zero (`p>0.22`). Removing the competing document removes the clear effect.
+
+![Gold-only conditioning](squad_same_passage_goldonly/n10/summary_generalization.png)
+
+| Evaluation | Depth 1 | Depth 5 | Depth 10 |
+|---|---:|---:|---:|
+| Target A F1 | +0.096 [−0.137, +0.367] | +0.040 [−0.253, +0.333] | +0.040 [−0.180, +0.300] |
+| Held-out B F1 | **−0.600** [−0.900, −0.300] | **−0.500** [−0.800, −0.200] | **−0.433** [−0.800, 0.000] |
+| Held-out B judge | **−0.600** [−0.900, −0.300] | **−0.500** [−0.800, −0.200] | **−0.500** [−0.900, −0.100] |
+
+At stage 1, conditioned summaries retain A in 8/10 and B in 3/10; generic summaries retain A in 8/10 and B in 9/10. No handoff hits the token guard.
+
+> **Key result:** Conditioning narrows to the named task even when the source is one short passage and there is no noise or length pressure. This is distinct from discarding a competing document.
+
+### 5a. Rewriting versus selection
+
+> **Model:** Llama 3.1 8B Instruct · **Dataset:** same SQuAD gold-only A/B pairs, `n=10`, one seed · **Configuration:** one shared A/B gold passage, no distractors, depths 0–10; pass-through, paraphrase-only, generic compression, and question-conditioned selection
+
+> **Change:** Add pass-through and paraphrase-only controls. The ladder is: no rewriting → rewriting without compression → generic compression → question-conditioned selection.
+
+**Question visibility and evaluation.** Only the **conditioned** compressor receives Question A. The **generic**, **paraphrase**, and **pass-through** arms receive neither Question A nor Question B: paraphrase is explicitly instructed to restate every fact without shortening, selecting, or adding content; pass-through copies its input without an LLM call. At each depth, the same resulting handoff is then answered twice by the final answerer—once for target Question A and once for held-out Question B. Thus, B is an evaluation-only query, not information available while the handoff is written.
+
+**How to read the figures.** The first figure is a *transition diagnostic*, not just an end-task comparison. From left to right, top to bottom, it shows: lexical overlap between a message and its immediate predecessor; an independent judge's semantic-preservation verdict for that rewrite; whether a gold-answer string for B is still present; and final answer accuracy for A. Edge 1 is source passage → first handoff; later edges are handoff → handoff. It therefore separates surface rewriting, judged meaning preservation, direct B-answer retention, and the answer consequence for the conditioned task.
+
+**Operational definitions.** “Held-out fact B present” is a deterministic answer-string survival probe: it is 1 when any annotated gold answer or alias for B (excluding strings shorter than three characters) appears as a case-insensitive contiguous substring of the handoff, and 0 otherwise. It does **not** establish that the handoff semantically entails B, nor that it retained the entire supporting proposition; it tracks the observable answer-bearing span. “Lexical similarity” is the symmetric bag-of-words token F1 between consecutive messages. Before matching, both are lowercased, stripped of punctuation and articles (*a*, *an*, *the*), and whitespace-normalized; token multiplicities count. Thus, it measures shared normalized vocabulary rather than word order, syntax, or semantic equivalence.
+
+![Per-edge rewriting diagnostics](squad_same_passage_paraphrase/n10/paraphrase_transitions.png)
+
+The second figure is the *end-task view* of the same four arms. Its left column evaluates Question A and its right column evaluates held-out Question B; the top row is token F1 and the bottom row is LLM-judge accuracy. Depth 0 is direct access to the original passage, while depths 1–10 use only the handoff. Marker area represents the mean number of characters given to the answerer (larger markers are longer messages), not statistical uncertainty. Comparing columns tests whether a message useful for its conditioning question remains useful for an unprovided future query.
+
+![Four-arm gold-only accuracy](squad_same_passage_paraphrase/n10/summary_generalization.png)
+
+| Held-out B judge | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
 |---|---:|---:|---:|---:|
-| Question A | 1 | 1 (Question B) | 8 | 10 passages |
-| Question B | 1 | 1 (Question A) | 8 | 10 passages |
+| Pass-through | 1.00 | 1.00 | 1.00 | 1.00 |
+| Paraphrase-only | 0.90 | 1.00 | 0.90 | 0.90 |
+| Generic compression | 1.00 | 1.00 | 1.00 | 0.90 |
+| Question-conditioned | 0.40 | 0.30 | 0.60 | 0.40 |
 
-The conditioned and generic chains use the exact system prompt and handoff instructions from the repeated-degradation experiment. A runtime self-test verifies that the prompts become byte-identical when the single Question A block is deleted.
+At depths 1/2/5/10, paraphrase-minus-pass-through and generic-minus-pass-through judge intervals include zero. Conditioned-minus-generic judge is −0.600 [−0.900, −0.300], −0.700 [−1.000, −0.400], −0.400 [−0.700, −0.100], and −0.500 [−0.900, −0.100]. F1 shows the same selective-loss pattern.
 
-- **Conditioned:** Question A is appended to the documents/summary at every handoff.
-- **Generic:** the same prompt is used without that question block.
+Later messages are near copies (mean lexical similarity across stages 2–10: paraphrase 0.958, generic 0.907, conditioned 0.914). The fact is usually excluded during the first narrowing step and then faithfully propagated. Paraphrase judge accuracy remains 0.90–1.00 even when token F1 is lower.
 
-The final answerer receives whichever question is being evaluated. Summaries have the same 700-token maximum in both arms.
+> **Key result:** Ordinary rewriting and generic compression do not explain the large held-out loss. Question-conditioned selection does.
 
-#### Results
+**Boundary:** `n=10`, one seed. The original gold-only run and four-arm follow-up are separate cached runs; the mechanistic conclusion uses within-follow-up contrasts.
 
-![Question-only conditioning through ten handoffs](summary_generalization_v2_depth10/n20/summary_generalization.png)
+**Audit:** separate-passage/depth extension about $0.0235; same-passage $0.031; gold-only $0.005; four-arm follow-up $0.036.
 
-Dot area is proportional to the mean number of characters the answerer actually received at that point (the raw 10-passage context at depth 0, the generated summary at every depth after) — the same size encoding used for the repeated-degradation plot in §2. It makes the mechanism visible directly on the accuracy curve: conditioned summaries settle to 726–883 characters after the first handoff, while generic summaries, with no question to focus them, stay roughly 3–4x larger throughout (2,983–3,140 characters) despite sharing the identical 700-token cap. Conditioning is not just differently-focused here, it is writing a substantially shorter note.
+## 6. Multilingual fixed versus switching handoffs
 
-The plot evaluates every depth from 0 to 10. Selected Token-F1 landmarks are:
+> **Model:** Llama 3.1 8B Instruct · **Dataset:** same SQuAD gold-only A/B passages, `n=10` passages / 20 question IDs, one seed · **Configuration:** one shared A/B gold passage and no distractors; depths 1–6; conditioned/generic × fixed/switching schedule across six languages
 
-| Evaluation | Direct | Conditioned d1 | Generic d1 | Conditioned d2 | Generic d2 | Conditioned d5 | Generic d5 | Conditioned d10 | Generic d10 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Conditioning Question A | 0.828 | 0.829 | 0.535 | 0.794 | 0.576 | 0.504 | 0.480 | 0.388 | 0.463 |
-| Unrelated Question B | 0.970 | 0.200 | 0.592 | 0.150 | 0.583 | 0.250 | 0.573 | 0.100 | 0.597 |
+> **Change:** Compare keeping one handoff language with rotating through English, German, French, Italian, Portuguese, and Spanish on the same gold-only A/B passages.
 
-Paired conditioned-minus-generic F1 contrasts show that the target-specific benefit is real at depths 1–2, then becomes indistinguishable from zero. It is numerically negative at depths 8–10, but those later reversals are not distinguishable at this sample size.
+Fixed and switching schedules share stage 1; the treatment begins at stage 2. Final questions and answers remain English.
 
-| Evaluation | Depth | Difference | 95% interval | p-value |
-|---|---:|---:|---|---:|
-| Question A | 1 | **+0.295** | [+0.125, +0.476] | 0.0009 |
-| Question A | 2 | **+0.218** | [+0.033, +0.417] | 0.0252 |
-| Question A | 3 | +0.091 | [−0.111, +0.303] | 0.3948 |
-| Question A | 5 | +0.024 | [−0.156, +0.208] | 0.8014 |
-| Question A | 10 | −0.076 | [−0.309, +0.160] | 0.5262 |
-| Question B | 1 | **−0.392** | [−0.600, −0.192] | 0.0001 |
-| Question B | 5 | **−0.323** | [−0.540, −0.117] | 0.0023 |
-| Question B | 10 | **−0.497** | [−0.700, −0.283] | <0.0001 |
+**How to read the figure.** Orange is question-conditioned and green is generic; solid lines keep one assigned language and dashed lines rotate languages. Both schedules share the stage-1 handoff, so only depths 2–6 test the language treatment. The columns compare target A with held-out B; the rows show token F1 and LLM-judge accuracy. Direct context at depth 0 is the shared baseline.
 
-The lower row of the figure repeats both panels under the LLM judge, and it **reinforces** this experiment's conclusion rather than softening it (unlike experiment 2, where the judge flattened the F1 signal). Paired conditioned-minus-generic judge contrasts:
+![Fixed versus switching language handoffs](multilingual_handoff_gold_only/n10/multilingual_handoffs_compact.png)
 
-| Evaluation | Depth | Judge difference | 95% interval | p-value |
-|---|---:|---:|---|---:|
-| Question A | 1 | **+0.400** | [+0.200, +0.600] | 0.0001 |
-| Question A | 2 | **+0.350** | [+0.150, +0.550] | 0.0013 |
-| Question A | 5 | +0.150 | [−0.050, +0.350] | 0.2349 |
-| Question A | 10 | −0.100 | [−0.350, +0.150] | 0.5325 |
-| Question B | 1 | **−0.400** | [−0.600, −0.200] | 0.0003 |
-| Question B | 5 | **−0.400** | [−0.600, −0.200] | 0.0002 |
-| Question B | 10 | **−0.450** | [−0.650, −0.250] | <0.0001 |
+| Depth-6 switching − fixed F1 | Conditioned | Generic |
+|---|---:|---:|
+| Target A | −0.181 [−0.550, +0.183] | +0.061 [−0.225, +0.332] |
+| Held-out B | +0.183 [0.000, +0.400] | −0.017 [−0.267, +0.183] |
 
-The same asymmetry appears with larger effect sizes: the target-question benefit is significant at depths 1–2 and gone by depth 5, while the damage to the unrelated question is significant at *every* depth and does not shrink with depth. Because the judge scores whether the answer is actually right rather than how many gold tokens it shares, this rules out the possibility that the held-out damage was merely a wording artefact.
+Every F1 and judge interval from depths 2–6 includes zero. Language compliance is 237/240; no handoff reaches the token guard. Observed summaries average 583–804 characters, with generic summaries generally longer.
 
-The stronger conclusion is therefore asymmetric. Question conditioning is useful for its target in the first two handoffs, but that benefit does not survive reliably beyond depth 2. In contrast, it persistently removes information needed for the unrelated, answerable question. This supports generic summaries when long-horizon reuse is expected, but does not prove that generic summaries are better for a fixed task at every later depth: the target d8–10 reversal remains uncertain.
+> **Key result:** No reliable cost or benefit from language switching is detected. This is not an equivalence result; `n=10` leaves wide intervals.
 
-A complete side-by-side example is available in [`summary_generalization_v2_depth10/n20/example.md`](summary_generalization_v2_depth10/n20/example.md).
+**Boundary:** Mostly high-resource Latin-script languages. Meta does not publish per-language pretraining shares. [Llama 3.1 model card](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md).
 
-Original corrected pilot cost was approximately **$0.0100**; the depth-10 extension added **$0.013471** (698 live calls, 22 cache hits). Full metrics and contrasts are in [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv) and [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv).
-
-### Same-passage design: random distractors, natural length
-
-Each example selects one SQuAD passage that already has two independently human-written SQuAD questions targeting distinct facts — Question A, conditioned on, and held-out Question B. No question is model-generated. The gold passage sits at a stratified position among nine unrelated SQuAD distractor passages of matched length; conditioned and generic summaries are otherwise free to choose their own length under a non-binding 1,500-token cap.
-
-- **20 pairs**, each built from its own gold passage (712–878 characters); full ten-passage contexts span 7,432–8,197 characters (10.3% spread).
-- Gold position stratified exactly twice per slot across all ten positions.
-- Closed-book C1 leakage probed both questions of every candidate pair: 85/220 candidate questions leaked; 20 fully-clean pairs were kept.
-- Distractors are randomly sampled SQuAD passages of matched length, not screened for relevance to either question.
-
-#### Results
-
-![Question-only conditioning on the same-passage design with distractors](squad_same_passage/n20/summary_generalization.png)
-
-Paired conditioned-minus-generic contrasts:
-
-| Evaluation | Metric | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
-|---|---|---:|---:|---:|---:|
-| Target A | F1 | +0.059 [−0.149, +0.284] | −0.074 [−0.297, +0.155] | −0.039 [−0.218, +0.137] | −0.092 [−0.304, +0.112] |
-| Target A | LLM judge | +0.150 [0.000, +0.300] | −0.050 [−0.250, +0.150] | −0.050 [−0.200, +0.100] | −0.100 [−0.350, +0.150] |
-| Held-out B | F1 | −0.169 [−0.442, +0.091] | −0.136 [−0.414, +0.137] | −0.184 [−0.475, +0.125] | −0.163 [−0.450, +0.125] |
-| Held-out B | LLM judge | −0.150 [−0.450, +0.150] | −0.200 [−0.500, +0.100] | −0.200 [−0.500, +0.100] | −0.200 [−0.500, +0.100] |
-
-Every interval spans zero and every p-value exceeds 0.22. With one shared passage instead of two competing gold documents, conditioning no longer has a whole document it can discard — and the significant separate-passage effects above disappear. The held-out sign is still consistently negative at every depth, which the gold-only design below sharpens considerably.
-
-Run cost: **$0.031**.
-
-### Gold-only design: no distractors, no length request
-
-Same underlying same-passage pairing, but replicating Experiment 6's correction: every context is reduced to the one shared gold passage that answers both A and B, with the nine distractors stripped before any model call by `gold_only_pairs()` — one shared function, imported by both this experiment and Experiment 6, not two copies of the same projection. There is no prompt-level length target here either; only the same non-binding 1,500-token guard as the design above, so any difference between the two isolates the effect of removing distractor noise, not a change in length policy.
-
-- **10 pairs** — the same shared-passage pairs Experiment 6 also uses (`data/squad_same_passage/pairs_n10.jsonl`), reduced to their gold passage only: 721–866 characters, versus 7,841–8,467 characters for the ten-passage context above.
-- **Truncation:** 0/200 handoffs hit the token cap.
-- **Stage-1 exact fact survival:** conditioned retains A in 8/10 summaries and B in 3/10; generic retains A in 8/10 and B in 9/10.
-
-#### Results
-
-![Question-only conditioning, gold-only context](squad_same_passage_goldonly/n10/summary_generalization.png)
-
-Paired conditioned-minus-generic contrasts:
-
-| Evaluation | Metric | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
-|---|---|---:|---:|---:|---:|
-| Target A | F1 | +0.096 [−0.137, +0.367] | −0.092 [−0.233, 0.000] | +0.040 [−0.253, +0.333] | +0.040 [−0.180, +0.300] |
-| Target A | LLM judge | +0.100 [0.000, +0.300] | −0.200 [−0.500, 0.000] | +0.000 [−0.300, +0.300] | +0.000 [−0.300, +0.300] |
-| Held-out B | F1 | **−0.600** [−0.900, −0.300] | **−0.700** [−1.000, −0.400] | **−0.500** [−0.800, −0.200] | **−0.433** [−0.800, 0.000] |
-| Held-out B | LLM judge | **−0.600** [−0.900, −0.300] | **−0.700** [−1.000, −0.400] | **−0.500** [−0.800, −0.200] | **−0.500** [−0.900, −0.100] |
-
-Held-out B is significant at **every landmark depth on both metrics** (p ranges 0.0001–0.0379 across F1, 0.0000–0.0276 across the judge), the sharpest result in this section. Target A shows no such effect: every interval spans zero at every depth.
-
-Removing distractors, rather than adding a fair-comparison control, is what surfaces the effect. With nothing to filter, the generic arm's summary of one ~800-character paragraph is close to lossless for both facts (held-out F1 0.85–0.95 against a direct-context ceiling of 0.95, stage-1 survival 9/10) — a short passage does not force a choice. Conditioning makes that choice anyway: it does not improve target accuracy, which generic already gets right without help, but it still drops B's fact on most runs (stage-1 survival 3/10, held-out F1 0.25–0.45 across depths). This is task-induced narrowing in close to its purest form — the model discards an answerable, salient fact from a short, fully-retained passage for no compression reason, solely because it was told which question mattered.
-
-Read across all three designs: the separate-passage design's effect (significant at depths 1–2, decaying by depth 5) comes from conditioning discarding an entire competing document. The same-passage-with-distractors design removes that mechanism and the effect vanishes. The gold-only design removes distractor noise too, and a *different*, larger, and more durable held-out effect reappears — one that cannot be attributed to document competition or noise filtering, since neither is present. These are two distinct mechanisms by which conditioning narrows a summary, not one effect appearing and disappearing.
-
-Run cost: **$0.005** (597 live calls at `llama-3.1-8b-instruct`, 16 live judge calls, 404 judge calls served from cache).
-
-### Paraphrase-only and pass-through controls: is repeated rewriting itself lossy?
-
-The three designs above vary *what a compressor is told to select* — a question, a competing document, distractor noise. None of them can separate that from *the act of rewriting itself*, because `conditioned` and `generic` both compress. Two arms were added to the same gold-only design to isolate rewriting from compression and from question-conditioned selection:
-
-- **`passthrough`** — no model call at all. Each stage forwards its input unchanged (the raw gold passage at stage 1). Zero rewriting, zero compression; the floor any other arm is read against.
-- **`paraphrase`** — every stage rewrites the whole message in new words and is explicitly instructed *not* to condense, shorten, omit, prioritise, or select relevant content, and not to add anything. Maximum rewriting, no compression, no question.
-
-Both are question-blind, like `generic`. Model, evidence, decoding, depths, seeds, and every prompt element except the condition-specific instruction are identical to the gold-only design above — including the same 10 pairs, the same 1,500-token non-binding guard (0/400 handoffs truncated across all four arms), and the same judge. `prompt_difference_selftest()` additionally asserts that substituting the generic instruction back into the paraphrase prompt reproduces the generic prompt exactly, so a `paraphrase`-vs-`generic` contrast measures only the instruction.
-
-Read together, the four arms form a ladder: `passthrough → paraphrase` isolates the cost of rewriting; `paraphrase → generic` adds compression; `generic → conditioned` adds question-conditioned selection.
-
-Stage-1 exact fact survival (10 pairs): `passthrough` retains A 10/10, B 10/10; `paraphrase` retains A 9/10, B 7/10; `generic` retains A 8/10, B 9/10; `conditioned` retains A 8/10, B 3/10.
-
-#### Prompts used
-
-All three model-calling arms share one system prompt, imported unchanged from Experiment 2:
-
-> You are a research handoff agent. Preserve every fact needed to answer the question. Your output will replace your entire input for the next agent, so omitted information is lost.
-
-`conditioned` and `generic` then share the identical instruction text — the load-bearing design property is that these two arms differ **only** by the question block, never by wording:
-
-| Stage | Instruction (`conditioned` and `generic`, verbatim) |
-|---|---|
-| 1 | Write concise prose research notes that preserve all evidence needed to answer the question. Do not answer the question directly and do not add unsupported facts. |
-| ≥2 | Rewrite the previous agent's notes into concise prose research notes for another agent. Preserve every answer-relevant fact, qualifier, date, number, relationship, uncertainty, and source id. Use only the previous notes. Do not answer the question directly. |
-
-`paraphrase` replaces only that instruction, keeping the same system prompt and the same absence of a question block as `generic`:
-
-| Stage | Instruction (`paraphrase`, verbatim) |
-|---|---|
-| 1 | Rewrite the source material in your own words for another agent. Restate every fact, qualifier, date, number, relationship, uncertainty, and source id it contains. This is a rewrite, not a summary: do not condense, shorten, omit, prioritise, or keep only what seems relevant, and do not add any fact that is not already present. |
-| ≥2 | Rewrite the previous agent's notes in your own words for another agent. Restate every fact, qualifier, date, number, relationship, uncertainty, and source id they contain. This is a rewrite, not a summary: do not condense, shorten, omit, prioritise, or keep only what seems relevant, and do not add any fact that is not already present. Use only the previous notes. |
-
-The user message assembles as `{material}\n\nQuestion the final agent must answer: {Question A}\n\n{instruction}` for `conditioned`, or `{material}\n\n{instruction}` for the three question-blind arms (`generic`, `paraphrase`, `passthrough`), where `material` is `Source material:\n{shared gold passage}` at stage 1 and `Previous agent's notes:\n{previous handoff text}` at every later stage.
-
-`passthrough` has **no prompt and issues no model call**: `compress()` returns the incoming text unchanged (the raw gold passage at stage 1, the prior handoff verbatim at every later stage) — the one arm defined by the absence of a compressor rather than a different instruction to one.
-
-`validate_modes()` refuses to run `paraphrase` together with a prompt-level word-count target, since a length budget is itself a compression instruction and would contradict the arm's own "do not condense" wording; none is used in this design regardless. Full prompt text, the runtime self-tests that verify each arm differs from the others only where intended, and the semantic-preservation judge's prompt are in [PROMPTS.md § Experiment 5](../PROMPTS.md#experiment-5).
-
-#### Results
-
-![Per-edge lexical similarity, semantic preservation, fact survival, and answer accuracy](squad_same_passage_paraphrase/n10/paraphrase_transitions.png)
-
-![Four-arm question-only conditioning, gold-only context](squad_same_passage_paraphrase/n10/summary_generalization.png)
-
-LLM-judge answer accuracy, all four arms:
-
-| Evaluation | Arm | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
-|---|---|---:|---:|---:|---:|
-| Target A | `passthrough` | 1.00 | 1.00 | 1.00 | 1.00 |
-| Target A | `paraphrase` | 1.00 | 1.00 | 0.90 | 1.00 |
-| Target A | `generic` | 0.90 | 0.90 | 0.80 | 0.80 |
-| Target A | `conditioned` | 1.00 | 0.70 | 0.80 | 0.80 |
-| Held-out B | `passthrough` | 1.00 | 1.00 | 1.00 | 1.00 |
-| Held-out B | `paraphrase` | 0.90 | 1.00 | 0.90 | 0.90 |
-| Held-out B | `generic` | 1.00 | 1.00 | 1.00 | 0.90 |
-| Held-out B | `conditioned` | 0.40 | 0.30 | 0.60 | 0.40 |
-
-Paired ladder contrasts, held-out B, at every landmark depth:
-
-| Comparison | Metric | Depth 1 | Depth 2 | Depth 5 | Depth 10 |
-|---|---|---:|---:|---:|---:|
-| paraphrase − passthrough (rewriting alone) | F1 | −0.250 [−0.500, 0.000] | −0.150 [−0.350, 0.000] | −0.250 [−0.600, +0.050] | −0.233 [−0.500, 0.000] |
-| paraphrase − passthrough (rewriting alone) | LLM judge | −0.100 [−0.300, 0.000] | 0.000 [0.000, 0.000] | −0.100 [−0.300, 0.000] | −0.100 [−0.300, 0.000] |
-| generic − passthrough (+ compression) | F1 | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | −0.100 [−0.300, 0.000] |
-| generic − passthrough (+ compression) | LLM judge | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | −0.100 [−0.300, 0.000] |
-| conditioned − generic (+ question selection) | F1 | **−0.600** [−0.900, −0.300] | **−0.700** [−1.000, −0.400] | **−0.400** [−0.700, −0.100] | **−0.433** [−0.800, 0.000] |
-| conditioned − generic (+ question selection) | LLM judge | **−0.600** [−0.900, −0.300] | **−0.700** [−1.000, −0.400] | **−0.400** [−0.700, −0.100] | **−0.500** [−0.900, −0.100] |
-
-`conditioned − generic` reproduces the gold-only design's own numbers exactly (Gold-only design subsection, above), as it must — it is the identical two-arm contrast re-derived from the same 10 pairs. Neither rewriting alone nor adding compression moves held-out judge accuracy outside a single pair's worth of noise at any depth; every one of those eight intervals spans zero. Only the step that adds question-conditioned selection is significant, at every landmark depth, on both metrics, with the largest point estimates in the whole ladder.
-
-**Per-edge measurement explains why.** Lexical similarity between consecutive messages collapses from a real transformation at stage 1 (`paraphrase` 0.697, `generic` 0.711, `conditioned` 0.442 — all substantially rewritten relative to the source) to near-copying by later stages (mean across stages 2–10: `paraphrase` 0.958, `generic` 0.907, `conditioned` 0.914; verbatim 5-gram copy rates 92%, 75%, and 81% respectively). Labelling every rewrite edge (stages 2–10, 90 edges per arm) against the four-way scheme confirms this directly: `passthrough` is 100% `verbatim_copy` by construction (the identity sanity check); `paraphrase` is 71% `verbatim_copy`, 24% `benign_paraphrase`, with only 3 `critical_detail_loss` edges on B; `generic` splits 44%/44% between copy and benign paraphrase, again with a handful of losses; `conditioned` is 58% `verbatim_copy` but **26% `critical_detail_loss` on B** — the semantic-preservation judge scores these rewrites as fully preserving *what the summary already contains*, while the fact was already excluded and stays excluded. The mechanism is not accumulating rewrite damage; it is a single narrowing decision at stage 1 that later stages faithfully reproduce.
-
-**Read F1 alongside the judge here, not instead of it.** `paraphrase` target-A token F1 (0.78–0.84) sits well below `passthrough` (0.955) even though judge accuracy is 0.90–1.00 at every depth — the same F1-overstates-degradation pattern flagged for the main chain (§2, HotpotQA gold-only): a paraphraser instructed to use its own words does exactly that, and token overlap with the gold string drops accordingly without the fact being lost. Mean handoff length also diverges by arm in a way consistent with the instructions: `paraphrase` and `generic` both grow with repeated rewriting (980→1,365 and 792→1,125 characters, stage 1 to stage 10), while `conditioned` shrinks (507→425) — only the arm told to select for one question gets shorter over time.
-
-Run cost: **$0.036** total — $0.0034 on the primary model (265 live calls; `conditioned`/`generic` mostly reuse the gold-only design's cache keys and `passthrough` issues none), $0.0321 on the preservation judge (392 live calls, one per rewrite-or-compression edge), $0.0005 on the answer judge (16 live calls, 804 served from cache).
-
-## 6. Multilingual fixed vs switching handoffs
-
-> **Model:** `meta-llama/llama-3.1-8b-instruct` · **Dataset:** 10 corrected SQuAD same-passage examples / 20 native question IDs, projected to gold-only · **Config:** `multilingual_handoff_config.yaml` · **Prompts:** [PROMPTS.md § Experiment 6](../PROMPTS.md#experiment-6)
-
-### Design and input composition
-
-The active experiment removes the retrieval confound. The reusable SQuAD file still stores one `gold_AB` passage plus nine screened distractors for other experiments, but `gold_only_pairs()` validates and removes all nine distractors before fingerprinting, prompting, or answering. Each Experiment 6 input is therefore one 721–866-character passage containing both answer facts.
-
-| Arm | Question visible to compressors? | Language schedule | Experimental input |
-|---|---|---|---|
-| Conditioned, fixed | Question A | One assigned language at every handoff | 1 shared gold passage / 0 distractors |
-| Conditioned, switching | Question A | A different language at every handoff | Same gold-only passage |
-| Generic, fixed | No question | One assigned language at every handoff | Same gold-only passage |
-| Generic, switching | No question | A different language at every handoff | Same gold-only passage |
-
-Depth 0 answers directly from that one English passage. At depths 1–6, the answerer sees only the latest handoff and the original English A or B question. Starting language is stratified by passage. A fixed chain keeps that language; a switching chain cycles through English → German → French → Italian → Portuguese → Spanish, rotated by starting language, so each switching chain uses all six once. Fixed and switching share the exact stored stage-1 handoff and answer; the schedule treatment begins only at stage 2.
-
-Question A is the conditioning target and B is held out. The same examples, source passage, decoding, answer budget, depths, judge, and final English answer prompt are paired across all arms. Removing distractors means generic versus conditioned now tests information selection *inside the gold passage*, not which document is found.
-
-### Prompts used
-
-The compressor system prompt is imported unchanged from Experiment 2:
-
-> You are a research handoff agent. Preserve every fact needed to answer the question. Your output will replace your entire input for the next agent, so omitted information is lost.
-
-At stage 1 the user message is `Source material:\n{one shared gold passage}`, optionally followed only in the conditioned arm by `Question the final agent must answer: {Question A}`, then:
-
-> Write concise prose research notes that preserve all evidence needed to answer the question. Do not answer the question directly and do not add unsupported facts.
-
-At later stages, `Previous agent's notes:\n{previous handoff}` replaces the source material and the instruction is:
-
-> Rewrite the previous agent's notes into concise prose research notes for another agent. Preserve every answer-relevant fact, qualifier, date, number, relationship, uncertainty, and source id. Use only the previous notes. Do not answer the question directly.
-
-Every arm then receives the same directive, formatted with its assigned language:
-
-> OUTPUT LANGUAGE (mandatory): {language}. Write the entire replacement handoff in {language}. Proper names, identifiers, numbers, and short source quotations may remain unchanged when translation would alter them. Do not mix in another language for the prose. Summarize; do not translate or rewrite the source passage by passage. Do not use headings or one section per passage.
-
-The final-answer message is `Research material:\n{material}\n\nQuestion:\n{A or B}\nAnswer:` under the shared answer persona. The complete prompt assembly and language-audit prompt are reproduced in [PROMPTS.md](../PROMPTS.md#experiment-6).
-
-### Language relevance to Llama 3.1 pretraining
-
-Meta reports Llama 3.1 as trained on more than 15T pretraining tokens from a multilingual corpus and officially supports eight languages, but it does **not** publish per-language token counts or proportions. Consequently, the experiment cannot claim an exact “pretraining relevance” share for any single language. The defensible operational proxy is official support plus Meta's published 8B-Instruct multilingual MMLU result. [Official Llama 3.1 model card](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/MODEL_CARD.md), [official evaluation details](https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/eval_details.md).
-
-| Language | Used? | Officially supported | Meta 8B-Instruct multilingual MMLU | Role |
-|---|---:|---:|---:|---|
-| English | Yes | Yes | Not separately reported in this table | Source passages and final questions are English; also one handoff language |
-| German | Yes | Yes | 60.59 | Handoff language |
-| French | Yes | Yes | 62.34 | Handoff language |
-| Italian | Yes | Yes | 61.63 | Handoff language |
-| Portuguese | Yes | Yes | 62.12 | Handoff language |
-| Spanish | Yes | Yes | 62.45 | Handoff language |
-| Hindi | No | Yes | 50.88 | Not in the retained six-language schedule |
-| Thai | No | Yes | 50.32 | Not in the retained six-language schedule |
-
-The gold-only correction deliberately retains the same six-language schedule as the retired noisy pilot so context composition is the principal design change. Hindi and Thai failures observed under the retired 10-passage preflight are not treated as evidence about the gold-only setting. This remains a mostly high-resource Latin-script test, not a test of every supported language.
-
-### Diagnostics
-
-- **Handoffs and answers:** 240 handoffs and 500 answers (20 direct plus 4 arms × 6 depths × 20 questions); all 500 answer-judge verdicts parsed.
-- **Source and compression:** the direct input averages 810 characters / 129 words. There is no requested summary length. Across all depths, conditioned-fixed, conditioned-switching, generic-fixed, and generic-switching average 583/87, 665/101, 759/113, and 804/122 characters/words respectively; those differences are observed outcomes, not compliance targets.
-- **Budget compliance:** no handoff hit the 1,500-token API guard (0/240). It is a non-binding safety limit, not a prompt instruction.
-- **Language compliance:** deterministic predominant-language detection matches 237/240 requested languages (98.75%). The raw GPT-4o-mini audit remains available, while deterministic detection is the reported primary compliance diagnostic.
-- **Generic baseline:** B is no longer a retrieval floor. At stage 1, generic B F1/judge is 0.400/0.800 versus conditioned 0.200/0.500. Both remain below direct gold-passage answering (0.950/1.000), so compression still loses substantial within-passage evidence.
-
-### Results
-
-Each schedule is shown separately in the same 2×2 grammar as the Experiment 5
-conditioning plot: Question A/B are the columns, token F1/LLM-judge accuracy
-are the rows, and direct context/conditioned/generic are the three series.
-This avoids conflating the conditioning comparison with the language-schedule
-comparison by overlaying four tracks in each panel. Dot **area** is
-proportional to mean answer-input size.
-
-![Gold-only question conditioning with a fixed handoff language](multilingual_handoff_gold_only/n10/multilingual_handoffs_fixed_compact.png)
-
-![Gold-only question conditioning with switching handoff languages](multilingual_handoff_gold_only/n10/multilingual_handoffs_switching_compact.png)
-
-The matching smaller-marker versions remain available as
-`multilingual_handoffs_fixed_compact.png` and
-`multilingual_handoffs_switching_compact.png`; they contain the same data with
-a smaller visual scale, while preserving marker area proportional to the
-answerer's input size.
-
-**Reading the reference-style plots.** Fixed and switching share their
-stage-1 point by construction. Within each schedule, generic is generally
-stronger on held-out B—most visibly for the fixed-language judge track at
-depths 2–3—whereas target A alternates between the arms. The larger generic
-markers show why this is not a pure conditioning effect: generic often passes
-more characters to the answerer. Splitting the figures improves readability;
-it does not change the paired estimates or the conclusion that the n=10
-language-schedule contrasts are inconclusive.
-
-Paired switching-minus-fixed contrasts (95% paired-bootstrap intervals):
-
-| Evaluation | Conditioning | Metric | Depth 1 | Depth 3 | Depth 6 |
-|---|---|---|---:|---:|---:|
-| Target A | Conditioned | F1 | 0.000 [0.000, 0.000] | −0.116 [−0.416, +0.153] | −0.181 [−0.550, +0.183] |
-| Target A | Conditioned | LLM judge | 0.000 [0.000, 0.000] | −0.200 [−0.500, 0.000] | −0.100 [−0.400, +0.200] |
-| Target A | Generic | F1 | 0.000 [0.000, 0.000] | +0.055 [−0.075, +0.240] | +0.061 [−0.225, +0.332] |
-| Target A | Generic | LLM judge | 0.000 [0.000, 0.000] | 0.000 [0.000, 0.000] | 0.000 [−0.300, +0.300] |
-| Held-out B | Conditioned | F1 | 0.000 [0.000, 0.000] | −0.050 [−0.350, +0.250] | +0.183 [0.000, +0.400] |
-| Held-out B | Conditioned | LLM judge | 0.000 [0.000, 0.000] | +0.200 [0.000, +0.500] | +0.200 [0.000, +0.500] |
-| Held-out B | Generic | F1 | 0.000 [0.000, 0.000] | −0.200 [−0.600, +0.200] | −0.017 [−0.267, +0.183] |
-| Held-out B | Generic | LLM judge | 0.000 [0.000, 0.000] | 0.000 [−0.300, +0.300] | +0.100 [−0.200, +0.400] |
-
-The stage-1 zeroes are a design check: schedules are identical until stage 2. From depths 2–6, **no switching-minus-fixed F1 or LLM-judge interval excludes zero**. The depth-6 conditioning × switching interactions are also uncertain: target F1 −0.241 [−0.592, +0.089], target judge −0.100 [−0.600, +0.500], held-out F1 +0.200 [0.000, +0.600], and held-out judge +0.100 [−0.400, +0.600].
-
-The corrected conclusion is narrow: cycling among six supported languages does not produce a reliably detectable accuracy penalty or benefit relative to staying in one language. The document-selection explanation is eliminated. With no prompt-level length request, generic summaries are also longer at stage 1 (836 versus 696 characters), so its B advantage is not clean evidence of selective preservation: conditioned-minus-generic B is −0.200 F1 [−0.500, 0.000] and −0.300 judge [−0.600, 0.000]. At depth 3 the fixed-language B judge difference is larger (−0.500 [−0.800, −0.200]), whereas the F1 difference remains uncertain. This is a descriptive n=10 result, not a confirmed specialization–generalization effect.
-
-The active gold-only run used **$0.0078** for handoff generation and answering, **$0.0085** for language auditing, and **$0.0026** for answer judging. The retired noisy run remains in `results/multilingual_handoff/n10` for auditability but is no longer interpreted as Experiment 6 evidence; the active artifacts are under `multilingual_handoff_gold_only/n10`.
+**Audit:** $0.0078 generation/answering, $0.0085 language auditing, $0.0026 judging.
 
 ## 7. Incremental-evidence handoff chain
 
-> **Model:** `meta-llama/llama-3.3-70b-instruct` · **Dataset:** MuSiQue-Answerable (validation) · **Sample:** 30 model-filtered questions, two seeds, 2–4 supporting-paragraph packets/question · **Prompts:** [PROMPTS.md § Experiment 2](../PROMPTS.md#experiment-2) plus the incremental specialist update (`src/run_incremental_chain.py`)
+> **Model:** Llama 3.3 70B Instruct · **Dataset:** MuSiQue-Answerable validation, `n=30`, two seeds · **Configuration:** 2–4 supporting paragraphs delivered one at a time; counterbalanced packet order; 0/1/3/5 evidence-free relays between specialists; question-conditioned versus question-omitted chains
 
-### Design
+> **Change:** Deliver one new MuSiQue supporting paragraph to each specialist while inserting 0/1/3/5 evidence-free relays between specialists.
 
-Experiment 2 asks what happens when a *fixed* evidence set is repeatedly
-compressed. This experiment asks a different systems question: what remains of
-older evidence when later agents acquire new evidence. Each MuSiQue supporting
-paragraph is an ordered packet `E_i`. Specialist `i` receives only the sealed
-previous handoff `M_{i-1}` and `E_i`, then emits `M_i`. Between specialists,
-exactly 0, 1, 3, or 5 relay-only agents rewrite the sealed message; relays have
-no packet parameter and never receive source text.
+The 30 examples contain 2–4 packets. Order is counterbalanced and fixed across conditions, depths, and two seeds. Relays receive only the sealed prior message. Conditions differ only in whether chain agents see the main question. Hidden decomposition probes measure packet-fact survival.
 
-The complete underlying evidence, packet order, model, prompts, token budgets,
-and decoding are held fixed across relay depths. Packet order is exactly
-counterbalanced forward/reverse across questions and stays fixed for every
-condition and seed. The two conditions differ only in whether the main question
-is shown to specialists and relays. The final answerer always receives the main
-question. Each packet also supplies a hidden decomposition probe, which is never
-shown to the chain agents. A fact's *handoff age* is the number of message
-transformations since the specialist that introduced its packet.
+![Incremental evidence and relay-only transformation](incremental_chain/incremental_chain.png)
 
-This gives three complementary tests: final multi-hop QA, whether the answer
-string from each packet remains literally present in the handoff, and whether a
-fresh answerer can answer a hidden probe from the evolving message. Future-query
-regret is `score(probe | complete original evidence) − score(probe | final
-handoff)`, so positive values would be evidence that the final representation is
-less reusable than the original packet set.
+**How to read the figure.** The upper-left panel is final multi-hop token F1: its dotted line is direct access to all original evidence, and error bars are 95% bootstrap intervals. The upper-right panel is future-query regret, defined as original-evidence probe F1 minus final-handoff probe F1: positive values would mean the handoff is worse; values below zero mean probes were easier to answer from the handoff. In both panels, intervals overlap the relevant zero/baseline reference, so the figure does not establish a relay-depth effect.
 
-### Results
+The lower panels follow individual packet probes after their evidence first arrives. Their x-axis is **handoff age**, the number of later transformations the packet has experienced; colour gives relay depth (0, 1, 3, 5) and solid/dashed lines give question-conditioned/question-omitted chains. Lower-left is hidden-probe F1; lower-right is literal answer-string survival (a gold answer or alias appears in the message). These lines are descriptive, not a clean causal age curve: high ages contain only earlier packets, have fewer examples, and combine packet position with relay count. They show high observed retention, not proof that repeated relays are lossless.
 
-![Incremental evidence: acquisition separated from relay-only transformation](incremental_chain/incremental_chain.png)
-
-The main outcome is a **null relay-depth effect at this scale**, not monotonic
-degradation. The original-evidence baseline is EM/F1/judge = 0.500/0.610/0.667.
-The table reports the final multi-hop answer after the complete evidence stream.
-
-| Relays between specialists | Question conditioned: F1 / judge | Question omitted: F1 / judge |
+| Relays | Conditioned F1 / judge | Question omitted F1 / judge |
 |---:|---:|---:|
 | 0 | 0.601 / 0.667 | 0.624 / 0.700 |
 | 1 | 0.629 / 0.700 | 0.655 / 0.733 |
 | 3 | 0.634 / 0.717 | 0.655 / 0.717 |
 | 5 | 0.651 / 0.683 | 0.578 / 0.633 |
 
-None of the paired relay-depth-minus-zero-relay F1 intervals excludes zero. At
-five relays, the conditioned estimate is +0.050 [−0.050, +0.152] and the
-question-omitted estimate is −0.046 [−0.174, +0.067]. Thus the apparent
-conditioned improvement and omitted-condition drop are both compatible with
-sampling variation at `n = 30`.
+The complete-evidence baseline is F1/judge = 0.610/0.667. No relay-depth-minus-zero-relay F1 interval excludes zero. At five relays, the contrast is +0.050 [−0.050, +0.152] when conditioned and −0.046 [−0.174, +0.067] when omitted.
 
-The hidden probes make the interpretation sharper. Every final-handoff
-future-query F1 regret is negative (conditioned: −0.050, −0.068, −0.038,
-−0.018 at 0/1/3/5 relays; omitted: −0.069, −0.061, −0.027, −0.035). Their F1
-intervals all include zero, while several judge contrasts favour the final
-handoff. This is not information creation: the original-evidence probe asks a
-fresh model to extract one relation from the entire packet set, whereas staged
-specialists have already turned each packet into a compact, query-friendly
-representation. The result says that this re-encoding can offset, or exceed,
-the loss due to relays under the present model and budget.
+Future-query F1 regret—original evidence minus final handoff—is negative in every cell (−0.069 to −0.018), with every interval including zero. Specialists can make evidence easier to query without creating information. Literal answer-string survival in the five-relay conditioned chain is 0.986 at age 0 and about 0.91 at ages 11–12.
 
-Literal answer-string survival is high but not perfect: across the longest
-five-relay chains, it is 0.986 at age 0 and about 0.91 for the early packets at
-ages 11–12 in the conditioned condition; the corresponding omitted-condition
-values are 0.965 and 0.946. Topic survival is somewhat lower. The age curves
-should be read descriptively, not as a clean causal decay rate: high ages contain
-only early packets from the 3–4-hop subset, whereas age 0 contains the newest
-packet from every example. The experiment nevertheless provides direct evidence
-that many individually introduced facts survive long relay stretches even when
-the main QA metric is flat.
+> **Key result:** Relay-only depth does not reliably degrade this incremental-acquisition system. Fresh specialist updates can compensate for communication loss; Experiment 2 remains the cleaner isolation of pure serial degradation.
 
-The bounded conclusion is therefore architectural. In an incremental-evidence
-workflow, relay-only transformations do not by themselves dominate the benefits
-of later specialist updates. A depth comparison that lets agents gain new
-evidence tests the combined system, not an isolated communication channel. The
-fixed-evidence serial chain (§2) and this incremental chain are complementary:
-the former measures degradation after acquisition stops; the latter measures
-whether that degradation survives an ongoing acquire–summarize–relay loop.
+**Boundary:** One model, `n=30`; high handoff age is correlated with early packet position and higher hop count.
 
-Generation/answering spend was **$0.6942** (7,019 live and 1,693 cached calls;
-2.88M prompt and 0.61M completion tokens). The independent answer judge is
-accounted separately under its own cap. Full tables and raw records are in
-[`incremental_chain/`](incremental_chain/).
+**Audit:** generation/answering spend $0.6942; 7,019 live and 1,693 cached calls.
 
 ## Cross-experiment interpretation
 
-The results support six distinct roles for handoffs:
+| Mechanism | Supported conclusion | Boundary |
+|---|---|---|
+| Denoising | Compression can improve QA when contexts contain removable distractors. | Context- and model-dependent. |
+| Surface drift | Rewriting can lower EM/F1 while preserving judged correctness. | Report both metrics; the judge may miss subtle errors. |
+| Retrieval quality | Missing relevant evidence remains harmful through later handoffs. | BM25 rank is not a relevance label. |
+| Task conditioning | A known question guides filtering but can remove facts needed later. | Target benefit may be brief; held-out harm depends on context. |
+| Rewriting vs selection | Large held-out loss appears when question-conditioned selection is added. | Cleanest control has ten pairs and one seed. |
+| Language | Switching among six languages has no detected effect. | Wide intervals do not establish equivalence. |
+| Incremental acquisition | Packet-specific updates can offset relay loss. | Depth no longer isolates communication when evidence arrives. |
 
-1. **Denoising:** one summary can remove distractors and improve answer accuracy.
-2. **Serial information loss:** repeated compression can progressively remove precise evidence, especially when the starting evidence is already minimal — though the rewriting-vs-selection ladder (below) shows that repeated *rewriting alone*, without compression, is not this mechanism.
-3. **Rewriting is not the culprit; selection is.** Isolating rewriting from compression from question-conditioned selection on the gold-only design, only the step that adds question-conditioned selection produces a significant held-out effect; a pass-through control and a paraphrase-only control both stay within noise of each other at every depth.
-4. **Task conditioning:** supplying a question changes what a compressor emphasizes, but the corrected same-passage-with-distractors pilot is too small to establish either target benefit or held-out harm — the effect requires removing distractors entirely to surface (§5, gold-only design).
-5. **Representation language:** changing language between handoffs can alter compression length and occasionally trigger refusal behavior, but this six-language pilot does not isolate a robust accuracy effect.
-6. **Acquisition-compensated communication:** when new evidence arrives between relay stretches, packet-specific specialist updates can offset relay-only degradation. Depth is then a property of the whole acquire–summarize–relay architecture, not a pure measure of message-channel loss (§7).
-
-These mechanisms can coexist. A handoff may improve the current answer by filtering noise while simultaneously making the representation less reusable for future tasks.
+The systems implication is that a handoff can improve the current task while reducing future reuse. Evaluation should distinguish factual correctness, lexical form, task specificity, evidence acquisition, and fact age.
 
 ## Limitations
 
-- All completed runs are pilots: 10, 20, or 30 questions per condition.
-- The baseline and long-chain experiments used Llama 3.3 70B, whereas the low-cost retrieval and generalization pilots used Llama 3.1 8B.
-- The repeated-chain experiment used two seeds, but the low-cost pilots used one deterministic seed.
-- The incremental-evidence experiment uses one model and 30 MuSiQue questions, despite two generation seeds. Its highest handoff ages contain only the early packets from the 3–4-packet subset (6 or 14 questions), so the plotted age profile is not a balanced causal estimate of per-transformation loss. Its complete-evidence probe baseline also measures fresh-model extraction from a multi-packet context; specialist re-encoding can improve that extraction without creating information.
-- SQuAD A/B contexts are simulated retrieval packs rather than outputs from a live retriever.
-- SQuAD is a heavily-pretrained public benchmark: 85/220 candidate questions failed the original design's closed-book leakage check (a separate audit on the 10-pair pool used by the gold-only rerun and Experiment 6 found 84/220). The surviving pairs are drawn from SQuAD's harder tail, not from SQuAD at large.
-- Both same-passage designs use one seed; the original design (20 pairs) is underpowered for its own small, non-significant effects, and even the gold-only design's large, significant held-out effect (10 pairs) has not been checked against a second seed.
-- The rewriting-vs-selection ladder reuses the gold-only design's 10 pairs and one seed, and inherits every limitation of that design (including the leakage-check caveat above); the null on the pass-through and paraphrase-only arms is a null at n=10, not a proof that rewriting is harmless at scale. The semantic-preservation judge is new in this experiment and has not been cross-checked against a second judge model.
-- The original design's distractors are randomly sampled, not screened for relevance to either question; a separate, no-longer-reported build applied an LLM relevance screen instead (`negative_verification_n10.csv`) without changing the qualitative null result, before the gold-only rerun replaced screening with removing distractors entirely.
-- The redundant-evidence signal-ratio gold passages share an answer-bearing source paragraph. The experiment controls answer sufficiency, but not independent-source diversity.
-- Direct scores for Question A and B should not be compared as measures of relative difficulty. Valid causal comparisons are paired within the same question type.
-- Bootstrap intervals are exploratory and were not corrected for multiple comparisons.
-- The multilingual experiment uses only 10 passages and one deterministic seed. Language order is coupled to depth within each pair, although starting languages are stratified across pairs; order-specific and depth-specific effects cannot be fully separated.
-- Its active run covers six high-resource supported languages. Three handoffs fail deterministic language compliance; the 1,500-token safety guard did not bind. The result cannot be generalized to all supported languages or writing systems.
-- Meta does not publish per-language Llama 3.1 pretraining shares. Official support and multilingual MMLU are capability proxies, not measurements of corpus prevalence.
+- All runs are pilots (`n=10–30`); several use one seed.
+- Bootstrap intervals are exploratory and not multiplicity-corrected.
+- The LLM judge is not human adjudication and may share benchmark knowledge.
+- Public benchmarks risk pretraining exposure; leakage filters select harder, model-specific subsets.
+- Candidate distractors in Experiments 3–4 are LLM-screened, not exhaustively human-labelled.
+- Experiment 4 uses shared-source redundancy, not independent corroboration.
+- Experiment 5's strongest control has ten pairs; summary length differs naturally across some arms.
+- Experiment 6 covers six mostly high-resource languages with depth coupled to order.
+- Experiment 7 correlates handoff age with packet position and hop count.
+- Cross-model replications are not paired because leakage filtering is model-specific.
 
 ## Recommended next steps
 
-1. Scale the gold-only same-passage design (§5) to at least 100 pairs and two seeds. It is the cleanest of the three variants tried (original distractors, LLM-screened distractors, gold-only) and already produces the report's most significant single result at n=10; confirming it holds at scale is higher priority than further distractor-realism work on the 20-pair design. Scale the pass-through/paraphrase-only ladder alongside it on the same larger pool, since it shares the design and would otherwise stay the more underpowered of the two.
-2. Replicate it with Llama 3.3 70B or another stronger model to test whether the specialization–generalization asymmetry survives model scaling.
-3. Replicate the incremental-evidence chain (§7) at n≥100 with independent evidence orders and a within-packet age analysis. Pair it with an extractive/oracle packet-update control to distinguish genuine factual retention from query-friendly specialist re-encoding.
-4. Expand the MS MARCO retrieval pilot to at least 100 questions before interpreting the medium-noise behavior.
-5. Keep the v2 question-only prompt audit as a required self-test in all subsequent conditioning experiments, and report the truncation rate and generic-arm fact survival before interpreting any conditioning contrast — a summariser silently hitting its token cap produces a degenerate baseline that reads as a large treatment effect.
-6. Scale the corrected redundant-evidence signal-ratio experiment to 100 packs, then replace shared-source redundancy with independently sourced, answer-sufficient documents where a suitable labelled corpus permits it.
-7. Replicate gold-only Experiment 6 at n≥100 with two seeds, enforced length-matching rather than prompt-only targets, and balanced reversed or Latin-square language orders. Add Hindi/Thai only as a separately preregistered language-set expansion.
+1. Scale the gold-only A/B design and rewriting-selection ladder to at least 100 pairs and two seeds.
+2. Add a second judge or human audit for major metric disagreements, especially HotpotQA gold-only and paraphrase-only chains.
+3. Scale the incremental-evidence chain with independent evidence orders and within-packet age comparisons; add extractive/oracle specialist updates.
+4. Scale retrieval and redundancy experiments, then test independently sourced answer-sufficient evidence.
+5. Expand multilingual testing with balanced Latin-square orders and separately preregistered script-diverse languages.
+6. Keep prompt-equivalence, isolation, truncation, and distractor-relevance audits as required controls.
 
 ## Result artifacts
 
-- Baseline: [`report.md`](report.md), [`summary.csv`](summary.csv), [`contrasts.csv`](contrasts.csv)
-- Serial degradation: [`chain/report.md`](chain/report.md), [`chain/stage_metrics.csv`](chain/stage_metrics.csv)
-- Serial degradation, question omitted: [`chain_generic/report.md`](chain_generic/report.md), [`chain_generic/stage_metrics.csv`](chain_generic/stage_metrics.csv), [`chain_generic/conditioning_comparison.png`](chain_generic/conditioning_comparison.png)
-- Incremental-evidence chain: [`incremental_chain/report.md`](incremental_chain/report.md), [`incremental_chain/stage_metrics.csv`](incremental_chain/stage_metrics.csv), [`incremental_chain/future_query_regret.csv`](incremental_chain/future_query_regret.csv), [`incremental_chain/survival_by_age.csv`](incremental_chain/survival_by_age.csv), [`incremental_chain/incremental_chain.png`](incremental_chain/incremental_chain.png), raw records [`../runs/incremental_chain/`](../runs/incremental_chain/)
-- Retrieval quality: [`retrieval_quality/n20/metrics.csv`](retrieval_quality/n20/metrics.csv), [`retrieval_quality/n20/deltas.csv`](retrieval_quality/n20/deltas.csv)
-- Corrected redundant-evidence signal ratio: [`redundant_signal_ratio/n20/metrics.csv`](redundant_signal_ratio/n20/metrics.csv), [`redundant_signal_ratio/n20/deltas.csv`](redundant_signal_ratio/n20/deltas.csv), [`redundant_signal_ratio/n20/redundant_signal_ratio.png`](redundant_signal_ratio/n20/redundant_signal_ratio.png)
-- Generalization, separate-passage design (20 pairs): [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv), [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv), [`summary_generalization_v2_depth10/n20/summary_generalization.png`](summary_generalization_v2_depth10/n20/summary_generalization.png), example [`summary_generalization_v2_depth10/n20/example.md`](summary_generalization_v2_depth10/n20/example.md)
-- Generalization, same-passage design with distractors (20 pairs): [`squad_same_passage/n20/metrics.csv`](squad_same_passage/n20/metrics.csv), [`squad_same_passage/n20/deltas.csv`](squad_same_passage/n20/deltas.csv), [`squad_same_passage/n20/summary_generalization.png`](squad_same_passage/n20/summary_generalization.png), construction report [`../data/squad_same_passage/construction_n20.csv`](../data/squad_same_passage/construction_n20.csv)
-- Generalization, gold-only design (10 pairs): [`squad_same_passage_goldonly/n10/metrics.csv`](squad_same_passage_goldonly/n10/metrics.csv), [`squad_same_passage_goldonly/n10/deltas.csv`](squad_same_passage_goldonly/n10/deltas.csv), [`squad_same_passage_goldonly/n10/summary_generalization.png`](squad_same_passage_goldonly/n10/summary_generalization.png), shared pair pool also used by Experiment 6: construction report [`../data/squad_same_passage/construction_n10.csv`](../data/squad_same_passage/construction_n10.csv), distractor audit [`../data/squad_same_passage/negative_verification_n10.csv`](../data/squad_same_passage/negative_verification_n10.csv)
-- Generalization, rewriting-vs-selection ladder (pass-through/paraphrase-only/generic/conditioned, same 10 pairs): [`squad_same_passage_paraphrase/n10/metrics.csv`](squad_same_passage_paraphrase/n10/metrics.csv), [`squad_same_passage_paraphrase/n10/deltas.csv`](squad_same_passage_paraphrase/n10/deltas.csv), [`squad_same_passage_paraphrase/n10/transition_metrics.csv`](squad_same_passage_paraphrase/n10/transition_metrics.csv), [`squad_same_passage_paraphrase/n10/paraphrase_transitions.png`](squad_same_passage_paraphrase/n10/paraphrase_transitions.png), [`squad_same_passage_paraphrase/n10/summary_generalization.png`](squad_same_passage_paraphrase/n10/summary_generalization.png), per-edge records [`../runs/squad_same_passage_paraphrase/n10/transitions.jsonl`](../runs/squad_same_passage_paraphrase/n10/transitions.jsonl)
-- Retired (no longer in this report, still on disk): LLM-screened-distractor natural-length run `squad_same_passage/n10`, its length-matched control `squad_same_passage_matched/n10`
-- Multilingual handoffs, **active gold-only run**: [`multilingual_handoff_gold_only/n10/metrics.csv`](multilingual_handoff_gold_only/n10/metrics.csv), [`multilingual_handoff_gold_only/n10/deltas.csv`](multilingual_handoff_gold_only/n10/deltas.csv), [`multilingual_handoff_gold_only/n10/diagnostics.csv`](multilingual_handoff_gold_only/n10/diagnostics.csv), size-encoded [`multilingual_handoffs.png`](multilingual_handoff_gold_only/n10/multilingual_handoffs.png), compact-marker [`multilingual_handoffs_compact.png`](multilingual_handoff_gold_only/n10/multilingual_handoffs_compact.png), raw handoffs [`../runs/multilingual_handoff_gold_only/n10/handoffs.jsonl`](../runs/multilingual_handoff_gold_only/n10/handoffs.jsonl), raw answers [`../runs/multilingual_handoff_gold_only/n10/answers.jsonl`](../runs/multilingual_handoff_gold_only/n10/answers.jsonl). Retired noisy artifacts remain under `multilingual_handoff/n10`.
+- Single handoff: [`report.md`](report.md), [`summary.csv`](summary.csv), [`contrasts.csv`](contrasts.csv)
+- Fixed-evidence chain: [`chain/report.md`](chain/report.md), [`chain/stage_metrics.csv`](chain/stage_metrics.csv), [`chain/degradation.png`](chain/degradation.png)
+- Qwen3 8B: [`chain_qwen/report.md`](chain_qwen/report.md), [`chain_qwen/degradation.png`](chain_qwen/degradation.png)
+- Qwen3 32B: [`chain_qwen32/report.md`](chain_qwen32/report.md), [`chain_qwen32/degradation.png`](chain_qwen32/degradation.png)
+- Question omitted: [`chain_generic/report.md`](chain_generic/report.md), [`chain_generic/stage_metrics.csv`](chain_generic/stage_metrics.csv), [`chain_generic/conditioning_comparison.png`](chain_generic/conditioning_comparison.png)
+- Retrieval: [`retrieval_quality/n20/metrics.csv`](retrieval_quality/n20/metrics.csv), [`retrieval_quality/n20/deltas.csv`](retrieval_quality/n20/deltas.csv), [`retrieval_quality/n20/retrieval_quality.png`](retrieval_quality/n20/retrieval_quality.png)
+- Redundancy: [`redundant_signal_ratio/n20/metrics.csv`](redundant_signal_ratio/n20/metrics.csv), [`redundant_signal_ratio/n20/deltas.csv`](redundant_signal_ratio/n20/deltas.csv), [`redundant_signal_ratio/n20/redundant_signal_ratio.png`](redundant_signal_ratio/n20/redundant_signal_ratio.png)
+- Cross-question, separate passages: [`summary_generalization_v2_depth10/n20/metrics.csv`](summary_generalization_v2_depth10/n20/metrics.csv), [`summary_generalization_v2_depth10/n20/deltas.csv`](summary_generalization_v2_depth10/n20/deltas.csv), [`summary_generalization_v2_depth10/n20/summary_generalization.png`](summary_generalization_v2_depth10/n20/summary_generalization.png)
+- Same passage with distractors: [`squad_same_passage/n20/metrics.csv`](squad_same_passage/n20/metrics.csv), [`squad_same_passage/n20/deltas.csv`](squad_same_passage/n20/deltas.csv), [`squad_same_passage/n20/summary_generalization.png`](squad_same_passage/n20/summary_generalization.png)
+- Gold-only: [`squad_same_passage_goldonly/n10/metrics.csv`](squad_same_passage_goldonly/n10/metrics.csv), [`squad_same_passage_goldonly/n10/deltas.csv`](squad_same_passage_goldonly/n10/deltas.csv), [`squad_same_passage_goldonly/n10/summary_generalization.png`](squad_same_passage_goldonly/n10/summary_generalization.png)
+- Rewriting-selection ladder: [`squad_same_passage_paraphrase/n10/deltas.csv`](squad_same_passage_paraphrase/n10/deltas.csv), [`squad_same_passage_paraphrase/n10/transition_metrics.csv`](squad_same_passage_paraphrase/n10/transition_metrics.csv), [`squad_same_passage_paraphrase/n10/paraphrase_transitions.png`](squad_same_passage_paraphrase/n10/paraphrase_transitions.png)
+- Multilingual: [`multilingual_handoff_gold_only/n10/metrics.csv`](multilingual_handoff_gold_only/n10/metrics.csv), [`multilingual_handoff_gold_only/n10/deltas.csv`](multilingual_handoff_gold_only/n10/deltas.csv), [`multilingual_handoff_gold_only/n10/diagnostics.csv`](multilingual_handoff_gold_only/n10/diagnostics.csv)
+- Incremental evidence: [`incremental_chain/report.md`](incremental_chain/report.md), [`incremental_chain/stage_metrics.csv`](incremental_chain/stage_metrics.csv), [`incremental_chain/future_query_regret.csv`](incremental_chain/future_query_regret.csv), [`incremental_chain/survival_by_age.csv`](incremental_chain/survival_by_age.csv), [`incremental_chain/incremental_chain.png`](incremental_chain/incremental_chain.png)
+
+Raw records remain under [`../runs/`](../runs/); retired exploratory variants remain on disk but are not used for the active conclusions.

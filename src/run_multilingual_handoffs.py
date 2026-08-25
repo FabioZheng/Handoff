@@ -338,7 +338,7 @@ def make_plot(metrics: list[dict], cfg: dict, output: Path, *, schedule: str | N
     if schedule is None:
         colors = {
             "conditioned_fixed": "#d95f02", "generic_fixed": "#1b9e77",
-            "conditioned_switching": "#7570b3", "generic_switching": "#e7298a",
+            "conditioned_switching": "#d95f02", "generic_switching": "#1b9e77",
         }
         linestyles = {"conditioned_fixed": "-", "generic_fixed": "-",
                       "conditioned_switching": "--", "generic_switching": "--"}
@@ -359,9 +359,9 @@ def make_plot(metrics: list[dict], cfg: dict, output: Path, *, schedule: str | N
     # figure; it merely uses a smaller absolute scale so overlapping tracks are
     # easier to follow.  Do not make its markers fixed-size: that would discard
     # the size signal the figure is meant to retain.
-    # Matches Experiment 5's marker scale after its own too-large-markers fix;
-    # compact halves it again for schedule-overlay figures with more tracks.
-    min_area, max_area = (4.0, 110.0) if compact_markers else (6.0, 220.0)
+    # The report uses the compact overlay: retain the size cue, but keep dots
+    # below the visual weight of the four line styles they annotate.
+    min_area, max_area = (3.0, 75.0) if compact_markers else (6.0, 180.0)
     scale = max_area / max_chars
 
     def area(row: dict) -> float:

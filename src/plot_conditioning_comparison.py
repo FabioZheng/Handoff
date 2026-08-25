@@ -10,6 +10,8 @@ import argparse
 import csv
 from pathlib import Path
 
+from run_chain import context_display_label
+
 
 ROOT = Path(__file__).resolve().parent.parent
 COLORS = {"short": "#1b9e77", "medium": "#d95f02", "full": "#7570b3"}
@@ -76,7 +78,8 @@ def make_plot(conditioned: list[dict], generic: list[dict], output: Path) -> Non
                     upper = [as_float(r, f"{metric}_hi") - v for r, v in zip(subset, y)]
                     axis.errorbar(
                         x, y, yerr=[lower, upper], marker="", linewidth=2,
-                        capsize=3, label=variant, color=COLORS[variant], zorder=2,
+                        capsize=3, label=context_display_label(rows, dataset, variant),
+                        color=COLORS[variant], zorder=2,
                     )
                     axis.scatter(x, y, s=[marker_area(r) for r in subset], color=COLORS[variant],
                                 edgecolors="white", linewidths=0.6, zorder=3)
@@ -86,14 +89,13 @@ def make_plot(conditioned: list[dict], generic: list[dict], output: Path) -> Non
                     axis.set_xlabel("Number of compression handoffs")
                 if dataset_idx == 0 and condition_idx == 0:
                     axis.set_ylabel(label)
+                if row_idx == 0 and condition_idx == 0:
+                    axis.legend(title="Evidence composition", fontsize=7, title_fontsize=8, loc="best")
                 axis.set_xticks(range(0, 11))
                 axis.grid(alpha=0.25)
 
-    handles, labels = axes[0][0].get_legend_handles_labels()
-    fig.legend(handles, labels, title="Evidence length", loc="upper center", ncol=3,
-               bbox_to_anchor=(0.5, 1.1))
-    fig.suptitle("Effect of question conditioning on repeated handoff degradation", y=1.18)
-    fig.tight_layout(rect=(0, 0.02, 1, 1))
+    fig.suptitle("Effect of question conditioning on repeated handoff degradation", y=.99)
+    fig.tight_layout(rect=(0, 0.02, 1, .96))
     fig.text(0.5, 0.005,
               f"Marker area ∝ mean characters in the answerer's input at that point "
               f"(full context at depth 0, else the handoff text) — smallest marker "

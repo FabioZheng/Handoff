@@ -488,12 +488,21 @@ def analyse(rows: list[dict], chain_cfg: dict, args, output_root: Path, ledger: 
         mean = lambda field: float(np.mean([
             np.mean([x[field] for x in by_qid[qid]]) for qid in qids
         ]))
+        gold_document_fractions = np.array([
+            np.mean([
+                x["gold_documents"] / x["context_documents"]
+                for x in by_qid[qid] if x.get("context_documents", 0)
+            ])
+            for qid in qids
+        ])
         metric_row = {
             "dataset": dataset, "context_variant": variant, "depth": depth, "n": len(qids),
             "em": round(em_m, 4), "em_lo": round(em_lo, 4), "em_hi": round(em_hi, 4),
             "f1": round(f1_m, 4), "f1_lo": round(f1_lo, 4), "f1_hi": round(f1_hi, 4),
             "em_f1_disagree": round(em_f1_disagreement(em, f1), 4),
             "documents_mean": round(mean("context_documents"), 2),
+            "gold_documents_mean": round(mean("gold_documents"), 2),
+            "gold_document_fraction_pct": round(float(gold_document_fractions.mean() * 100), 1),
             "context_characters_mean": round(mean("context_characters"), 1),
             "handoff_characters_mean": round(mean("final_handoff_characters"), 1),
             "chain_tokens_mean": round(mean("chain_prompt_tokens") + mean("chain_completion_tokens"), 1),
@@ -559,6 +568,28 @@ def write_csv(path: Path, rows: list[dict]) -> None:
         writer.writerows(rows)
 
 
+CONTEXT_NOISE_LABELS = {
+    "short": "Zero noise",
+    "medium": "Mid noise",
+    "full": "High noise",
+}
+
+
+def context_display_label(metrics: list[dict], dataset: str, variant: str) -> str:
+    """Human-readable legend label with the observed gold-document share."""
+    fractions = [
+        float(row["gold_document_fraction_pct"])
+        for row in metrics
+        if row.get("dataset") == dataset and row.get("context_variant") == variant
+        and row.get("gold_document_fraction_pct") not in (None, "")
+    ]
+    prefix = CONTEXT_NOISE_LABELS.get(variant, variant)
+    if not fractions:
+        # Gold-only is exact even for older result files lacking this field.
+        return f"{prefix} (100% gold docs)" if variant == "short" else prefix
+    return f"{prefix} ({np.mean(fractions):.0f}% gold docs)"
+
+
 def make_plot(metrics: list[dict], args, path: Path, oracle_metrics: dict[str, dict] | None = None) -> None:
     import matplotlib
     matplotlib.use("Agg")
@@ -605,7 +636,8 @@ def make_plot(metrics: list[dict], args, path: Path, oracle_metrics: dict[str, d
                 lower = [r[metric] - r[f"{metric}_lo"] for r in subset]
                 upper = [r[f"{metric}_hi"] - r[metric] for r in subset]
                 axis.errorbar(x, y, yerr=[lower, upper], marker="", linewidth=2,
-                              capsize=3, label=variant, color=colors.get(variant), zorder=2)
+                              capsize=3, label=context_display_label(metrics, dataset, variant),
+                              color=colors.get(variant), zorder=2)
                 axis.scatter(x, [r[metric] for r in subset], s=[marker_area(r) for r in subset],
                              color=colors.get(variant), edgecolors="white", linewidths=0.6, zorder=3)
             # A_full equivalent: this run's own depth-0/full-context point (no
@@ -624,8 +656,8 @@ def make_plot(metrics: list[dict], args, path: Path, oracle_metrics: dict[str, d
             if oracle is not None and metric in oracle:
                 axis.axhline(oracle[metric], color="#e7298a", linestyle="--", linewidth=1.3,
                               label=f"E_oracle equivalent{n_suffix(oracle)}")
-            if full_depth0 is not None or oracle is not None:
-                axis.legend(fontsize=8, loc="best")
+            if row_idx == 0:
+                axis.legend(title="Evidence composition", fontsize=7, title_fontsize=8, loc="best")
             if row_idx == 0:
                 axis.set_title(dataset)
             if row_idx == len(plot_metrics) - 1:
@@ -634,7 +666,6 @@ def make_plot(metrics: list[dict], args, path: Path, oracle_metrics: dict[str, d
             if col_idx == 0:
                 axis.set_ylabel(label)
             axis.grid(alpha=0.25)
-    axes[0][-1].legend(title="Evidence length")
     fig.suptitle("Answer accuracy across repeated handoffs")
     fig.tight_layout(rect=(0, 0.03, 1, 1))
     fig.text(0.5, 0.005,

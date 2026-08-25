@@ -61,6 +61,13 @@ MODE_COLORS = {
     "direct": "#7570b3", "conditioned": "#d95f02", "generic": "#1b9e77",
     "paraphrase": "#e7298a", "passthrough": "#777777",
 }
+MODE_LABELS = {
+    "direct": "direct context",
+    "conditioned": "conditioned",
+    "generic": "generic",
+    "paraphrase": "paraphrase (generic)",
+    "passthrough": "passthrough",
+}
 
 # Contrasts are emitted in this order for whichever arms a config actually
 # runs. ``conditioned_minus_generic`` keeps its exact historical name and
@@ -501,7 +508,7 @@ def plot_transitions(records: list[dict], modes: list[str], root: Path) -> None:
         ("lexical_similarity", "Lexical similarity to previous message", (-.02, 1.02)),
         ("semantic_preserved", "Judged semantic preservation", (-.02, 1.02)),
         ("fact_B_survived", "Held-out fact B present in message", (-.02, 1.02)),
-        ("target_judge_correct", "Answer accuracy on target question A", (-.02, 1.02)),
+        ("target_judge_correct", "LLM-judge accuracy on target question A", (-.02, 1.02)),
     ]
     fig, axes = plt.subplots(2, 2, figsize=(11, 8), squeeze=False)
     for index, (metric, title, ylim) in enumerate(panels):
@@ -513,7 +520,8 @@ def plot_transitions(records: list[dict], modes: list[str], root: Path) -> None:
             if not points:
                 continue
             axis.plot([p[0] for p in points], [p[1] for p in points], marker="o",
-                      markersize=4, linewidth=1.8, color=MODE_COLORS.get(mode), label=mode)
+                      markersize=4, linewidth=1.8, color=MODE_COLORS.get(mode),
+                      label=MODE_LABELS.get(mode, mode))
         axis.set(title=title, xlabel="Handoff edge (stage)", ylim=ylim)
         axis.grid(alpha=.25)
     axes[0][0].legend(fontsize=8)
@@ -625,7 +633,8 @@ def plot_summary_generalization(metrics: list[dict], modes: list[str], depths: l
             for mode in modes:
                 subset = sorted([r for r in metrics if r["mode"] == mode and r["query_type"] == query_type], key=lambda r: r["depth"])
                 x = [r["depth"] for r in subset]
-                axis.plot(x, [r[metric] for r in subset], marker="", linewidth=2, color=colors.get(mode), label=mode, zorder=2)
+                axis.plot(x, [r[metric] for r in subset], marker="", linewidth=2,
+                          color=colors.get(mode), label=MODE_LABELS.get(mode, mode), zorder=2)
                 axis.scatter(x, [r[metric] for r in subset], s=[marker_area(r) for r in subset],
                             color=colors.get(mode), edgecolors="white", linewidths=0.6, zorder=3)
             if row_idx == 0:
