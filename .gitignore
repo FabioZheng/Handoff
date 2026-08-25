@@ -14,3 +14,13 @@ data/raw/
 #   data/sampled_ids.json
 #   data/filtered_questions.jsonl
 .idea/
+
+# Personal research profile and the Obsidian vault generated from it. Kept
+# locally, never published — they describe the author rather than the probe.
+research/
+obsidian/
+.obsidian/
+
+# Runner stdout/stderr, which embed absolute local paths.
+runs/**/*.stdout.log
+runs/**/*.stderr.log
