@@ -31,6 +31,25 @@ RESULTS = ROOT / "results" / "anticipatory_context"
 RETRIEVAL_FAMILIES = {"pointer", "retrieval_only"}
 
 
+def uses_retrieval(row: dict) -> bool:
+    """Classify by behaviour, not by policy name.
+
+    ``uncertainty_aware`` is the reason this matters: it *chooses* whether to
+    retrieve based on the entropy of its estimate, so at high entropy it is a
+    retrieval arm despite its family name. Splitting on the name put it in the
+    static baseline, which inflated the static hypervolume and made the
+    incremental gain from retrieval look like nothing.
+    """
+    for key in ("retrieval_k", "c_retrieval", "retrieval_rate"):
+        if key in row and row.get(key) not in ("", None):
+            try:
+                if float(row[key]) > 0:
+                    return True
+            except ValueError:
+                pass
+    return False
+
+
 def read_csv(name: str) -> list[dict]:
     with open(RESULTS / name, encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
@@ -90,16 +109,19 @@ def frontier_shift(rows: list[dict], cfg: dict, budget_words: int,
 
     def summarise(sample: list[str]) -> tuple[float, float]:
         acc: dict[str, list[tuple[float, float]]] = defaultdict(list)
+        retrieving: set[str] = set()
         for context in sample:
             for row in by_context[context]:
                 cost = beta * num(row, "c_context") + gamma * num(row, "c_retrieval")
                 acc[row["policy"]].append((num(row, "future_judge_correct"), cost))
+                if uses_retrieval(row):
+                    retrieving.add(row["policy"])
         static, everything = [], []
         for policy, values in acc.items():
             point = (float(np.mean([v for v, _ in values])),
                      float(np.mean([c for _, c in values])))
             everything.append(point)
-            if policy.split("__")[0] not in RETRIEVAL_FAMILIES:
+            if policy not in retrieving:
                 static.append(point)
         cost_max = max([c for _, c in everything] + [1.0])
         return hypervolume(static, cost_max), hypervolume(everything, cost_max)
@@ -125,31 +147,42 @@ def frontier_shift(rows: list[dict], cfg: dict, budget_words: int,
 
 
 def fig_anticipation(value: list[dict], path: Path) -> None:
-    fig, ax = plt.subplots(figsize=(8.4, 5.0))
+    """One panel per budget.
+
+    Budgets must not share an axis here: each mismatch level appears once per
+    budget, so pooling them draws a line between two different experiments and
+    invents a slope that no arm has.
+    """
     families = {"preserve": ("#c44e52", "o", "preserve (predict, no recall)"),
                 "pointer": ("#4c72b0", "s", "pointer (predict + recall)"),
-                "uncertainty_aware": ("#55a868", "^", "uncertainty-aware")}
-    for family, (colour, marker, label) in families.items():
-        pts = sorted(((num(r, "tv_mismatch"), num(r, "v_anticipation"),
-                       num(r, "lo"), num(r, "hi"))
-                      for r in value if r["family"] == family
-                      and r.get("tv_mismatch") not in ("", None)),
-                     key=lambda t: t[0])
-        if not pts:
-            continue
-        x = [p[0] for p in pts]
-        y = [p[1] for p in pts]
-        lo = [p[1] - p[2] for p in pts]
-        hi = [p[3] - p[1] for p in pts]
-        ax.errorbar(x, y, yerr=[lo, hi], color=colour, marker=marker, capsize=3,
-                    lw=1.8, label=label)
-    ax.axhline(0.0, color="#333", lw=1.2)
-    ax.set_xlabel("mismatch between prediction and truth   TV(P̂, P)")
-    ax.set_ylabel("$V_{anticipation}$   (utility vs no prediction)")
-    ax.set_title("The value of anticipation as prediction degrades\n"
-                 "below zero = anticipating is worse than not anticipating", fontsize=11)
-    ax.legend(frameon=False, fontsize=9)
-    ax.grid(alpha=0.25)
+                "uncertainty_aware": ("#55a868", "^", "uncertainty-aware (adaptive)")}
+    budgets = sorted({int(num(r, "budget_words")) for r in value})
+    fig, axes = plt.subplots(1, len(budgets), figsize=(6.4 * len(budgets), 5.0),
+                             squeeze=False, sharey=True)
+    for ax, budget_words in zip(axes[0], budgets):
+        for family, (colour, marker, label) in families.items():
+            pts = sorted(((num(r, "tv_mismatch"), num(r, "v_anticipation"),
+                           num(r, "lo"), num(r, "hi"))
+                          for r in value
+                          if r["family"] == family
+                          and int(num(r, "budget_words")) == budget_words
+                          and r.get("tv_mismatch") not in ("", None)),
+                         key=lambda t: t[0])
+            if not pts:
+                continue
+            x = [p[0] for p in pts]
+            y = [p[1] for p in pts]
+            err = [[p[1] - p[2] for p in pts], [p[3] - p[1] for p in pts]]
+            ax.errorbar(x, y, yerr=err, color=colour, marker=marker, capsize=3,
+                        lw=1.8, label=label)
+        ax.axhline(0.0, color="#333", lw=1.2)
+        ax.set_xlabel("mismatch   TV(P̂, P)")
+        ax.set_title(f"{budget_words}-word budget")
+        ax.grid(alpha=0.25)
+    axes[0][0].set_ylabel("$V_{anticipation}$   (utility vs no prediction)")
+    axes[0][-1].legend(frameon=False, fontsize=9, loc="center right")
+    fig.suptitle("The value of anticipation as prediction degrades — "
+                 "below zero, anticipating is worse than not anticipating", fontsize=12)
     fig.tight_layout()
     fig.savefig(path, dpi=160)
     plt.close(fig)
@@ -162,8 +195,8 @@ def fig_frontier(points: list[dict], cfg: dict, path: Path) -> None:
     fig, axes = plt.subplots(1, len(budgets), figsize=(6.0 * len(budgets), 5.0), squeeze=False)
     for ax, budget_words in zip(axes[0], budgets):
         cell = [p for p in points if int(num(p, "budget_words")) == budget_words]
-        static = [p for p in cell if p["family"] not in RETRIEVAL_FAMILIES]
-        recall = [p for p in cell if p["family"] in RETRIEVAL_FAMILIES]
+        static = [p for p in cell if not uses_retrieval(p)]
+        recall = [p for p in cell if uses_retrieval(p)]
         for group, colour, label in ((static, "#c44e52", "static compression"),
                                      (recall, "#4c72b0", "retrieval-enabled")):
             xs = [beta * num(p, "c_context") + gamma * num(p, "c_retrieval") for p in group]
