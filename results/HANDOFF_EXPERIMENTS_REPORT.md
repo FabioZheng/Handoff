@@ -1231,8 +1231,10 @@ Ranking the four candidate strategies by what the data support:
 
 1. **Keep discarded evidence retrievable** — the dominant effect. It absorbs
    ~90% of the cost of predicting badly, roughly doubles achievable
-   hypervolume, and survives charging a retrieved word the same as a context
-   word.
+   hypervolume within this experiment, survives charging a retrieved word the
+   same as a context word, and triples-to-quadruples the hypervolume of
+   Experiment 11's tuned preference frontier when scored on that experiment's
+   own objective.
 2. **Adaptively combine by uncertainty** — works, but only because it switches
    *into* retrieval. `uncertainty_aware__tau1` is behaviourally identical to
    `retrieval_only`; the adaptation adds nothing the retrieval arm did not
@@ -1272,22 +1274,50 @@ threshold near 0.5.
   here are per message and per query; nothing tests context accumulating across
   a long-running agent session.
 
-### Pareto-pipeline integration: deliberately not pooled
+### Bridged to Experiment 11, on Experiment 11's own objective
 
-Experiment 12 emits `anticipatory-context-v1` and is **not** discovered by
+Experiment 12 emits `anticipatory-context-v1` and is not discovered by
 `render_frontier_study.py`, which accepts only
-`bounded-communication-frontier-v2` and `communication-regret-v1`. This is a
-decision, not an oversight.
+`bounded-communication-frontier-v2` and `communication-regret-v1`. Pooling them
+through that pipeline as they stand would be invalid: Experiment 11's
+`U_future` is relation-weighted (paraphrase / same-entity / same-topic /
+orthogonal) while Experiment 12's is aspect-weighted under a declared true `P`,
+so a shared frontier would rank policies that were never competing -- exactly
+the cross-regime comparison Experiment 11's own configuration prohibits.
 
-Both experiments reweight the same off-diagonal utility matrix on the same 16
-dossiers, but they weight it differently: Experiment 11's `U_future` is
-relation-weighted (paraphrase / same-entity / same-topic / orthogonal), while
-Experiment 12's is aspect-weighted under a declared true `P`. Placing them on
-one frontier would compare policies optimised against different objectives,
-which is exactly the cross-regime pooling Experiment 11's own configuration
-prohibits. A valid bridge exists -- rescore Experiment 12's sealed answers
-under Experiment 11's relation distributions, which needs no new generation --
-but it is a separate analysis, not a schema change.
+The obstacle is the weighting, not the data. Both experiments answer every
+question of the same 16 dossiers, with the same models, on the same 64
+rotations, with byte-identical rotation ids. `src/bridge_frontier_11_12.py`
+therefore rescores Experiment 12's sealed answers under Experiment 11's
+relation distributions -- no new generation -- and puts both on one frontier
+under a common cost definition.
+
+This is the strongest available form of the retrieval claim. "Retrieval beats
+the static policies built alongside it" is weak; "retrieval beats the tuned
+preference-allocation frontier of the previous experiment, scored on that
+experiment's own objective" is not.
+
+| relation distribution | budget | Exp 11 alone | + Exp 12 recall | delta HV |
+|---|---:|---:|---:|---|
+| `empirical_cells` | 40 | 0.089 | 0.349 | **+0.261** [0.238, 0.278] |
+| `empirical_cells` | 80 | 0.094 | 0.434 | **+0.340** [0.313, 0.362] |
+| `relation_balanced` | 40 | 0.145 | 0.372 | **+0.228** [0.202, 0.246] |
+| `relation_balanced` | 80 | 0.160 | 0.454 | **+0.295** [0.266, 0.322] |
+| `far` | 40 | 0.087 | 0.344 | **+0.257** [0.234, 0.278] |
+| `far` | 80 | 0.099 | 0.427 | **+0.328** [0.300, 0.351] |
+
+Adding retrieval roughly **triples to quadruples** the attained hypervolume,
+and every interval excludes zero. It holds under `far` -- 100% orthogonal
+demand, the hardest case for any conditioned message -- and under
+`relation_balanced`, where Experiment 11's own policies do best. Under the
+relation weighting the retrieval arms reach `U_future` around 0.90 while the
+preference-allocation arms top out near 0.30
+(`figures/fig5_bridge_frontier.png`).
+
+The honest reading is that preference allocation and retrievability are not
+competing settings of one dial. Experiment 11 showed that an explicit quota
+*controls* the present-future trade-off; this shows that controlling it is
+worth much less than escaping it.
 
 **Audit:** sender and answerer **$0.2303** across 33,000 calls (37.7% cache
 hits). Figures and tables in
