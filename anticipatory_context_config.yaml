@@ -1,0 +1,127 @@
+# Experiment 12: anticipatory context management under uncertain future demand.
+#
+# Extends Experiment 10's utility matrix and Experiment 11's frontier analysis
+# with (a) an explicit split between the true future-use distribution P and the
+# harness's estimate P-hat, and (b) an action space wider than "one message":
+# keep, compress, externalize, pointer, retrieve, discard.
+#
+# The channel, corpus, answer isolation, scoring and judge are inherited
+# unchanged from Experiment 10 so that any difference is attributable to the
+# action space and the prediction, not to a changed measurement.
+
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+answerer:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  sender_temperature: 0.0
+  answer_temperature: 0.0
+  closed_book_temperature: 0.7
+  answer_max_tokens: 32
+
+# A fresh cap. Never inherited from Experiment 11 -- one experiment, one cap.
+cost:
+  cap_usd: 6.0
+  api_call_cap: 120000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 12
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  retry_after_max_s: 300.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+budget:
+  words: [40, 80]
+  tokens_per_word: 1.35
+  api_max_tokens_headroom: 2.2
+  api_max_tokens_floor: 128
+  fill_floor_ratio: 0.85
+  max_length_corrections: 3
+
+dataset:
+  contexts_jsonl: data/communication_regret/relation_dossiers.jsonl
+  n_contexts: 16
+
+anticipatory:
+  # Half the budget is reserved for the currently known question in every arm,
+  # so no arm can win U_now merely by refusing to provide for the future. The
+  # arms differ only in how the remaining half is spent.
+  now_reserve_fraction: 0.5
+  retrieval_k: 2
+  # Above this normalised entropy the uncertainty-aware policy stops predicting
+  # and switches to storing everything recallably. 0.75 of maximum sits between
+  # the peaked truth (0.60) and uniform (1.00).
+  entropy_gate: 0.75
+  compression_target_ratio: 0.5
+
+  # The true future-use distribution. Peaked, because a near-uniform P leaves
+  # the dilution knob almost no range to sweep: TV(P, dilute(P,tau)) = tau *
+  # TV(P, U), so a flat P makes every tau level look alike. 0.7/0.1/0.1/0.1
+  # gives TV(P,U) = 0.45.
+  true_distribution:
+    concentration: 0.7
+    # The aspect demand actually lands on, relative to the conditioning
+    # aspect's position in the canonical aspect order. 1 = the next aspect.
+    target_offset: 1
+
+  noise:
+    tau: [0.0, 0.5, 1.0]      # dilution: uncertain but unbiased
+    sigma: [0.5, 1.0]         # displacement: systematically wrong
+
+  # tau=0 is the perfect aspect-level oracle; tau=1 is the uniform hedge;
+  # sigma=1 is the confidently wrong endpoint. They are not separate arms.
+  policies:
+    - static_conditioned          # Experiment 10 analogue: no future provision
+    - blind                       # no prediction; preserve broadly (V_anticipation reference)
+    - oracle_exact                # knows the actual future question
+    - preserve__tau0              # predict, P-hat = P
+    - preserve__tau0p5
+    - preserve__tau1              # predict, but maximally uncertain
+    - preserve__sigma0p5
+    - preserve__sigma1            # confidently wrong
+    - pointer__tau0               # predict + keep the rest retrievable
+    - pointer__tau0p5
+    - pointer__tau1
+    - pointer__sigma0p5
+    - pointer__sigma1
+    - retrieval_only              # no prediction; everything recallable
+    - uncertainty_aware__tau0     # adapts on H(P-hat): confident -> preserve
+    - uncertainty_aware__tau1     # adapts on H(P-hat): uncertain -> retrieve
+
+analysis:
+  primary_metric: judge_correct
+  metrics: [judge_correct, em, f1]
+  bootstrap_resamples: 5000
+  ci_level: 0.95
+  cluster: context
+  # lambda for the scalarised objective when reporting a single utility.
+  lambda_default: 1.0
+  # Cost is scalarised so Experiment 11's 3-objective hypervolume machinery
+  # applies unchanged: C = beta*C_context + gamma*C_retrieval. gamma < beta
+  # encodes that a retrieved word occupies context only transiently.
+  beta: 1.0
+  gamma_grid: [0.25, 0.5, 1.0]
+  gamma_default: 0.5
+  bootstrap_seed: 12100
+
+outputs:
+  run_root: runs/anticipatory_context
+  result_root: results/anticipatory_context
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 3.0
+  concurrency: 16
