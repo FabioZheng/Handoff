@@ -1131,6 +1131,85 @@ existing specialization–reusability curve.
   `-0.310` [-0.376, -0.243] with `U_future = 0.04`, replicating Experiment 10's
   specialization cost inside the new action space.
 
+### Can lambda be calibrated or learned rather than fixed?
+
+Lambda is a preference, not a fact, so it cannot be estimated from data the way
+a parameter can. The answerable question is how much the *policy choice*
+depends on it. Sweeping lambda and taking the argmax policy at each level,
+with cost normalised so the word-valued cost term does not swamp two [0,1]
+utilities:
+
+| budget | lambda <= 0.25 | lambda >= 0.5 |
+|---:|---|---|
+| 40 | `static_conditioned` | `uncertainty_aware__tau1` |
+| 80 | `static_conditioned` | `retrieval_only` |
+
+There is exactly **one breakpoint**, between 0.25 and 0.5, and above it the
+choice does not change again across a sixteen-fold range of lambda (0.5 to
+8.0). The practical implication is that lambda barely needs calibrating: a
+harness only has to decide whether it values a future query at least about half
+as much as the current one. Precision beyond that buys nothing.
+
+Split-half generalisation confirms the choice transfers. Selecting the policy
+on eight dossiers and scoring it on the other eight gives a **selection regret
+of exactly 0.0000 at every lambda and both budgets**, including the four cells
+where the fitted choice and the held-out best differ by name.
+
+Those name disagreements are not instability. Bootstrap selection stability is
+1.00 at 40 words but ~0.64 at 80, and the reason is that `retrieval_only` and
+`uncertainty_aware__tau1` are *behaviourally identical* at 80 words -- an
+estimate at `tau=1` is maximum-entropy, so the entropy gate fires and the
+adaptive policy becomes the retrieval policy (both: `U_now` 0.98,
+`U_future` 0.90, `C_context` 27.6, `C_retrieval` 55.5). The bootstrap flips
+between two labels for one behaviour. The zero selection regret is what proves
+that reading, and it is why stability alone would have been a misleading
+statistic here.
+
+### Does regret degrade smoothly, or hit a threshold?
+
+Slope of `V_anticipation` against mismatch, context-clustered bootstrap:
+
+| budget | `preserve` (no recall) | `pointer` (recall) |
+|---:|---|---|
+| 40 | **-0.325** [-0.385, -0.268] | -0.002 [-0.046, +0.045] |
+| 80 | **-0.383** [-0.410, -0.357] | -0.035 [-0.081, -0.000] |
+
+Degradation is monotone and approximately linear across the sweep, and about
+**ten times steeper without recall than with it**. Note the low `R^2`
+(0.19-0.29 for `preserve`, ~0.00 for `pointer`): the trend in the mean is
+clear, but mismatch explains only a modest share of rotation-level variance.
+
+**No threshold test was run, and the design cannot support one.** With at most
+four distinct mismatch levels per family, a breakpoint model cannot be
+separated from a steep slope. Claiming smoothness on this evidence would be as
+unfounded as claiming a threshold. A denser sweep would settle it and needs new
+generation.
+
+### Is any of this an artefact of total variation?
+
+Repeating the same fit against Jensen-Shannon divergence reproduces every sign
+and every significance verdict: `preserve` at -0.240 [-0.298, -0.188] and
+-0.436 [-0.472, -0.402]; `pointer` at +0.006 [-0.041, +0.058] and
+-0.046 [-0.106, -0.000]. The separation between predicting and recalling is a
+property of the policies, not of the divergence used to measure the estimate.
+See `figures/fig4_divergence_check.png`.
+
+### Equal mismatch, unequal harm -- confirmed
+
+Pairing arms at identical `TV = 0.45` and differencing within rotation, the
+dilution arm scores **-0.054** [-0.094, -0.014] against the displacement arm
+for `preserve` at 80 words: reliably different at the same mismatch. The fully
+uncertain estimate does *worse* than the partly biased one, because dilution at
+`tau=1` discards the peak entirely while displacement at `sigma=0.5` still
+retains half the true mass.
+
+The effect is conditional -- at 40 words, and for `pointer` at either budget,
+the interval includes zero (and is exactly zero for `pointer` at 80 words,
+where the two arms are the same policy). But one reliable case is enough to
+show that regret is **not a function of mismatch magnitude alone**, which is
+what justifies carrying two noise axes rather than a single "prediction
+quality" scalar.
+
 ### Boundary
 
 One corpus, one model pair, one true-distribution shape (0.7 concentration on a
@@ -1140,6 +1219,75 @@ the obvious next test before concluding that recall beats preservation in
 general. `U_future` is aspect-averaged before weighting, so an arm targeting
 sub-aspect structure is penalised by construction; that is the intended
 demand model, but it is a modelling choice rather than a fact about agents.
+
+### What this says about the research problem
+
+The framing question was whether the broader problem is best understood as
+anticipatory retrieval and context management under uncertain future
+information needs. On this evidence: **yes, but the weight belongs on the
+retrieval half, not the anticipatory half.**
+
+Ranking the four candidate strategies by what the data support:
+
+1. **Keep discarded evidence retrievable** — the dominant effect. It absorbs
+   ~90% of the cost of predicting badly, roughly doubles achievable
+   hypervolume, and survives charging a retrieved word the same as a context
+   word.
+2. **Adaptively combine by uncertainty** — works, but only because it switches
+   *into* retrieval. `uncertainty_aware__tau1` is behaviourally identical to
+   `retrieval_only`; the adaptation adds nothing the retrieval arm did not
+   already have in this setting.
+3. **Predict what will matter** — buys +0.114 when perfect, costs -0.236 when
+   wrong, and is not reliably better than no prediction once mismatch is large.
+4. **Preserve broadly** — the `blind` baseline; beaten by every retrieval arm
+   at equal or lower cost.
+
+The design principle that follows is not *predict better*. It is **make
+discarding reversible**. A harness that cannot anticipate well is not thereby
+disadvantaged, provided what it drops remains addressable; a harness that
+anticipates confidently and wrongly is actively worse off than one that does
+not try.
+
+Two secondary rules fall out. Prediction should be made at the granularity at
+which demand actually varies -- exact-question foresight lost to aspect-level
+foresight -- and lambda needs only to be placed on the correct side of a single
+threshold near 0.5.
+
+### New research questions
+
+- **Does recall still win when the retrieval query is degraded?** Ours is the
+  live question, which is realistic but favourable. This is the single result
+  most likely to move, and it is the next thing to run.
+- **When does recoverability fail?** Store size, lexical overlap and BM25
+  precision were never stressed here. There must be a store large or homogeneous
+  enough that retrieval stops finding the right unit -- and prediction should
+  start winning again at that point.
+- **Is there a regime where anticipation dominates?** High retrieval latency or
+  cost, or a channel where recall is impossible, should invert the ranking. We
+  only probed `gamma` up to parity with context words.
+- **What is the right prediction granularity, and can it be learned?**
+  Exact-question prediction was worse than aspect-level. Granularity is
+  currently a design choice, not an estimated quantity.
+- **Does the result survive a multi-step task with cumulative context?** Costs
+  here are per message and per query; nothing tests context accumulating across
+  a long-running agent session.
+
+### Pareto-pipeline integration: deliberately not pooled
+
+Experiment 12 emits `anticipatory-context-v1` and is **not** discovered by
+`render_frontier_study.py`, which accepts only
+`bounded-communication-frontier-v2` and `communication-regret-v1`. This is a
+decision, not an oversight.
+
+Both experiments reweight the same off-diagonal utility matrix on the same 16
+dossiers, but they weight it differently: Experiment 11's `U_future` is
+relation-weighted (paraphrase / same-entity / same-topic / orthogonal), while
+Experiment 12's is aspect-weighted under a declared true `P`. Placing them on
+one frontier would compare policies optimised against different objectives,
+which is exactly the cross-regime pooling Experiment 11's own configuration
+prohibits. A valid bridge exists -- rescore Experiment 12's sealed answers
+under Experiment 11's relation distributions, which needs no new generation --
+but it is a separate analysis, not a schema change.
 
 **Audit:** sender and answerer **$0.2303** across 33,000 calls (37.7% cache
 hits). Figures and tables in
