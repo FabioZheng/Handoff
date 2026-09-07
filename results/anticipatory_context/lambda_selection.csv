@@ -1,0 +1,15 @@
+budget_words,lambda,winner,selection_stability
+40.0,0.0,static_conditioned,1.0
+40.0,0.25,static_conditioned,1.0
+40.0,0.5,uncertainty_aware__tau1,0.9925
+40.0,1.0,uncertainty_aware__tau1,1.0
+40.0,2.0,uncertainty_aware__tau1,1.0
+40.0,4.0,uncertainty_aware__tau1,1.0
+40.0,8.0,uncertainty_aware__tau1,0.9525
+80.0,0.0,static_conditioned,1.0
+80.0,0.25,static_conditioned,1.0
+80.0,0.5,retrieval_only,0.64
+80.0,1.0,retrieval_only,0.63
+80.0,2.0,retrieval_only,0.6375
+80.0,4.0,retrieval_only,0.665
+80.0,8.0,retrieval_only,0.635

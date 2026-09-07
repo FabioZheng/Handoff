@@ -1,0 +1,13 @@
+{
+  "lambda_levels": 14,
+  "distinct_winners": [
+    "retrieval_only",
+    "static_conditioned",
+    "uncertainty_aware__tau1"
+  ],
+  "split_half_matches": 6,
+  "split_half_total": 10,
+  "max_selection_regret": 0.0,
+  "equal_mismatch_cells": 4,
+  "equal_mismatch_nonzero": 1
+}

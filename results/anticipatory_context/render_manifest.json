@@ -1,0 +1,11 @@
+{
+  "figures": [
+    "fig1_value_of_anticipation",
+    "fig2_retrieval_frontier",
+    "fig3_policy_tradeoff"
+  ],
+  "frontier_shift_cells": 6,
+  "positive_shift_cells": 6,
+  "harmful_anticipation_arms": 2,
+  "helpful_anticipation_arms": 21
+}

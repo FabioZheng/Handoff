@@ -1,0 +1,11 @@
+budget_words,lambda,chosen_on_fit,best_on_held,matches,held_value_chosen,held_value_best,selection_regret
+40.0,0.0,static_conditioned,static_conditioned,True,0.7021594865100087,0.7021594865100087,0.0
+40.0,0.5,uncertainty_aware__tau1,uncertainty_aware__tau1,True,0.7515771186901654,0.7515771186901654,0.0
+40.0,1.0,uncertainty_aware__tau1,uncertainty_aware__tau1,True,1.203790660356832,1.203790660356832,0.0
+40.0,2.0,uncertainty_aware__tau1,uncertainty_aware__tau1,True,2.1082177436901652,2.1082177436901652,0.0
+40.0,4.0,uncertainty_aware__tau1,uncertainty_aware__tau1,True,3.9170719103568317,3.9170719103568317,0.0
+80.0,0.0,static_conditioned,static_conditioned,True,0.7525055679287305,0.7525055679287305,0.0
+80.0,0.5,retrieval_only,uncertainty_aware__tau1,False,0.9631623515219006,0.9631623515219006,0.0
+80.0,1.0,retrieval_only,uncertainty_aware__tau1,False,1.4173290181885672,1.4173290181885672,0.0
+80.0,2.0,retrieval_only,uncertainty_aware__tau1,False,2.3256623515219004,2.3256623515219004,0.0
+80.0,4.0,retrieval_only,uncertainty_aware__tau1,False,4.142329018188567,4.142329018188567,0.0

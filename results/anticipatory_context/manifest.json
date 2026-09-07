@@ -1,0 +1,33 @@
+{
+  "schema_version": "anticipatory-context-v1",
+  "dossiers": 16,
+  "rotations": 64,
+  "policies": [
+    "static_conditioned",
+    "blind",
+    "oracle_exact",
+    "preserve__tau0",
+    "preserve__tau0p5",
+    "preserve__tau1",
+    "preserve__sigma0p5",
+    "preserve__sigma1",
+    "pointer__tau0",
+    "pointer__tau0p5",
+    "pointer__tau1",
+    "pointer__sigma0p5",
+    "pointer__sigma1",
+    "retrieval_only",
+    "uncertainty_aware__tau0",
+    "uncertainty_aware__tau1"
+  ],
+  "budgets_words": [
+    40,
+    80
+  ],
+  "messages": 2048,
+  "answers": 32768,
+  "lambda": 1.0,
+  "beta": 1.0,
+  "gamma": 0.5,
+  "bootstrap_resamples": 5000
+}
