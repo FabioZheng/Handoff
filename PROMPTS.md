@@ -1,15 +1,13 @@
 # Prompts reference
 
-Every prompt string used anywhere in this pipeline, in one place. The actual
-Python constants still live in their source files — moving them would mean
-either a repo-wide import refactor or risking a byte-for-byte change to a
-cache key (the on-disk cache is keyed on exact message content, so an
-accidental whitespace change during a move would silently start paying for
-calls that used to be free). This file is the map, not a new source of truth;
-if a prompt changes, edit it at the file:line given and update this file to
-match.
+This file collects every prompt used anywhere in the pipeline. The prompts themselves still
+live as Python constants in their source files, and each section gives the file and line. They
+stay there because the on-disk cache is keyed on the exact message text: moving a constant and
+accidentally changing a space would turn free cached calls into paid ones. Treat this file as a
+map, not a second source of truth. If you change a prompt, change it at the file and line given
+here and then update the copy in this file.
 
-Every experiment number below refers to the numbering in
+Experiment numbers follow
 [results/HANDOFF_EXPERIMENTS_REPORT.md](results/HANDOFF_EXPERIMENTS_REPORT.md).
 
 ## Contents
@@ -35,7 +33,7 @@ Every experiment number below refers to the numbering in
 
 ### C1 parametric-leakage filter — closed-book check
 
-**File:** [`src/data.py:21`](src/data.py#L21) (`CLOSED_BOOK_SYSTEM`), user template at
+**File:** [`src/data.py:21`](src/data.py#L21) (`CLOSED_BOOK_SYSTEM`), with the user template at
 [`src/data.py:238`](src/data.py#L238)
 
 ```
@@ -46,24 +44,22 @@ User:   Question: {question}
         Answer:
 ```
 
-**Role:** run three times per candidate question at temperature 0.7, no
-evidence supplied. A question is **discarded** if any of the three closed-book
-attempts already answers it correctly (exact match or token-F1 ≥ 0.6,
-`config.yaml: leakage_filter.f1_known_threshold`). This is the load-bearing
-control described in `AGENTS.md`: if the model can already answer from
-pretraining, corrupting or compressing the handoff can't hurt it, so that
-question would measure nothing.
+**Role:** each candidate question is answered three times at temperature 0.7, with no evidence.
+If any of the three answers is already correct (exact match, or token F1 ≥ 0.6 from
+`config.yaml: leakage_filter.f1_known_threshold`), the question is **dropped**. The reason: if
+the model can answer from pretraining, compressing or corrupting the handoff cannot lower its
+score, so the question would tell us nothing about the handoff.
 
-**Used by:** Experiment 1 (`src/run.py`) and Experiment 2 (`src/run_chain.py`
-via `src/chain_data.py` → `data.apply_c1`), because both draw questions from
-MuSiQue/HotpotQA through `data.py`'s `Question` type.
+**Used by:** Experiment 1 (`src/run.py`) and Experiment 2 (`src/run_chain.py`, through
+`src/chain_data.py` → `data.apply_c1`). Both draw MuSiQue and HotpotQA questions through the
+`Question` type in `data.py`.
 
-**Not used by:** Experiments 3, 4, 5. They sample from SQuAD / MS MARCO
-through their own standalone construction code and do not run a closed-book
-leakage check. This is a real asymmetry, not an oversight to paper over — it
-means a nonzero fraction of those questions could in principle be answerable
-from the model's parametric memory alone, which the C1-filtered experiments
-are specifically designed to rule out.
+**Not used by:** Experiments 3 and 4, or the original Experiment 5 construction. They build their
+SQuAD and MS MARCO samples with their own code and skip the closed-book check, so some of their
+questions could in principle be answered from memory alone, which is exactly what the filter
+rules out elsewhere. This is a real difference between the experiments, not something to gloss
+over. (Experiment 5's current prebuilt pairs do pass C1; see its
+[dataset construction](#dataset-construction).)
 
 ### Final-answer persona
 
@@ -75,27 +71,24 @@ Reply with only the short answer span - no explanation, no full sentence, no pre
 If the material seems insufficient, still give your single best guess.
 ```
 
-**Role:** the system prompt for every "final answer" call in the whole
-codebase — whoever produces the score-relevant prediction, whether reading a
-handoff or the raw context. Shared deliberately (comment at
-[`handoffs.py:22`](src/handoffs.py#L22)): if `A_full` and a handoff mechanism's
-answerer used different wording, a measured accuracy difference could be a
-prompt artefact instead of a handoff effect.
+**Role:** the system prompt for every call in the codebase that produces a scored answer,
+whether the model is reading a handoff or the raw context. It is shared on purpose (see the
+comment at [`handoffs.py:22`](src/handoffs.py#L22)): if `A_full` and a handoff's answerer were
+worded differently, an accuracy gap could come from the wording rather than from the handoff.
 
-**Used by:** `src/handoffs.py` (`A_full`, `orchestrator_answer`), and directly
-or via `hm.ANSWER_SYSTEM` in `src/run_chain.py`, `src/run_redundant_signal_ratio.py`,
-`src/run_retrieval_quality.py`, `src/run_summary_generalization.py`, and
-`src/run_slack_retrieval.py`. `src/run_slack_facts.py` (`ANSWER_SYSTEM`,
-`run_slack_facts.py:41`) defines a genuinely different one instead — its task
-asks for multiple labelled facts per question (`L1: answer`, `L2: answer`, …),
-which the shared single-span persona above can't express, so this is a
-legitimate task-shape difference, not an accidental duplicate.
+**Used by:** `src/handoffs.py` (`A_full`, `orchestrator_answer`), and, directly or through
+`hm.ANSWER_SYSTEM`, `src/run_chain.py`, `src/run_redundant_signal_ratio.py`,
+`src/run_retrieval_quality.py`, `src/run_summary_generalization.py` and
+`src/run_slack_retrieval.py`. `src/run_slack_facts.py` defines its own `ANSWER_SYSTEM`
+(`run_slack_facts.py:41`) because its task asks for several labelled facts per question
+(`L1: answer`, `L2: answer`, …), which the single-span prompt above cannot ask for. That is a
+different task format, not an accidental copy.
 
 ### LLM judge — answer correctness vs. gold
 
-**File:** [`src/judge.py:24`](src/judge.py#L24) (`JUDGE_SYSTEM`), instruction at
-[`src/judge.py:31`](src/judge.py#L31), user template built by
-`judge_user_prompt()` at [`src/judge.py:42`](src/judge.py#L42)
+**File:** [`src/judge.py:24`](src/judge.py#L24) (`JUDGE_SYSTEM`), with the instruction at
+[`src/judge.py:31`](src/judge.py#L31) and the user template built by `judge_user_prompt()` at
+[`src/judge.py:42`](src/judge.py#L42)
 
 ```
 System: You grade short answers to reading-comprehension questions. You are
@@ -122,26 +115,24 @@ User:   Question: {question}
         Reply with exactly one word: CORRECT or INCORRECT.
 ```
 
-**Role:** semantic-correctness metric, secondary to EM/token-F1 (never
-replaces them — see `AGENTS.md`, "EM/F1 are primary; an LLM judge is a
-secondary semantic metric"). Runs at temperature 0 on `openai/gpt-4o-mini`
-— deliberately a **different model family** from every llama model under
-test, to avoid a model grading its own family's outputs. Added 2026-08-20 to
-replace BERTScore, which scored surface-form similarity rather than whether
-the answer was actually right.
+**Role:** a semantic correctness score. It is secondary: exact match and token F1 remain the
+primary metrics and are always reported next to it, never replaced by it. It runs at temperature
+0 on `openai/gpt-4o-mini`, which comes from a **different model family** than the Llama models
+under test, so no model grades answers from its own family. It was added on 2026-08-20 to
+replace BERTScore, which measured surface similarity rather than whether the answer was right.
 
-**Used by:** Experiment 2 (`run_chain.py`), Experiment 4
-(`run_redundant_signal_ratio.py`), Experiment 5 (`run_summary_generalization.py`),
-and Experiment 6 (`run_multilingual_handoffs.py`). Not yet wired into
-Experiment 1 or Experiment 3.
+**Used by:** Experiment 2 (`run_chain.py`), Experiment 3 (`run_retrieval_quality.py`),
+Experiment 4 (`run_redundant_signal_ratio.py`), Experiment 5 (`run_summary_generalization.py`),
+Experiment 6 (`run_multilingual_handoffs.py`), and the later experiments described below.
+Experiment 1 does not use it.
 
 ---
 
 ## Experiment 1 — single-handoff mechanism pilot<a id="experiment-1"></a>
 
-**File:** [`src/handoffs.py`](src/handoffs.py). Ran mechanisms: `A_full`,
-`B_freeform`, `E_oracle`. `C_structured`/`D_extractive` are implemented and
-offline-tested but were never run against the live API (`AGENTS.md`).
+**File:** [`src/handoffs.py`](src/handoffs.py). The pilot ran `A_full`, `B_freeform` and
+`E_oracle`. `C_structured` and `D_extractive` are implemented and covered by the offline
+selftest, but were never run against the live API.
 
 ### Subagent persona (B/C/D)
 
@@ -153,11 +144,10 @@ orchestrator cannot see and will never see. Your output is the orchestrator's
 ONLY information for answering the question. Anything you leave out is lost.
 ```
 
-**Role:** told to every subagent that writes a handoff in this experiment
-(not the final answerer — that's `ANSWER_SYSTEM` above). States the isolation
-guarantee in-prompt, matching the actual code-level guarantee (`seal()` /
-`SealedHandoff`, `handoffs.py:144`) that the orchestrator can never see source
-paragraphs.
+**Role:** the system prompt for every subagent that writes a handoff in this experiment. The
+final answerer uses `ANSWER_SYSTEM` instead. The prompt tells the model what the code enforces:
+the orchestrator never sees the source paragraphs (`seal()` / `SealedHandoff`,
+`handoffs.py:144`).
 
 ### `B_freeform` — prose handoff instruction
 
@@ -192,8 +182,8 @@ Include every claim the orchestrator needs, and no claim the source material doe
 Do not answer the question yourself. Output only the JSON object.
 ```
 
-**Role:** never run against the live API (see above) — implemented and
-covered by the offline selftest only.
+**Role:** never run against the live API. It is implemented and covered only by the offline
+selftest.
 
 ### `D_extractive` — verbatim-sentence handoff instruction
 
@@ -209,26 +199,25 @@ Output a single JSON object and nothing else:
 {"sentences": [{"source_para_id": <integer paragraph id>, "text": "<verbatim sentence>"}]}
 ```
 
-**Role:** never run against the live API — implemented and offline-tested
-only, same as `C_structured`.
+**Role:** like `C_structured`, implemented and tested offline but never run against the live API.
 
 ### `E_oracle` — no prompt at all
 
-`make_oracle()`, [`src/handoffs.py:304`](src/handoffs.py#L304), issues **zero**
-LLM calls. It pulls the dataset's own gold-supporting sentences directly and
-hands them to `ANSWER_SYSTEM`. Included here only so the mechanism inventory
-is complete — there is no prompt to catalogue.
+`make_oracle()`, [`src/handoffs.py:304`](src/handoffs.py#L304), makes **no** LLM calls. It takes
+the dataset's own gold supporting sentences and passes them straight to the answerer with
+`ANSWER_SYSTEM`. It appears here only so the list of mechanisms is complete; there is no prompt
+to show.
 
 ---
 
 ## Experiment 2 — repeated handoff degradation<a id="experiment-2"></a>
 
-**File:** [`src/run_chain.py:31-57`](src/run_chain.py#L31). Two parallel prompt
-sets — question-conditioned (every compressor sees the target question) and
-generic (no compressor ever sees it) — chosen by `question_conditioned` in the
-experiment's YAML config. A runtime self-test (`isolation_selftest()`,
-`run_chain.py:165`) proves later-stage compressors can only ever receive a
-`SealedHandoff`, never source documents.
+**File:** [`src/run_chain.py:31-57`](src/run_chain.py#L31). There are two prompt sets. In the
+question-conditioned set every compressor sees the target question; in the generic set none of
+them does. The `question_conditioned` flag in the experiment's YAML config chooses between them.
+A self-test that runs with the experiment (`isolation_selftest()`, `run_chain.py:165`) shows
+that compressors after stage 1 can only ever receive a `SealedHandoff`, never the source
+documents.
 
 ### System prompt
 
@@ -277,24 +266,22 @@ uncertainty, and source ids. Use only the previous notes.
 
 ### User-message assembly
 
-`initial_compress()` / `recompress()`, [`run_chain.py:83`](src/run_chain.py#L83)
-and [`run_chain.py:116`](src/run_chain.py#L116), splice in
-`Dataset: {dataset}\nEvidence length: {variant}\n\nSource material:\n{context}`
-(stage 1) or `Previous agent's notes:\n{handoff_text}` (stage ≥2), then
-optionally `Question the final agent must answer: {question}` when
-question-conditioned, then the instruction above.
+`initial_compress()` and `recompress()`, at [`run_chain.py:83`](src/run_chain.py#L83) and
+[`run_chain.py:116`](src/run_chain.py#L116), build the user message in this order: the source
+block `Dataset: {dataset}\nEvidence length: {variant}\n\nSource material:\n{context}` at stage 1,
+or `Previous agent's notes:\n{handoff_text}` at later stages; then, in the question-conditioned
+set only, `Question the final agent must answer: {question}`; and finally the instruction above.
 
 ### Final answer
 
-Reuses shared `ANSWER_SYSTEM` (see above). User message:
+Uses the shared `ANSWER_SYSTEM` (see above). At depth 0 the user message is
 `Dataset: {dataset}\nEvidence length: {variant}\n\nSource material:\n{context}\n\nQuestion: {question}\nAnswer:`
-at depth 0 (`answer_context()`, `run_chain.py:145`), or the same shared
-`orchestrator_answer()` template at depth ≥1.
+(`answer_context()`, `run_chain.py:145`). At depth 1 and deeper it is the shared
+`orchestrator_answer()` template.
 
-**Also drives:** the Qwen3-8B (`chain_qwen`) and Qwen3-32B (`chain_qwen32`)
-replications, plus the generic /
-question-omitted replication (`chain_generic`) — same prompt constants, just a
-different `question_conditioned` flag and model config.
+**Also drives:** the Qwen3-8B (`chain_qwen`) and Qwen3-32B (`chain_qwen32`) replications, and
+the replication in which compressors never see the question (`chain_generic`). They use the same
+prompt constants, with a different `question_conditioned` flag and model config.
 
 ---
 
@@ -314,33 +301,30 @@ Stage ≥2:  Rewrite the prior notes concisely. Preserve every fact needed to an
            the question, including qualifiers, numbers, dates, and relationships.
 ```
 
-**Role:** MS MARCO QA v2.1, good/medium/bad passage-recall through repeated
-compression. Same compression shape as Experiment 2 (system + stage-1 +
-stage-≥2 instruction) but reimplemented locally rather than importing
-`run_chain.py`'s constants — see [Wording inconsistency](#wording-inconsistency).
-Final answer reuses the shared `ANSWER_SYSTEM` via `hm.ANSWER_SYSTEM`.
+**Role:** MS MARCO QA v2.1 contexts with good, medium or bad passage recall, passed through
+repeated compression. The structure matches Experiment 2 (a system prompt, a stage-1 instruction
+and a stage ≥2 instruction), but the prompts are written out again in this file instead of being
+imported from `run_chain.py`; see [Wording inconsistency](#wording-inconsistency). The final
+answer uses the shared `ANSWER_SYSTEM` through `hm.ANSWER_SYSTEM`.
 
-**Construction (2026-08-20 revision, no prompt text changed):** retrieval is
-now real, not assumed. A self-contained Okapi BM25 index
-(`BM25Index`, [`src/retrieval.py`](src/retrieval.py) — shared with Experiment 4)
-is built over a bounded pool of MS MARCO passages. For each query:
-- **usable gold** = passages MS MARCO's own `is_selected` label marks
-  relevant **and** that this code's own BM25 ranking actually retrieves for
-  that query in its own top-k — "top retrieved and relevant," not relevance
-  judged in isolation.
-- **hard negatives** = passages BM25 ranks in that same query's top-k but
-  that are *not* usable gold — either the query's own non-relevant passages,
-  or another query's passage that is lexically on-topic enough to rank
-  highly. These replace the previous design's distractors, which were a
-  passage sampled at random from an unrelated query (an "easy" negative with
-  no lexical relationship to the query at all).
+**Construction (revised 2026-08-20; the prompt text did not change).** Retrieval is now real
+rather than assumed. A self-contained Okapi BM25 index (`BM25Index` in
+[`src/retrieval.py`](src/retrieval.py), shared with Experiment 4) is built over a bounded pool of
+MS MARCO passages. For each query:
+- **Usable gold** passages are those that MS MARCO's own `is_selected` label marks as relevant
+  **and** that this code's BM25 ranking actually returns in its top-k for that query. A passage
+  has to be both relevant and retrieved; relevance on its own is not enough.
+- **Hard negatives** are passages that BM25 ranks in that same query's top-k but that are not
+  usable gold. They are either the query's own non-relevant passages or another query's passage
+  that is close enough in wording to rank highly. They replace the earlier distractors, which
+  were passages sampled at random from an unrelated query: easy negatives with no lexical link to
+  the query at all.
 
-The good/medium/bad recall knob keeps the previous global-pool mechanic (a
-single seeded shuffle-and-slice over every usable-gold passage pooled across
-all queries, not a per-query fraction — a per-query fraction breaks down when
-a query has only one findable gold passage, since `round(1 * 0.5) == 0` by
-Python's banker's rounding while `bad`'s `max(1, ...)` floor stays at 1,
-inverting the intended `good > medium > bad` ordering).
+The good/medium/bad recall setting still uses the original global pool: one seeded
+shuffle-and-slice over all usable gold passages pooled across queries, rather than a fraction per
+query. A per-query fraction fails when a query has only one findable gold passage. Python's
+banker's rounding makes `round(1 * 0.5) == 0`, while `bad` keeps a floor of `max(1, ...)` = 1, so
+the intended `good > medium > bad` order would be reversed.
 
 ---
 
@@ -360,51 +344,47 @@ Stage ≥2:  Rewrite the prior notes concisely. Preserve every fact needed to an
            question, including qualifiers, numbers, dates, and relationships.
 ```
 
-**Role:** SQuAD, 10/5/1 answer-sufficient passages out of 10. Near-identical
-in substance to Experiment 3's prompts, again a separate local copy rather
-than a shared import — see [Wording inconsistency](#wording-inconsistency).
-Final answer reuses shared `ANSWER_SYSTEM`.
+**Role:** SQuAD contexts in which 10, 5 or 1 of the 10 passages are enough to answer the
+question. The prompts say essentially the same thing as Experiment 3's, but again they are a
+separate local copy rather than a shared import; see
+[Wording inconsistency](#wording-inconsistency). The final answer uses the shared
+`ANSWER_SYSTEM`.
 
-**Construction (2026-08-20 revision, no prompt text changed):** the
-non-relevant passages (10/5/1 → 0/5/9 distractor slots) now come from the
-same BM25 hard-negative mechanism as Experiment 3, reusing `src/retrieval.py`.
-An index is built once over every unique SQuAD paragraph (~2,000 in the
-validation split — small enough to index whole, unlike Experiment 3's bounded
-MS MARCO pool). For each base question, `hard_negative_ids` is that
-question's own BM25 top-60, excluding same-article paragraphs and paragraphs
-containing an answer alias — a real "retrieved but not relevant" negative,
-replacing the previous design's passage sampled uniformly at random from any
-unrelated article. Every pack is also fingerprinted by its actual passage
-content (`content_fingerprint()`, order-independent hash) and the fingerprint
-is included in the on-disk handoff/answer cache keys — the same qid can
-otherwise carry different passages across construction runs (a BM25 top-k
-change, a different seed, a code fix), and a cache keyed on qid alone let a
-stale cached handoff for an old passage set silently answer a new, unrelated
-passage set sharing the same qid. This is not hypothetical: it happened on
-the first post-BM25 rerun of Experiment 3 before the fingerprint fix was
-added — a cached "good"-condition handoff about Susan Rice answered a
-freshly-constructed pack about gross rental income, both keyed under the same
-qid from an earlier run. Both experiments fingerprint every pack now.
+**Construction (revised 2026-08-20; the prompt text did not change).** The non-relevant passages
+(0, 5 or 9 distractor slots for the 10/5/1 conditions) now come from the same BM25 hard-negative
+method as Experiment 3, reusing `src/retrieval.py`. One index is built over every unique SQuAD
+paragraph (about 2,000 in the validation split, small enough to index in full, unlike Experiment
+3's bounded MS MARCO pool). For each base question, `hard_negative_ids` is that question's BM25
+top 60, excluding paragraphs from the same article and paragraphs that contain an answer alias.
+These are real "retrieved but not relevant" negatives; the earlier design sampled a paragraph
+uniformly at random from any unrelated article.
+
+Every pack is also fingerprinted by its passage content (`content_fingerprint()`, an
+order-independent hash), and the fingerprint is part of the on-disk handoff and answer cache
+keys. Without it, the same qid can carry different passages across construction runs (after a
+change in the BM25 top-k, a different seed or a code fix), and a cache keyed on qid alone would
+let a stale handoff for an old passage set answer a new, unrelated one. This really happened on
+the first rerun of Experiment 3 after the switch to BM25, before the fingerprint was added: a
+cached "good"-condition handoff about Susan Rice answered a newly built pack about gross rental
+income, because both had the same qid from an earlier run. Both experiments now fingerprint
+every pack.
 
 ---
 
 ## Experiment 5 — question conditioning and cross-question generalization<a id="experiment-5"></a>
 
-**File:** [`src/run_summary_generalization.py`](src/run_summary_generalization.py).
-The system prompt is always `CHAIN_SYSTEM`, imported unchanged from
-`run_chain.py` (Experiment 2's question-conditioned set, above) — deliberately,
-so no effect measured here can be blamed on different wording from the main
-chain experiment. The two original arms (`conditioned`, `generic`) likewise
-reuse `INITIAL_INSTRUCTION` / `RECOMPRESS_INSTRUCTION` verbatim and add **no
-new prompt text at all**. Only the `paraphrase` arm introduces its own
-instruction, below.
+**File:** [`src/run_summary_generalization.py`](src/run_summary_generalization.py). The system
+prompt is always `CHAIN_SYSTEM`, imported unchanged from `run_chain.py` (Experiment 2's
+question-conditioned set, above). This is deliberate: no effect measured here can be blamed on
+wording that differs from the main chain experiment. The two original arms, `conditioned` and
+`generic`, also reuse `INITIAL_INSTRUCTION` and `RECOMPRESS_INSTRUCTION` verbatim and add **no new
+prompt text**. Only the `paraphrase` arm has its own instruction, shown below.
 
 ### What this experiment actually varies
 
-`compression_user_prompt()` assembles every arm from the same template, so the
-material block, ordering, separators, and the optional length directive are
-byte-identical across arms. Exactly two things move: whether a question block
-is present, and which instruction is used.
+`compression_user_prompt()` builds every arm from the same template, so the material block, the
+ordering, the separators and the optional length directive are identical across arms. Only two
+things change: whether a question block is present, and which instruction is used.
 
 ```
 conditioned: {material}
@@ -421,22 +401,21 @@ generic:     {material}
 | Arm | Question block | Instruction | Model call |
 |---|---|---|---|
 | `conditioned` | Question A | Experiment 2's question-conditioned set | yes |
-| `generic` | none | same set, unchanged | yes |
-| `paraphrase` | none | paraphrase-only set, below | yes |
-| `passthrough` | none | none — input forwarded unchanged | **no** |
+| `generic` | none | the same set, unchanged | yes |
+| `paraphrase` | none | the paraphrase-only set, below | yes |
+| `passthrough` | none | none; the input is forwarded unchanged | **no** |
 
-`prompt_difference_selftest()` asserts at runtime that (1) deleting the
-question block from the conditioned prompt yields a byte-identical string to
-the generic prompt, (2) no question-blind arm contains either question, and
-(3) substituting the generic instruction back into any question-blind arm
-reproduces the generic prompt exactly — so a `paraphrase`-vs-`generic`
-contrast measures the instruction and nothing else.
+At runtime, `prompt_difference_selftest()` checks three things: (1) deleting the question block
+from the conditioned prompt gives exactly the generic prompt; (2) no question-blind arm contains
+either question; and (3) putting the generic instruction back into any question-blind arm gives
+exactly the generic prompt. A `paraphrase`-versus-`generic` contrast therefore measures the
+instruction and nothing else.
 
 ### `paraphrase` — rewrite-without-compression instruction
 
-The only new prompt text in this experiment. It exists to separate *rewriting*
-from *compression and relevance filtering*: `conditioned` and `generic` both
-summarise, so neither can tell whether repeated rewriting is itself lossy.
+This is the only new prompt text in the experiment. `conditioned` and `generic` both summarise,
+so neither can show whether repeated rewriting loses information on its own. This arm exists to
+separate *rewriting* from *compression and relevance filtering*.
 
 Stage 1 (`PARAPHRASE_INITIAL_INSTRUCTION`):
 
@@ -448,25 +427,24 @@ prioritise, or keep only what seems relevant, and do not add any fact that is
 not already present.
 ```
 
-Stage ≥2 (`PARAPHRASE_RECOMPRESS_INSTRUCTION`) is the same instruction over the
-previous agent's notes, plus `Use only the previous notes.` — matching how the
-question-conditioned set differs between its own stage-1 and stage-≥2 forms.
+Stage ≥2 (`PARAPHRASE_RECOMPRESS_INSTRUCTION`) is the same instruction applied to the previous
+agent's notes, with `Use only the previous notes.` added. That mirrors how the question-conditioned
+set differs between its own stage-1 and stage ≥2 forms.
 
-`validate_modes()` refuses to run this arm alongside `length_target_words`: a
-word budget is a compression instruction and would contradict the arm's own
-instruction, silently destroying the variable it exists to isolate.
+`validate_modes()` refuses to run this arm together with `length_target_words`. A word budget is
+a compression instruction, so combining the two would contradict the arm's own instruction and
+remove the very variable it is meant to isolate.
 
-`passthrough` has no prompt because it issues no model call — it forwards its
-input unchanged (the raw context at stage 1). It is the zero-rewriting floor.
+`passthrough` has no prompt because it makes no model call. It forwards its input unchanged (the
+raw context at stage 1) and serves as the floor with no rewriting at all.
 
 ### Semantic-preservation judge — did a rewrite keep the meaning?
 
-`add_preservation_judge()`, [`src/judge.py`](src/judge.py), scores each
-consecutive handoff edge `M_i -> M_{i+1}`. It is the semantic counterpart to
-the deterministic lexical measures in
-[`src/paraphrase_metrics.py`](src/paraphrase_metrics.py), and follows the same
-rules as the answer judge above: different model family from the system under
-test, temperature 0, content-hashed cache.
+`add_preservation_judge()` in [`src/judge.py`](src/judge.py) scores each consecutive handoff edge
+`M_i -> M_{i+1}`. It is the semantic counterpart to the deterministic lexical measures in
+[`src/paraphrase_metrics.py`](src/paraphrase_metrics.py), and it follows the same rules as the
+answer judge above: a different model family from the system under test, temperature 0, and a
+content-hashed cache.
 
 System prompt:
 
@@ -476,32 +454,30 @@ first. You judge only whether the rewrite preserves the information in the
 original. You never judge style, length, or writing quality.
 ```
 
-User message: `Original notes:\n{M_i}\n\nRewritten notes:\n{M_i+1}\n\n` followed
-by the instruction, which asks for exactly one of `EQUIVALENT` (every fact,
-name, number, date, qualifier, relationship and uncertainty preserved despite
-different wording), `MINOR_LOSS` (main content held, one detail dropped or
-blurred), or `MAJOR_LOSS` (substantial omission, contradiction, or an added
-fact). Scored 1.0 / 0.5 / 0.0. An unparsed verdict is left **unscored** rather
-than defaulted, so a missing measurement never reads as preservation.
+The user message is `Original notes:\n{M_i}\n\nRewritten notes:\n{M_i+1}\n\n`, followed by an
+instruction that asks for exactly one verdict: `EQUIVALENT` (every fact, name, number, date,
+qualifier, relationship and uncertainty is preserved, even if worded differently), `MINOR_LOSS`
+(the main content is kept but one detail is dropped or blurred) or `MAJOR_LOSS` (a substantial
+omission, a contradiction or an added fact). These score 1.0, 0.5 and 0.0. A verdict that cannot
+be parsed is left **unscored** instead of getting a default value, so a missing measurement
+never counts as preservation.
 
 ### Final answer
 
-`answer()`, [`run_summary_generalization.py:306`](src/run_summary_generalization.py#L306),
-reuses shared `ANSWER_SYSTEM`. User message:
+`answer()`, [`run_summary_generalization.py:306`](src/run_summary_generalization.py#L306), uses
+the shared `ANSWER_SYSTEM`. User message:
 `Research material:\n{material}\n\nQuestion:\n{question}\nAnswer:`
 
 ### Dataset construction
 
-The only supported path is `load_prebuilt_pairs()`, using
-`summary_generalization_squad_pairs_config.yaml`. The dataset is built and
-validated ahead of time by
-[`src/build_squad_same_passage.py`](src/build_squad_same_passage.py). Each
-example takes two native SQuAD questions from one shared SQuAD passage, placed
-at a stratified slot among nine length-matched SQuAD passages. Both questions
-are independently audited for salience/independence and pass the closed-book
-C1 filter; every distractor is separately screened as irrelevant to both A and
-B. The obsolete constructors and configurations that joined questions from
-different passages have been removed.
+The only supported loader is `load_prebuilt_pairs()`, configured by
+`summary_generalization_squad_pairs_config.yaml`. The dataset is built and validated in advance by
+[`src/build_squad_same_passage.py`](src/build_squad_same_passage.py). Each example takes two
+native SQuAD questions about one shared SQuAD passage and places that passage at a stratified
+position among nine length-matched SQuAD passages. Both questions are audited for salience and
+independence, and both pass the closed-book C1 filter. Each distractor is screened separately to
+confirm it is irrelevant to both A and B. The older constructors and configs that paired
+questions from different passages have been removed.
 
 ---
 
@@ -510,9 +486,9 @@ different passages have been removed.
 **Files:** [`src/run_fictional_summary_generalization.py`](src/run_fictional_summary_generalization.py)
 and [`src/fictional_qa.py`](src/fictional_qa.py).
 
-Unlike Experiment 5's prose summaries, this runner asks for exactly K opaque
-card ids and renders their source text deterministically. Generic and
-conditioned prompts differ only by the announced-question block.
+Unlike Experiment 5, which asks for prose summaries, this runner asks for exactly K card ids and
+then renders those cards' source text in code. The generic and conditioned prompts differ only in
+the announced-question block.
 
 System:
 
@@ -522,7 +498,7 @@ Obey the requested JSON schema exactly. Select only supplied evidence-card ids;
 never write, merge, paraphrase, or invent evidence.
 ```
 
-User template (`generic` omits the marked question block):
+User template (`generic` leaves out the marked question block):
 
 ```
 Source evidence cards:
@@ -544,14 +520,14 @@ Return one JSON object and nothing else, with exactly this key:
 Copy only the C-number inside each CARD label; never include the word CARD in a value.
 ```
 
-On a schema failure, the same prompt is retried with only this suffix:
+If the reply does not match the schema, the same prompt is retried with only this suffix added:
 
 ```
 FORMAT CORRECTION: the previous response was invalid because {parse error}.
 Return exactly one JSON object with exactly {K} distinct valid ids and no other key.
 ```
 
-The final answerer receives shared `ANSWER_SYSTEM` and a frozen handoff:
+The final answerer gets the shared `ANSWER_SYSTEM` and a frozen handoff:
 
 ```
 Research material:
@@ -562,21 +538,20 @@ Question:
 Answer:
 ```
 
-Hidden queries never enter either selection prompt. Identical final-answer
-requests are single-flighted by their full request hash, so repeated logical
-roles cannot create different outputs for the same packet and question.
+Hidden questions never appear in either selection prompt. Identical final-answer requests are
+deduplicated by their full request hash (single-flighted), so the same packet and question cannot
+produce two different answers just because they appear in two roles.
 
 ---
 
 ## Experiment 6 — multilingual fixed vs switching handoffs<a id="experiment-6"></a>
 
-**File:** [`src/run_multilingual_handoffs.py`](src/run_multilingual_handoffs.py).
-This experiment imports `CHAIN_SYSTEM`, `INITIAL_INSTRUCTION`, and
-`RECOMPRESS_INSTRUCTION` from Experiment 2. It crosses the presence/absence of
-Question A with a fixed-language/switching-language schedule. The same exact
-language directive is appended in every arm. Before prompt assembly, the
-runner projects each reusable 1+9 SQuAD pack to its single `gold_AB` passage;
-no distractor text reaches any Experiment 6 model call.
+**File:** [`src/run_multilingual_handoffs.py`](src/run_multilingual_handoffs.py). This experiment
+imports `CHAIN_SYSTEM`, `INITIAL_INSTRUCTION` and `RECOMPRESS_INSTRUCTION` from Experiment 2. It
+crosses two factors: whether Question A is shown, and whether the language stays fixed or
+switches between stages. Every arm gets the same language directive. Before building any prompt,
+the runner reduces each reusable 1+9 SQuAD pack to its single `gold_AB` passage, so no distractor
+text reaches any model call in this experiment.
 
 ### System prompt
 
@@ -623,8 +598,7 @@ answer the question directly.
 
 ### Language directive
 
-`LANGUAGE_DIRECTIVE` is formatted with the language assigned to that pair and
-stage:
+`LANGUAGE_DIRECTIVE` is filled in with the language assigned to that pair and stage:
 
 ```
 OUTPUT LANGUAGE (mandatory): {language}. Write the entire replacement handoff
@@ -634,19 +608,18 @@ language for the prose. Summarize; do not translate or rewrite the source
 passage by passage. Do not use headings or one section per passage.
 ```
 
-This directive deliberately contains no sentence, word, paragraph, or other
-output-length target. The 1,500-token API limit in the configuration is only a
-non-binding runaway guard and is not part of the model prompt.
+The directive contains no length target of any kind (sentences, words, paragraphs or anything
+else). The 1,500-token API limit in the config only guards against runaway output and is not part
+of the prompt.
 
-At stage 1, the fixed and switching schedules receive the same assigned
-starting language and byte-identical prompts; the stored stage-1 handoff is
-copied between schedules. At later stages, fixed keeps that language while
-switching advances cyclically through English, German, French, Italian,
-Portuguese, and Spanish. Starting language is stratified by passage.
+At stage 1 the fixed and switching schedules start in the same assigned language with identical
+prompts, and the stored stage-1 handoff is shared between them. From stage 2 on, the fixed
+schedule keeps that language while the switching schedule cycles through English, German,
+French, Italian, Portuguese and Spanish. The starting language is stratified by passage.
 
 ### Final answer
 
-The shared `ANSWER_SYSTEM` is used with the original English question:
+The shared `ANSWER_SYSTEM` is used, with the original English question:
 
 ```
 Research material:
@@ -659,10 +632,9 @@ Answer:
 
 ### Language-compliance judge
 
-The saved audit includes both deterministic predominant-language detection and
-the following different-family LLM audit. The deterministic detector is the
-reported primary compliance metric because the LLM audit was overly
-conservative on clearly correct French prose.
+The saved audit includes both a deterministic detector of the predominant language and the LLM
+audit below, run by a different model family. The deterministic detector is the reported primary
+compliance metric, because the LLM audit was too strict on French prose that was clearly correct.
 
 System:
 
@@ -688,27 +660,26 @@ Otherwise reply MISMATCH.
 
 ## Experiment 8 — model heterogeneity across sequential handoffs<a id="experiment-8"></a>
 
-**This experiment adds no new prompt.** That is the point of it, so it is worth
-stating plainly: every string below is imported from Experiment 2 through
-Experiment 5's `conditioned` arm and asserted byte-identical at startup. The
-only thing that varies between arms is *which model receives the string*.
+**This experiment adds no new prompt**, and that is the design. Every string below is imported
+from Experiment 2 or from Experiment 5's `conditioned` arm, and a startup check confirms each one
+is unchanged. The only thing that varies between arms is *which model receives the prompt*.
 
 | Element | Source | Note |
 |---|---|---|
-| System prompt | `run_chain.CHAIN_SYSTEM` | Same constant as Experiments 2, 5 and 6 |
+| System prompt | `run_chain.CHAIN_SYSTEM` | The same constant as in Experiments 2, 5 and 6 |
 | Stage-1 instruction | `run_chain.INITIAL_INSTRUCTION` | See [Experiment 2](#experiment-2) |
 | Stage ≥2 instruction | `run_chain.RECOMPRESS_INSTRUCTION` | See [Experiment 2](#experiment-2) |
-| User-message assembly | `run_summary_generalization.compression_user_prompt(pair, notes, "conditioned", stage, cfg)` | Reused as a function, not retyped |
+| User-message assembly | `run_summary_generalization.compression_user_prompt(pair, notes, "conditioned", stage, cfg)` | Called as a function, not retyped |
 | Final answer | `handoffs.ANSWER_SYSTEM` + Experiment 5's answer template | See [Final-answer persona](#final-answer-persona) |
 | Answer judge | shared judge | See [LLM judge](#llm-judge--answer-correctness-vs-gold) |
 | Semantic-preservation judge | `judge.add_preservation_judge` | See [Experiment 5](#experiment-5) |
 
-### The one thing this experiment does add: a sealed rebuild of the stage ≥2 prompt
+### The one addition: a sealed rebuild of the stage ≥2 prompt
 
-`compression_user_prompt` needs the whole pair dictionary, which would put
-`render_context(pair)` — every source passage, gold and distractor — back inside
-a stage-2 call frame. Experiment 8 therefore rebuilds the identical string from
-a frozen `SealedHandoff` and nothing else:
+`compression_user_prompt` takes the whole pair dictionary, which would bring
+`render_context(pair)`, that is every source passage, gold and distractor alike, back into a
+stage-2 call. Experiment 8 therefore rebuilds the same string from a frozen `SealedHandoff` and
+nothing else:
 
 ```
 Previous agent's notes:
@@ -719,34 +690,32 @@ Question the final agent must answer: {sealed.question}
 {RECOMPRESS_INSTRUCTION}
 ```
 
-`prompt_selftest()` asserts, on every invocation, that this equals
-`compression_user_prompt(pair, notes, "conditioned", stage, cfg)` byte for byte,
-and that passing anything other than a `SealedHandoff` raises `TypeError`. So the
-experiment gains Experiment 2's structural isolation guarantee without drifting
-from Experiment 5's published prompt.
+On every run, `prompt_selftest()` checks that this string is byte-for-byte equal to
+`compression_user_prompt(pair, notes, "conditioned", stage, cfg)`, and that passing anything
+other than a `SealedHandoff` raises `TypeError`. The experiment thus gets Experiment 2's
+structural isolation without drifting from Experiment 5's published prompt.
 
 ### Model-blindness check
 
-The same self-test asserts that neither the stage-1 nor the stage ≥2 prompt
-contains any of `llama`, `qwen`, `mistral`, `ministral`, `gemma`, or
-`parameter count`. No agent is told which model wrote its input, which model
-will read its output, or how large any of them are. A model-composition effect
-therefore cannot come from a model being *told* about the composition.
+The same self-test checks that neither the stage-1 nor the stage ≥2 prompt contains any of
+`llama`, `qwen`, `mistral`, `ministral`, `gemma` or `parameter count`. No agent is told which
+model wrote its input, which model will read its output, or how large either of them is. An
+effect of model composition therefore cannot come from a model being *told* about the
+composition.
 
 ### Per-model generation controls
 
-Two registry entries carry a model-native control, applied by `LLMClient` and
-included in the cache key exactly as `qwen32_chain_config.yaml` already applies
-it. These are properties of the decoder, not of the condition:
+Two registry entries carry a model-specific control. `LLMClient` applies it and includes it in the
+cache key, in the same way `qwen32_chain_config.yaml` already does. It is a property of the
+decoder, not of the experimental condition:
 
 | Model | Control | Why |
 |---|---|---|
-| `qwen/qwen3-8b`, `qwen/qwen3-32b` | `reasoning: {effort: none}` **and** the system-prompt suffix `/no_think` | Qwen3 thinks by default and the gateway switch is not honoured by every routed provider. Without both, the shared 1,500-token budget is spent on hidden reasoning rather than on the visible handoff the experiment measures. |
+| `qwen/qwen3-8b`, `qwen/qwen3-32b` | `reasoning: {effort: none}` **and** the system-prompt suffix `/no_think` | Qwen3 reasons by default, and not every provider that OpenRouter routes to honours the gateway switch. Without both, the shared 1,500-token budget is spent on hidden reasoning instead of the visible handoff that the experiment measures. |
 
-This means the two Qwen entries receive one extra line in their system prompt
-that the other six models do not. It is a necessary per-model control rather
-than a design difference, but it is a real asymmetry and is listed as a confound
-in the report.
+As a result, the two Qwen models get one extra line in their system prompt that the other six
+models do not. The control is necessary rather than a design choice, but it is still an
+asymmetry, and the report lists it as a confound.
 
 ---
 
@@ -755,16 +724,15 @@ in the report.
 **Files:** [`src/run_fictional_model_bottleneck.py`](src/run_fictional_model_bottleneck.py)
 and [`src/fictional_qa.py`](src/fictional_qa.py).
 
-System for both selector stages:
+System prompt for both selector stages:
 
 ```
 You are an evidence-routing agent. Select only evidence-card ids supplied in the prompt.
 Obey the requested number of slots exactly and return only the requested JSON object.
 ```
 
-Stage 1 uses Experiment 5b's source-card template with `K=3` and includes
-Question A. The future Question B is absent from this call. After sealing,
-stage 2 uses:
+Stage 1 uses Experiment 5b's source-card template with `K=3` and includes Question A. The later
+Question B does not appear in this call. After the packet is sealed, stage 2 uses:
 
 ```
 Previous sealed handoff:
@@ -781,10 +749,10 @@ Return one JSON object and nothing else, with exactly this key:
 Copy only the C-number inside each CARD label; never include the word CARD in a value.
 ```
 
-The `restore` and `sham` arms change packet contents mechanically and add no
-instruction. The `reopen` positive control uses the stage-1 source-card
-template with all six source cards, Question B, and `K=1`; it is explicitly not
-a sealed factorial arm. A malformed selection is retried with:
+The `restore` and `sham` arms change the packet contents in code and add no instruction. The
+`reopen` positive control uses the stage-1 source-card template with all six source cards,
+Question B and `K=1`; it is explicitly not one of the sealed factorial arms. A malformed selection
+is retried with:
 
 ```
 FORMAT CORRECTION: the previous response was invalid because {parse error}.
@@ -792,33 +760,29 @@ Return exactly {K} distinct bare C-number ids in the requested JSON object;
 do not include the word CARD.
 ```
 
-The fixed Mistral reader uses shared `ANSWER_SYSTEM` and
-`handoffs.orchestrator_answer`: `Research notes from your subagent:\n{packet}`
-followed by `Question: {Question B}\nAnswer:`. The answer judge is the shared
-different-family judge documented above.
+The fixed Mistral reader uses the shared `ANSWER_SYSTEM` and `handoffs.orchestrator_answer`:
+`Research notes from your subagent:\n{packet}` followed by `Question: {Question B}\nAnswer:`.
+Answers are scored by the shared different-family judge described above.
 
 ---
 
 ## Experiment 9 — handoff size adaptation<a id="experiment-9"></a>
 
-This is the **only** experiment in the project that does not use Experiment 2's
-handoff instruction verbatim, and the deviation is the point of the design
-rather than an oversight.
+This is the **only** experiment in the project that does not use Experiment 2's handoff
+instruction word for word. The change is part of the design, not an oversight.
 
 ### The base instruction: Experiment 2's, minus one word
 
-Experiment 2's shared instruction opens *"Write **concise** prose research
-notes …"*. That word is a size instruction. An experiment whose whole subject is
-size cannot use it as a control: `resize_large` measured against it would be
-"expand" versus "shrink", not "expand" versus "no size instruction", and
-`resize_small` measured against it would compare a requested shrink to an
-already-shrunk baseline.
+Experiment 2's instruction begins *"Write **concise** prose research notes …"*. "Concise" is an
+instruction about size, and this experiment is about size, so the word cannot be in the control.
+Measured against it, `resize_large` would compare "expand" with "shrink" rather than with "no size
+instruction", and `resize_small` would compare a requested shrink with a baseline that has already
+been told to shrink.
 
-The base is therefore the published string with `concise ` deleted — one
-deletion, asserted rather than assumed. `run_size_adaptation._drop_concise`
-raises unless the inherited string contains the substring exactly once, and both
-the runner's startup check and the offline selftest reconstruct the published
-string from the neutral one before anything else runs.
+The base instruction is therefore the published string with `concise ` removed: one deletion,
+checked rather than trusted. `run_size_adaptation._drop_concise` raises an error unless the
+inherited string contains that substring exactly once, and both the runner's startup check and the
+offline selftest rebuild the published string from the neutral one before anything else runs.
 
 | Stage | Constant | Text |
 |---|---|---|
@@ -826,15 +790,15 @@ string from the neutral one before anything else runs.
 | 1 | `NEUTRAL_INITIAL_INSTRUCTION` | "Write prose research notes that preserve all evidence needed to answer the question. Do not answer the question directly and do not add unsupported facts." |
 | ≥2 | `NEUTRAL_RECOMPRESS_INSTRUCTION` | "Rewrite the previous agent's notes into prose research notes for another agent. Preserve every answer-relevant fact, qualifier, date, number, relationship, uncertainty, and source id. Use only the previous notes. Do not answer the question directly." |
 
-The system prompt is untouched: it carries no size language, and it is shared
-byte-identically with Experiments 2, 5, 6 and 8.
+The system prompt is unchanged. It contains no size language and is shared, identical, with
+Experiments 2, 5, 6 and 8.
 
 ### The directives
 
-Appended to the instruction above and to nothing else. Every arm's user message
-is the control's user message plus its directive string — asserted for every
-directive at both stage 1 and stage ≥2 in the offline selftest, so the
-manipulation provably cannot leak into the material block.
+Each directive is appended to the instruction above and to nothing else. Every arm's user message
+is the control's user message plus its directive string. The offline selftest checks this for
+every directive at stage 1 and at stage ≥2, so the manipulation cannot leak into the material
+block.
 
 | Directive | Appended text |
 |---|---|
@@ -845,27 +809,25 @@ manipulation provably cannot leak into the material block.
 | `inform_large` | " The next agent's model has a 10,000-token context window." |
 | `resize_large` | " The next agent's model has a 10,000-token context window. Expand your handoff to make use of the available space." |
 
-These are **built compositionally, not written out**:
-`directive_text()` constructs a `resize` string as its `inform` string plus one
-clause from `REQUEST_CLAUSE`, so the two cannot drift apart in a later edit and
-leave the inform-vs-resize contrast measuring an accidental rewording. Three
-properties are asserted at startup:
+These strings are **built from parts, not typed out**. `directive_text()` builds each `resize`
+string as the matching `inform` string plus one clause from `REQUEST_CLAUSE`, so a later edit
+cannot make the two drift apart and turn the inform-versus-resize contrast into a comparison of
+accidental rewording. Three properties are checked at startup:
 
-1. `resize_X` starts with `inform_X`, and the remainder is exactly one of the
-   two declared request clauses;
-2. `inform_small` with its number substituted equals `inform_large` — the two
-   differ only in the advertised figure;
-3. `directive_text("none")` is the empty string, and the assembled control
-   prompt contains none of *token*, *context window*, *concise*, *expand*,
-   *shorter*, *longer*.
+1. `resize_X` starts with `inform_X`, and what follows is exactly one of the two declared request
+   clauses;
+2. `inform_small` with its number swapped equals `inform_large`, so the two differ only in the
+   advertised size;
+3. `directive_text("none")` is the empty string, and the assembled control prompt contains none
+   of *token*, *context window*, *concise*, *expand*, *shorter* or *longer*.
 
-The advertised size is not connected to `decoding.handoff_max_tokens`. The
-number claimed to the model and the budget enforced by the API are separate
-variables; the enforced budget is identical and non-binding in every arm.
+The advertised size is not linked to `decoding.handoff_max_tokens`. The number the model is told
+and the budget the API enforces are separate variables. The enforced budget is the same in every
+arm and is meant only as a safety ceiling.
 
 ### Full user message
 
-Stage 1 — same three-block layout as Experiment 5:
+Stage 1 uses the same three-block layout as Experiment 5:
 
 ```
 Source material:
@@ -876,11 +838,10 @@ Question the final agent must answer: {question}
 {NEUTRAL_INITIAL_INSTRUCTION}{directive}
 ```
 
-Stage ≥2 — built from a frozen `SealedHandoff` and nothing else, so the source
-document is unreachable. This is load-bearing here in a way it is not elsewhere:
-the experiment's central claim is that a fact reappearing after it vanished was
-*reconstructed*, and that claim collapses if a later stage could have re-read the
-document.
+Stage ≥2 is built from a frozen `SealedHandoff` and nothing else, so the source document cannot
+be reached. This matters more here than elsewhere. The experiment's central claim is that a fact
+which disappears and later reappears was *reconstructed* by the model, and that claim falls apart
+if a later stage could have reread the document.
 
 ```
 Previous agent's notes:
@@ -893,80 +854,73 @@ Question the final agent must answer: {sealed.question}
 
 ### Dataset-construction prompts
 
-Run once by `src/build_size_adaptation_data.py`, never during the experiment.
-All are issued to a strong writer model (`openai/gpt-5.2`, reasoning effort
-high), never to the system under test — the same separation the Wikipedia and
-counterfactual builders use.
+These run once, in `src/build_size_adaptation_data.py`, and never during the experiment. They all
+go to a strong writer model (`openai/gpt-5.2`, high reasoning effort), never to the model under
+test; the Wikipedia and counterfactual builders keep the same separation.
 
-| Prompt | Purpose | Validation applied to the reply |
+| Prompt | Purpose | Checks applied to the reply |
 |---|---|---|
-| `WRITER_SYSTEM` + `fictional_prompt` | one invented-subject page per item, subject type cycled by index so variety is a property of the build, not of one sampling run | length in range; answer verbatim in the page; no meta-language about the task |
-| `KNOWN_SUBJECT_PROMPT` | a passage about a famous subject plus a question the model is likely to answer from memory | answer verbatim in the passage |
-| `COUNTERFACTUAL_REWRITE_PROMPT` | rewrite that passage so the answer becomes a different plausible value | replacement verbatim in the rewrite; **original value absent from the rewrite**; replacement and original not substrings of one another |
-| `EXTRACT_SYSTEM` + `side_fact_prompt` | five reusable side facts per document | each answer verbatim in the document; none overlapping the target answer; none containing another |
+| `WRITER_SYSTEM` + `fictional_prompt` | one page about an invented subject per item; the subject type cycles by index, so the variety comes from the build and not from one sampling run | length in range; answer appears verbatim in the page; no commentary about the task |
+| `KNOWN_SUBJECT_PROMPT` | a passage about a famous subject, plus a question the model is likely to answer from memory | answer appears verbatim in the passage |
+| `COUNTERFACTUAL_REWRITE_PROMPT` | rewrite that passage so the answer becomes a different plausible value | replacement appears verbatim in the rewrite; **original value absent from the rewrite**; neither value is a substring of the other |
+| `EXTRACT_SYSTEM` + `side_fact_prompt` | five reusable side facts per document | each answer appears verbatim in the document; none overlaps the target answer; none contains another |
 
 ### Closed-book knowledge probe
 
-Reuses `data.CLOSED_BOOK_SYSTEM` and the C1 message shape, temperature and seed
-ladder unchanged, so an item already probed by an earlier build hits the cache
-rather than being re-paid for. See
-[C1 parametric-leakage filter](#shared-across-experiments).
+This reuses `data.CLOSED_BOOK_SYSTEM` together with C1's message format, temperature and seed
+ladder, unchanged, so an item already probed by an earlier build comes from the cache instead of
+being paid for again. See [C1 parametric-leakage filter](#shared-across-experiments).
 
-The difference from C1 is what is done with the samples. C1 asks one question —
-*does the model already know this?* — and rejects on yes. Experiment 9 draws
-**one** set of samples per item and judges it **twice**, against the original
-gold set and against the replacement gold set, requiring:
+What differs from C1 is how the samples are used. C1 asks one question, *does the model already
+know this?*, and drops the item if the answer is yes. Experiment 9 draws **one** set of samples per
+item and judges it **twice**, once against the original gold answers and once against the
+replacement gold answers. It requires:
 
-- *knows the original* ≥ 2 of 3 samples — without this, a handoff that merely
-  loses the fact is indistinguishable from one that reverted to memory;
-- *knows the replacement* in 0 of 3 samples — the standard C1 condition.
+- that the model *knows the original* in at least 2 of 3 samples. Without this, a handoff that
+  simply loses the fact looks the same as one that falls back on memory;
+- that the model *knows the replacement* in 0 of 3 samples, the usual C1 condition.
 
-Judging one sample set twice rather than drawing two is deliberate: two
-independent draws could disagree with each other, and the two conditions would
-then describe different behaviour rather than two readings of the same
-behaviour.
+Judging one sample set twice, instead of drawing two, is deliberate. Two independent draws could
+disagree, and the two conditions would then describe different behaviour rather than two readings
+of the same behaviour.
 
 ### Claim-support judge
 
-New in this experiment; lives in `judge.py` beside the answer and preservation
-judges, and uses the same different-family model (`openai/gpt-4o-mini`) at
-temperature 0.
+New in this experiment. It lives in `judge.py` next to the answer and preservation judges, and
+uses the same different-family model (`openai/gpt-4o-mini`) at temperature 0.
 
-System: "You check whether research notes stay within their source document. You
-are given a source document and notes written from it. You report only claims the
-document does not support."
+System: "You check whether research notes stay within their source document. You are given a
+source document and notes written from it. You report only claims the document does not support."
 
-The instruction defines rewording, summarising, reordering and omitting as never
-unsupported, and asks for a count plus a short quote per unsupported claim in a
-single parseable line. An unparseable reply is left **unscored** rather than
-scored zero, so a judge failure cannot average in as a clean handoff.
+The instruction says that rewording, summarising, reordering and omitting never count as
+unsupported. It asks for a count plus a short quote for each unsupported claim, on a single line
+that can be parsed. A reply that cannot be parsed is left **unscored** rather than scored as zero,
+so a judge failure cannot be averaged in as a clean handoff.
 
-It is scored against the **source document at every depth**, not against the
-immediately preceding note. Grading stage 3 against stage 2 would bless a
-fabrication that entered at stage 2 and was then copied faithfully, and no stage
-of a chain is ever licensed to introduce material the document did not contain.
+Claims are checked against the **source document at every depth**, not against the note that came
+just before. Checking stage 3 against stage 2 would accept a fabrication that entered at stage 2
+and was then copied faithfully, and no stage in a chain is ever allowed to add material the
+document does not contain.
 
 ### Final answer and answer judge
 
-`handoffs.ANSWER_SYSTEM` and Experiment 5's answer template, unchanged — see
-[Final-answer persona](#final-answer-persona). Each prediction is scored twice
-by the shared answer judge: once against the document's golds and once against
-the memorised golds, from **one** generated answer, so "reverted to memory" can
-never be a sampling artefact.
+`handoffs.ANSWER_SYSTEM` and Experiment 5's answer template, unchanged; see
+[Final-answer persona](#final-answer-persona). The shared answer judge scores each prediction
+twice from **one** generated answer: once against the document's gold answers and once against
+the memorised ones. "Fell back on memory" therefore can never be a sampling artefact.
 
 ---
 
 ## Experiment 10 — communication regret under a hard budget<a id="experiment-10"></a>
 
-**Files:** [`src/budget.py`](src/budget.py) (every sender-side string),
+**Files:** [`src/budget.py`](src/budget.py) (every string the sender sees),
 [`src/run_communication_regret.py`](src/run_communication_regret.py),
 [`src/build_regret_data.py`](src/build_regret_data.py).
 
-The sender prompt is assembled in one fixed order for every policy: source,
-then information need, then the identical length contract and output form. Only
-the information-need block varies among the four abstractive policies, and the
-offline selftest asserts that replacing it with a placeholder leaves one
-identical skeleton.
+Every policy builds the sender prompt in the same fixed order: the source, then the information
+need, then the shared length contract and output form. Among the four abstractive policies only
+the information-need block changes, and the offline selftest checks that replacing that block with
+a placeholder leaves one identical skeleton.
 
 System ([`src/budget.py:53`](src/budget.py#L53), `SENDER_SYSTEM`):
 
@@ -1029,14 +983,14 @@ The next agent will use your handoff to answer these questions:
 Communicate the information that answers those questions.
 ```
 
-`generic` deliberately says only that it has not been told the question.
-Mentioning that further questions may follow *is* the `reusable` treatment; the
-control must not contain the independent variable.
+`generic` deliberately says only that the sender has not been told the question. Saying that more
+questions may follow *is* the `reusable` treatment, and the control must not contain the variable
+being tested.
 
 ### Extractive control
 
-The two extractive arms reuse the `generic` / `conditioned` blocks verbatim and
-replace only the final output-form line:
+The two extractive arms reuse the `generic` and `conditioned` blocks verbatim and replace only the
+final output-form line:
 
 ```
 Copy sentences VERBATIM from the source material - character for character. Do
@@ -1046,9 +1000,9 @@ Separate the sentences with a single space. Do not answer any question yourself.
 
 ### Length corrections
 
-Both are byte-identical across policies, so an arm that overruns or under-fills
-more often is not also handed a different instruction. Applied up to
-`budget.max_length_corrections` times before deterministic truncation takes over.
+Both corrections are identical for every policy, so an arm that overshoots or undershoots more
+often is not also being given a different instruction. They are applied up to
+`budget.max_length_corrections` times, after which the message is truncated deterministically.
 
 Over the cap ([`src/budget.py:86`](src/budget.py#L86), `SHRINK_CORRECTION`):
 
@@ -1067,14 +1021,14 @@ extra room for more of what the source material contains rather than restating
 what you have already written. Return only the rewritten handoff.
 ```
 
-The expansion wording names no question and no future need — it asks only for
-more of what the source already contains, which is the one neutral way to fill a
-budget without inviting the padding failure mode Experiment 9 found.
+The expansion wording mentions no question and no future need. It only asks for more of what the
+source already contains, which is the one neutral way to fill a budget without inviting the
+padding failure that Experiment 9 found.
 
 ### Answering
 
-Shared `ANSWER_SYSTEM` from [`src/handoffs.py:24`](src/handoffs.py#L24), and a
-frozen `SealedHandoff`:
+The shared `ANSWER_SYSTEM` from [`src/handoffs.py:24`](src/handoffs.py#L24), with a frozen
+`SealedHandoff`:
 
 ```
 Research material:
@@ -1085,14 +1039,14 @@ Question:
 Answer:
 ```
 
-The direct-context ceiling is the only call that receives `context.source` as
-its material. Hidden questions never enter any sender prompt. Identical answer
-requests are single-flighted by full request hash, which matters here because a
-`generic` message is deliberately shared across every rotation of its context.
+The direct-context ceiling is the only call whose material is `context.source`. Hidden questions
+never appear in any sender prompt. Identical answer requests are deduplicated by their full request
+hash, which matters here because one `generic` message is deliberately shared by every rotation of
+its context.
 
 ### Dataset build
 
-Group independence audit ([`src/build_regret_data.py`](src/build_regret_data.py),
+The group independence audit ([`src/build_regret_data.py`](src/build_regret_data.py),
 `AUDIT_TEMPLATE`), run by a different model family:
 
 ```
@@ -1116,37 +1070,34 @@ Return only a JSON object:
 {"verdicts": [{"n": 1, "answerable": true, "distinct": true}, ...]}
 ```
 
-The relation-dossier writer prompt (`RELATION_WRITER_PROMPT`) asks a strong
-model for four sections, each stating one anchor fact about the main subject, a
-second fact about that same subject, and a fact about a different named entity
-introduced in the same section, plus a paraphrase question sharing the anchor's
-answer. Every designed answer is then verified verbatim in the generated text
-and the role structure is asserted before the corpus is written.
+The relation-dossier writer prompt (`RELATION_WRITER_PROMPT`) asks a strong model for four
+sections. Each section states one anchor fact about the main subject, a second fact about that
+same subject, and a fact about a different named entity introduced in the section, and each comes
+with a paraphrase question that has the same answer as the anchor. Every designed answer is then
+checked verbatim in the generated text, and the role structure is checked before the corpus is
+written.
 
-The C1 closed-book filter is the shared one at the top of this file, applied to
-**every** question of a candidate context: a group dies if any of its questions
-leaks.
+The C1 closed-book filter is the shared one at the top of this file. It is applied to **every**
+question of a candidate context, and the whole group is dropped if any one question leaks.
 
 ---
 
 ## Experiment 14 — compression mechanism: rewriting vs selection<a id="experiment-14"></a>
 
 **Files:** [`src/budget.py`](src/budget.py) (the `paraphrase` block),
-[`src/elimination.py`](src/elimination.py) (the selectors — no prompts at all),
+[`src/elimination.py`](src/elimination.py) (the selectors, which use no prompts),
 [`src/lm_unit_scores.py`](src/lm_unit_scores.py) (the scoring templates),
 [`src/run_communication_regret.py`](src/run_communication_regret.py).
 
-Experiment 14 reuses Experiment 10's channel byte-for-byte: the same
-`SENDER_SYSTEM`, the same `LENGTH_CONTRACT`, the same `PROSE_FORM`, the same
-reader prompt and the same judge. Only two new *prompts* exist in the whole
-experiment, and four of its arms use no prompt whatsoever.
+Experiment 14 reuses Experiment 10's channel exactly: the same `SENDER_SYSTEM`,
+`LENGTH_CONTRACT` and `PROSE_FORM`, the same reader prompt and the same judge. The whole experiment
+adds only two new *prompts*, and four of its arms use no prompt at all.
 
 ### The `paraphrase` information-need block
 
-[`src/budget.py`](src/budget.py), `policy_block`. Assembled in exactly the same
-fixed order as every other abstractive arm — source, information need, length
-contract, output form — so the only difference from `generic` is the third
-sentence:
+[`src/budget.py`](src/budget.py), `policy_block`. It is assembled in the same fixed order as every
+other abstractive arm (source, information need, length contract, output form), so it differs from
+`generic` only in the third sentence:
 
 ```
 The next agent will use your handoff to answer a question about this source material.
@@ -1155,27 +1106,24 @@ Restate the source material in your own words. Keep as much of it as fits in the
 length below, in the order it appears, rather than choosing which parts matter.
 ```
 
-The first two lines are `generic`'s, unchanged. That matters: the independent
-variable is *rewriting with selection* versus *rewriting without deliberate
-selection*, so the control may not differ in what it knows about the question.
-The arm is rotation-invariant for the same reason `generic` is — it never sees a
-question.
+The first two lines are `generic`'s, unchanged. That is necessary: the variable under study is
+*rewriting with selection* versus *rewriting without deliberate selection*, so the two arms must
+know the same amount about the question. For the same reason as `generic`, this arm never sees a
+question, so its message is the same in every rotation.
 
-Under a 20–160-word cap on a 389–517-word dossier, "preserve everything" is not
-achievable, and the instruction does not pretend otherwise ("as much of it as
-fits"). The unbounded rewriting reference is Experiment 5's paraphrase run; the
-unbounded no-compression reference is this run's own `direct_context` baseline.
+With a 20–160-word cap on a 389–517-word dossier, keeping everything is impossible, and the
+instruction does not pretend otherwise ("as much of it as fits"). The reference for rewriting with
+no budget is Experiment 5's paraphrase run, and the reference for no compression at all is this
+run's own `direct_context` baseline.
 
 ### The LM selector's scoring templates
 
-[`src/lm_unit_scores.py`](src/lm_unit_scores.py). These are **not** generation
-prompts: nothing is sampled from them. They are teacher-forced inputs whose
-token log-probabilities are the score, computed by a local pinned GPT-2 (the
-compressor LM of LLMLingua/LongLLMLingua's small configuration), never by the
-system under test.
+[`src/lm_unit_scores.py`](src/lm_unit_scores.py). These are **not** generation prompts; nothing is
+sampled from them. They are fed to the model with teacher forcing, and the token log-probabilities
+are the score. A local, pinned GPT-2 computes them (the compressor LM in the small configuration of
+LLMLingua and LongLLMLingua), never the system under test.
 
-Query-aware (`lm_conditioned`), scoring one evidence sentence against the
-current question:
+Query-aware (`lm_conditioned`), scoring one evidence sentence against the current question:
 
 ```
 {unit}
@@ -1184,61 +1132,57 @@ We can get the answer to this question from the text above.
 Question: {question}
 ```
 
-Query-agnostic baseline for the same question, with the sentence removed and
-everything else byte-identical:
+The query-free baseline for the same question removes the sentence and leaves everything else
+identical:
 
 ```
 We can get the answer to this question from the text above.
 Question: {question}
 ```
 
-The score is the difference of the two mean question-token log-probabilities —
-LongLLMLingua's coarse document-relevance direction, expressed as a contrast so
-it is comparable across dossiers:
+The score is the difference between the two mean question-token log-probabilities. This follows
+LongLLMLingua's coarse document-relevance score, written as a contrast so it can be compared across
+dossiers:
 
 ```
 score(unit, q) = (1/|q|) * [ sum_i log p(q_i | unit, q_<i) - sum_i log p(q_i | q_<i) ]
 ```
 
-The restrictive statement ("We can get the answer…") is LongLLMLingua's, kept in
-**both** templates so that the only difference between them is the presence of
-the sentence being scored.
+The sentence "We can get the answer…" comes from LongLLMLingua. It appears in **both** templates,
+so the only difference between them is whether the sentence being scored is present.
 
-Query-agnostic (`lm_generic`) uses no question at all — mean per-token surprisal
-of the sentence itself, BOS-prefixed:
+The query-free arm (`lm_generic`) uses no question at all. Its score is the mean per-token
+surprisal of the sentence on its own, after a BOS token:
 
 ```
 score(unit) = -(1/T) * sum_t log p(x_t | x_<t)
 ```
 
-Both LM arms use the same scorer, the same checkpoint and the same
-tokenisation; only the score differs. Conditioned scores are computed **only**
-for the four anchor questions that rotate into the conditioning role, so the
-hidden questions never reach the model — `src/lm_unit_scores.py:check_leakage`
-enforces that at write time and the offline selftest re-checks it at read time.
+Both LM arms use the same scorer, checkpoint and tokenisation; only the score formula differs.
+Conditioned scores are computed **only** for the four anchor questions that rotate into the
+conditioning role, so the hidden questions never reach the model.
+`src/lm_unit_scores.py:check_leakage` enforces this when the scores are written, and the offline
+selftest checks it again when they are read.
 
 ### The arms with no prompt
 
-`nonllm_generic` (TF-IDF centrality), `nonllm_conditioned` (BM25 against the
-current question), `random_selection` (a content-seeded shuffle) and
-`passthrough` (the source prefix that fits) involve no model and therefore no
-prompt. Their message is a concatenation of whole source
-sentences, in source order, verified against the source before delivery
+`nonllm_generic` (TF-IDF centrality), `nonllm_conditioned` (BM25 against the current question),
+`random_selection` (a shuffle seeded from the content) and `passthrough` (the part of the source,
+from the start, that fits) use no model and therefore no prompt. Each message is a sequence of
+whole source sentences in source order, checked against the source before delivery
 (`elimination.verify_verbatim`).
 
-This is the difference from Experiment 10's `extractive_*` arms, which are a
-*prompt* asking an LLM to copy sentences verbatim
-([`src/budget.py`](src/budget.py), `EXTRACTIVE_FORM`) and which complied only
-0–29% of the time on the SQuAD run. Experiment 14 does not reuse those arms or
-their results.
+This is what separates them from Experiment 10's `extractive_*` arms. Those arms are a *prompt*
+asking an LLM to copy sentences verbatim ([`src/budget.py`](src/budget.py), `EXTRACTIVE_FORM`), and
+on the SQuAD run the output actually was verbatim only 0–29% of the time. Experiment 14 does not
+reuse those arms or their results.
 
 ---
 
 ## Cross-cutting wording inconsistency<a id="wording-inconsistency"></a>
 
-Three files independently define a handoff system prompt that says the same
-thing with slightly different wording, instead of importing one shared
-constant:
+Three files each define their own handoff system prompt. The prompts say the same thing in
+slightly different words, instead of importing one shared constant:
 
 | File | Wording |
 |---|---|
@@ -1246,10 +1190,8 @@ constant:
 | `run_retrieval_quality.py:26` (Exp. 3) | "...replace **the** entire input for the next agent..." |
 | `run_slack_retrieval.py:43` *(not part of the numbered report)* | "...replace **the** entire input for the next agent..." (matches retrieval_quality) |
 
-This is a cosmetic difference (a pronoun), not a different instruction, and it
-does not affect any reported result — but it means Experiments 3 and 4 are
-not running byte-identical compressor prompts, unlike Experiment 5's
-deliberately-shared, self-test-verified prompt with Experiment 2. If a future
-experiment needs to claim two conditions differ *only* in one specific
-variable, copy Experiment 5's pattern (import the shared constant, add a
-byte-identity self-test) rather than hand-retyping the prompt.
+The difference is one word and does not change the instruction or any reported result. It does
+mean Experiments 3 and 4 do not run identical compressor prompts, whereas Experiment 5 imports
+Experiment 2's prompt on purpose and checks it with a self-test. If a future experiment needs to
+claim that two conditions differ in *only* one variable, follow Experiment 5's approach (import the
+shared constant and add a self-test that it is unchanged) rather than retyping the prompt.
