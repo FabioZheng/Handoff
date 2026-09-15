@@ -1,0 +1,183 @@
+# Experiment 10: communication regret under a hard communication budget.
+#
+# Hypothesis. A bounded handoff written for the query the sender currently
+# knows may raise utility for that query while lowering it for other plausible
+# queries the same source could later be asked. The claim is only testable if
+# the channel is identical across policies, so the budget here is a HARD word
+# cap on the delivered message (see src/budget.py), not a shared `max_tokens`.
+#
+# Design in one line: rotate every question of a multi-query source through the
+# conditioning role, evaluate every resulting message on every question of that
+# source, and read current-query utility off the diagonal of the resulting
+# matrix and future-query utility off the off-diagonal.
+
+model:
+  # Sender AND answerer. Held at the published Experiment 5/5b model so the
+  # numbers sit on the same scale as the earlier conditioning results.
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  # The sender is deterministic: a length-controlled comparison must not also
+  # be a sampling comparison.
+  sender_temperature: 0.0
+  answer_temperature: 0.0
+  closed_book_temperature: 0.7
+  answer_max_tokens: 32
+
+cost:
+  cap_usd: 8.0
+  api_call_cap: 90000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 12
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  retry_after_max_s: 300.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+# ---------------------------------------------------------------- the channel
+
+budget:
+  # The enforced unit. Chosen against the corpora rather than copied from a
+  # round number: a SQuAD paragraph in the kept band is ~130-260 words, so the
+  # rungs span ~9x compression down to ~1.2x, and the top rung doubles as an
+  # internal near-lossless control where every policy should converge. A
+  # 400-token (~300-word) budget would exceed the source and force no choice
+  # at all, which is why the ladder sits below the round figure.
+  words: [20, 40, 80, 160]
+  # Nominal token equivalent, reported alongside every word figure. English
+  # prose on a Llama tokenizer runs near this; it is a reporting constant only
+  # and never gates anything.
+  tokens_per_word: 1.35
+  # `max_tokens` is deliberately NON-binding relative to the word cap, so an
+  # over-long draft is visible to the shrink stage instead of being clipped
+  # mid-sentence by the provider.
+  api_max_tokens_headroom: 2.2
+  api_max_tokens_floor: 128
+  # The OTHER side of the contract, and the reason this experiment is a length
+  # control rather than a length cap. A cap-only pilot (3 contexts, 40-word cap)
+  # gave fill ratios of 0.61 conditioned vs 0.88 generic -- the conditioned arm
+  # spent a third less channel, so a future-query deficit would have meant "it
+  # wrote less", not "it allocated differently". 0.85 leaves room to end a
+  # sentence without forcing padding. The floor is requested and audited, never
+  # assumed: `under_floor_rate` and `repetition_rate` are reported per arm.
+  fill_floor_ratio: 0.85
+  # Rewrite requests before deterministic truncation takes over. Both correction
+  # texts are byte-identical across policies (src/budget.py SHRINK_CORRECTION
+  # and EXPAND_CORRECTION).
+  max_length_corrections: 3
+  # Strictest length control: at these budgets, re-truncate every policy's
+  # message in a cell to the shortest delivered length in that cell and
+  # re-answer. Costs answer calls but no generation calls. Empty list disables.
+  trim_sensitivity_words: [40]
+  # A (context, budget) cell counts as tightly matched when the spread of
+  # delivered word counts across the compared policies is within this many
+  # words. Used for the length-matched subsample, never to drop data silently.
+  match_tolerance_words: 6
+
+policies: [generic, conditioned, reusable, oracle, extractive_generic, extractive_conditioned]
+
+# ---------------------------------------------------------------- the corpora
+
+dataset:
+  # Which corpus this invocation runs on. Both share one runner and one schema.
+  active: squad_groups
+  squad_groups:
+    contexts_jsonl: data/communication_regret/squad_groups.jsonl
+    n_contexts: 24
+  relation_dossiers:
+    contexts_jsonl: data/communication_regret/relation_dossiers.jsonl
+    # A dossier dies if ANY of its 16 questions leaks closed-book, and the
+    # first build lost 8 of 18 pages that way (usually to a single question).
+    # The pool is oversampled to compensate; already-written pages are cached,
+    # so widening it re-pays for nothing.
+    n_contexts: 16
+
+build:
+  squad:
+    local_parquet: data/raw/squad_validation.parquet
+    questions_per_context: 4
+    # Extra questions filtered first, so the closed-book filter has slack: a
+    # group dies only if fewer than `questions_per_context` survive it.
+    oversample_questions: 6
+    max_contexts_scanned: 200
+    context_chars_min: 800
+    context_chars_max: 1600
+    max_question_jaccard: 0.10
+    sample_seed: 20260901
+  relations:
+    pages: 40
+    # Long enough that all four budgets compress it, and long enough to hold
+    # four aspects x four questions without crowding.
+    min_characters: 2400
+    max_characters: 3600
+    writer_max_tokens: 6000
+    max_attempts: 3
+  writer:
+    # One strong model writes the relation dossiers. It is never the system
+    # under test, exactly as in the other builders.
+    model_id: "openai/gpt-5.2"
+    reasoning: {effort: high}
+    cap_usd: 6.0
+    # Below runtime.concurrency on purpose: enough long high-effort calls in
+    # flight trips OpenRouter's in-flight credit ceiling (HTTP 402
+    # in_flight_budget_exhausted) even with credit available.
+    concurrency: 2
+
+# Closed-book leakage filter, applied to EVERY question of a candidate context.
+# An off-diagonal success that came from parametric memory would look exactly
+# like a reusable handoff, so this is load-bearing, not hygiene.
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  f1_known_threshold: 0.6
+
+# Group-level audit by a different model family: every question must be
+# answerable from the passage and must ask about a fact distinct from all the
+# others. Two questions with the same answer would make the off-diagonal a
+# copy of the diagonal.
+group_audit:
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 400
+  cap_usd: 2.0
+  concurrency: 10
+
+baselines:
+  # The no-handoff ceiling U(D, q): the answerer reads the source directly.
+  # It is the reference value in the regret difference, so it is computed for every question.
+  direct_context: true
+  closed_book_samples: 3
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  cluster: context
+  # Utility used for the headline numbers. EM and F1 are always computed and
+  # reported alongside; token F1 alone penalises correct-but-reworded answers,
+  # which is exactly what compression produces.
+  primary_metric: judge_correct
+  # A context enters the normalised-utility table only when its direct-context
+  # ceiling is at least this high, so a near-zero denominator cannot manufacture
+  # a ratio. Excluded contexts are counted in the report, never dropped quietly.
+  min_ceiling_for_ratio: 0.25
+  # Domination test tolerance on the Pareto frontier. 0.0 = exact.
+  pareto_epsilon: 0.0
+
+outputs:
+  run_root: runs/communication_regret
+  result_root: results/communication_regret
+  build_root: results/communication_regret
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 4.0
+  concurrency: 16

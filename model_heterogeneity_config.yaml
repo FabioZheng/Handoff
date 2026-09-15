@@ -1,0 +1,347 @@
+# Experiment 8: model heterogeneity across sequential agent handoffs.
+#
+# Every other experiment in this project runs one model at every stage of a
+# chain. This one varies *which* model writes each handoff, holding the task,
+# the evidence, the prompts, the decoding settings, the output budget and the
+# final answerer fixed. Two questions:
+#
+#   1. matched size, different families -- does passing notes between families
+#      cost more than passing them within one family?
+#   2. family AND size -- do smaller->larger, larger->smaller and alternating
+#      size trajectories behave differently, and can a later larger model
+#      recover what an earlier smaller one dropped?
+#
+# The dataset, prompts, budgets and answer scoring are taken unchanged from
+# Experiment 5's `conditioned` arm on the same SQuAD same-passage pairs, so the
+# llama homogeneous arm re-derives an already-published curve (and re-uses its
+# cached calls) rather than being a fresh, separately-tuned baseline.
+
+model:
+  # Placeholder only. This experiment never calls a single configured model:
+  # `models:` below is the real registry and src/model_pool.py builds one
+  # LLMClient per entry over a shared cache and a shared cost ledger. The key
+  # is retained because LLMClient and the judge helpers expect the section.
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  # Byte-identical to summary_generalization_squad_pairs_config.yaml so the
+  # llama_small homogeneous arm hits the existing cache rather than re-paying
+  # for calls the project has already made.
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  # NON-BINDING guard, identical for every model in the pool. A per-model
+  # budget would make "model size" and "how much a model may write" the same
+  # variable. Truncation is measured and reported instead.
+  handoff_max_tokens: 1500
+
+cost:
+  cap_usd: 6.0
+  api_call_cap: 30000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 12
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+dataset:
+  source: "prebuilt_pairs"
+  pairs_jsonl: data/squad_same_passage/pairs_n20.jsonl
+  n_pairs: 20
+  # 1 shared gold passage that answers both A and B + 9 passages screened
+  # IRRELEVANT to both. Kept at full width (not projected to gold-only): the
+  # gold-only variant leaves the target task near ceiling, which would hide
+  # any model-composition effect.
+  context_passages: 10
+  experiment_context: "full_pack"
+
+# Unused here (pairs_n20.jsonl was leakage-filtered at build time against
+# meta-llama/llama-3.1-8b-instruct, which is also this run's primary answerer,
+# so the filter still applies to the model that produces the scored answer).
+# Retained because load_config consumers expect the key to exist.
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  f1_known_threshold: 0.6
+
+# ---------------------------------------------------------------- model pool
+#
+# Selection rules, in priority order:
+#   * open weights with a published parameter count, so the size axis is a
+#     documented number rather than a guess;
+#   * dense, not mixture-of-experts, so "parameter size" is unambiguous
+#     (no total-vs-active ambiguity to explain away);
+#   * one comparable release window (2024-07 .. 2025-06) across all four
+#     families, so "family" is not silently "model vintage";
+#   * non-reasoning / thinking disabled, so the shared token budget buys
+#     visible handoff text in every arm;
+#   * continuity: llama-3.1-8b, llama-3.3-70b, qwen3-8b and qwen3-32b are
+#     already used elsewhere in this project.
+#
+# parameters_b is the vendor's published count. parameters_basis records what
+# kind of number it is; where a vendor publishes only a rounded family label
+# (Meta's "8B", Mistral's "8B"/"24B") that is what is stored and said, rather
+# than a spuriously precise figure recovered from a checkpoint.
+
+families:
+  llama:   {label: "Llama (Meta)",       color: "#1b9e77"}
+  qwen:    {label: "Qwen (Alibaba)",     color: "#d95f02"}
+  mistral: {label: "Mistral (Mistral AI)", color: "#7570b3"}
+  gemma:   {label: "Gemma (Google)",     color: "#e7298a"}
+
+# The rotation order used by every cross-family schedule. Extending the pool
+# with a fifth family means adding it here and adding its two size entries.
+family_cycle: [llama, qwen, mistral, gemma]
+
+tiers:
+  small: {label: "small (8-12B)"}
+  large: {label: "large (24-71B)"}
+
+models:
+  llama_small:
+    id: "meta-llama/llama-3.1-8b-instruct"
+    family: llama
+    tier: small
+    short_code: "L8"
+    parameters_b: 8.0
+    parameters_basis: "vendor headline count (8B), dense"
+    parameters_source: "https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct"
+    released: "2024-07-23"
+    architecture: dense
+  qwen_small:
+    id: "qwen/qwen3-8b"
+    family: qwen
+    tier: small
+    short_code: "Q8"
+    parameters_b: 8.2
+    parameters_basis: "reported total 8.2B (6.95B non-embedding), dense"
+    parameters_source: "https://huggingface.co/Qwen/Qwen3-8B"
+    released: "2025-04-29"
+    architecture: dense
+    # Qwen3 thinks by default and the gateway-level switch is not honoured by
+    # every routed provider. Both controls are applied and both enter the
+    # cache key, exactly as qwen32_chain_config.yaml already does.
+    reasoning: {effort: "none"}
+    system_suffix: "/no_think"
+  mistral_small:
+    id: "mistralai/ministral-8b"
+    family: mistral
+    tier: small
+    short_code: "M8"
+    parameters_b: 8.0
+    parameters_basis: "vendor headline count (8B), dense"
+    parameters_source: "https://huggingface.co/mistralai/Ministral-8B-Instruct-2410"
+    released: "2024-10-16"
+    architecture: dense
+  gemma_small:
+    id: "google/gemma-3-12b-it"
+    family: gemma
+    tier: small
+    short_code: "G12"
+    parameters_b: 12.2
+    parameters_basis: "reported total 12.2B, dense"
+    parameters_source: "https://huggingface.co/google/gemma-3-12b-it"
+    released: "2025-03-12"
+    architecture: dense
+  llama_large:
+    id: "meta-llama/llama-3.3-70b-instruct"
+    family: llama
+    tier: large
+    short_code: "L70"
+    parameters_b: 70.6
+    parameters_basis: "reported total 70.6B (vendor headline 70B), dense"
+    parameters_source: "https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct"
+    released: "2024-12-06"
+    architecture: dense
+  qwen_large:
+    id: "qwen/qwen3-32b"
+    family: qwen
+    tier: large
+    short_code: "Q32"
+    parameters_b: 32.8
+    parameters_basis: "reported total 32.8B (31.2B non-embedding), dense"
+    parameters_source: "https://huggingface.co/Qwen/Qwen3-32B"
+    released: "2025-04-29"
+    architecture: dense
+    reasoning: {effort: "none"}
+    system_suffix: "/no_think"
+  mistral_large:
+    id: "mistralai/mistral-small-3.2-24b-instruct"
+    family: mistral
+    tier: large
+    short_code: "M24"
+    parameters_b: 24.0
+    parameters_basis: "vendor headline count (24B), dense"
+    parameters_source: "https://huggingface.co/mistralai/Mistral-Small-3.2-24B-Instruct-2506"
+    released: "2025-06-20"
+    architecture: dense
+  gemma_large:
+    id: "google/gemma-3-27b-it"
+    family: gemma
+    tier: large
+    short_code: "G27"
+    parameters_b: 27.4
+    parameters_basis: "reported total 27.4B, dense"
+    parameters_source: "https://huggingface.co/google/gemma-3-27b-it"
+    released: "2025-03-12"
+    architecture: dense
+
+# The answerer is held constant across every arm and every depth. If the last
+# chain model also answered, a "larger models late" trajectory would beat a
+# "smaller models late" one simply because a larger model answered, and no
+# statement about the handoff itself would survive.
+#
+# primary is the model pairs_n20.jsonl was leakage-filtered against, which
+# keeps the C1 filter valid for the scored answer and makes depth 0 directly
+# comparable with Experiment 5. secondary is a different family and exists to
+# test the one confound the primary cannot: whether a llama answerer simply
+# reads llama-written notes more easily.
+answerers:
+  - {role: primary, model: llama_small}
+  - {role: secondary, model: mistral_small}
+
+# ---------------------------------------------------------------- schedules
+
+depths: [0, 1, 2, 3, 4, 5, 6]
+max_depth: 6
+
+# Which size tier writes stage 1..max_depth. `alt`, `up` and `down` hold the
+# same multiset (3 small, 3 large) at max_depth, so the depth-6 comparison
+# between them is an ordering comparison and nothing else.
+size_patterns:
+  all_small: [small, small, small, small, small, small]
+  all_large: [large, large, large, large, large, large]
+  up:        [small, small, small, large, large, large]
+  down:      [large, large, large, small, small, small]
+  alt:       [small, large, small, large, small, large]
+
+# family_mode:
+#   fixed_named   every stage uses `family`
+#   start         every stage uses the pair's stratified start family
+#   cycle_forward stage k uses family_cycle[(start + k - 1) % len(cycle)]
+#   cycle_reverse stage k uses family_cycle[(start - k + 1) % len(cycle)]
+#
+# Each pair's start family is (pair index % len(family_cycle)), so with n=20
+# every family starts five pairs. That is what makes the cross-family arms
+# comparable to a homogeneous control: `homog_*_matched` below selects, per
+# pair, the homogeneous arm built from that same start family, so the two share
+# a byte-identical stage 1 and differ only from stage 2 onward.
+arms:
+  # --- block 1: matched size (small tier), family held or varied ------------
+  - {name: homog_small_llama,   block: matched_small, family_mode: fixed_named, family: llama,   size_pattern: all_small}
+  - {name: homog_small_qwen,    block: matched_small, family_mode: fixed_named, family: qwen,    size_pattern: all_small}
+  - {name: homog_small_mistral, block: matched_small, family_mode: fixed_named, family: mistral, size_pattern: all_small}
+  - {name: homog_small_gemma,   block: matched_small, family_mode: fixed_named, family: gemma,   size_pattern: all_small}
+  - {name: xfam_small_fwd,      block: matched_small, family_mode: cycle_forward, size_pattern: all_small}
+  - {name: xfam_small_rev,      block: matched_small, family_mode: cycle_reverse, size_pattern: all_small}
+  # --- block 2: matched size (large tier), family held or varied ------------
+  - {name: homog_large_llama,   block: matched_large, family_mode: fixed_named, family: llama,   size_pattern: all_large}
+  - {name: homog_large_qwen,    block: matched_large, family_mode: fixed_named, family: qwen,    size_pattern: all_large}
+  - {name: homog_large_mistral, block: matched_large, family_mode: fixed_named, family: mistral, size_pattern: all_large}
+  - {name: homog_large_gemma,   block: matched_large, family_mode: fixed_named, family: gemma,   size_pattern: all_large}
+  - {name: xfam_large_fwd,      block: matched_large, family_mode: cycle_forward, size_pattern: all_large}
+  # --- block 3: size trajectory x family regime (3 x 2 factorial) -----------
+  - {name: size_up_samefam,     block: size_trajectory, family_mode: start, size_pattern: up}
+  - {name: size_down_samefam,   block: size_trajectory, family_mode: start, size_pattern: down}
+  - {name: size_alt_samefam,    block: size_trajectory, family_mode: start, size_pattern: alt}
+  - {name: size_up_xfam,        block: size_trajectory, family_mode: cycle_forward, size_pattern: up}
+  - {name: size_down_xfam,      block: size_trajectory, family_mode: cycle_forward, size_pattern: down}
+  - {name: size_alt_xfam,       block: size_trajectory, family_mode: cycle_forward, size_pattern: alt}
+
+# Start-family-matched homogeneous controls. These issue no calls of their own:
+# for each pair they select the rows of the homogeneous arm built from that
+# pair's start family, so the control and the cross-family arm share stage 1
+# exactly and the contrast isolates what happens from stage 2 onward.
+derived_arms:
+  - {name: homog_small_matched, block: matched_small,  size_pattern: all_small, template: "homog_small_{family}"}
+  - {name: homog_large_matched, block: matched_large,  size_pattern: all_large, template: "homog_large_{family}"}
+
+# ---------------------------------------------------------------- contrasts
+#
+# kind: depth  -> treatment(d) - control(d), paired over pairs, at every depth
+# kind: did    -> [treatment(d) - treatment(from_depth)] - [control(d) - control(from_depth)]
+contrasts:
+  # 1. homogeneous vs heterogeneous families at matched size
+  - {name: xfam_minus_homog_small,        kind: depth, treatment: xfam_small_fwd,   control: homog_small_matched}
+  - {name: xfam_rev_minus_homog_small,    kind: depth, treatment: xfam_small_rev,   control: homog_small_matched}
+  - {name: xfam_minus_homog_large,        kind: depth, treatment: xfam_large_fwd,   control: homog_large_matched}
+  # 2. does the particular family ordering matter
+  - {name: xfam_fwd_minus_rev_small,      kind: depth, treatment: xfam_small_fwd,   control: xfam_small_rev}
+  # 3. size level, holding family and trajectory constant
+  - {name: large_minus_small_homog,       kind: depth, treatment: homog_large_matched, control: homog_small_matched}
+  # 4. size trajectories against both homogeneous size levels
+  - {name: size_up_minus_all_small,       kind: depth, treatment: size_up_samefam,  control: homog_small_matched}
+  - {name: size_up_minus_all_large,       kind: depth, treatment: size_up_samefam,  control: homog_large_matched}
+  - {name: size_down_minus_all_small,     kind: depth, treatment: size_down_samefam, control: homog_small_matched}
+  - {name: size_down_minus_all_large,     kind: depth, treatment: size_down_samefam, control: homog_large_matched}
+  - {name: size_alt_minus_all_small,      kind: depth, treatment: size_alt_samefam, control: homog_small_matched}
+  - {name: size_alt_minus_all_large,      kind: depth, treatment: size_alt_samefam, control: homog_large_matched}
+  # 5. direction of the size transition (identical size multiset at depth 6)
+  - {name: size_up_minus_down_samefam,    kind: depth, treatment: size_up_samefam,  control: size_down_samefam}
+  - {name: size_up_minus_down_xfam,       kind: depth, treatment: size_up_xfam,     control: size_down_xfam}
+  - {name: size_alt_minus_up_samefam,     kind: depth, treatment: size_alt_samefam, control: size_up_samefam}
+  # 6. adding family switching on top of an identical size trajectory
+  - {name: xfam_cost_on_size_up,          kind: depth, treatment: size_up_xfam,     control: size_up_samefam}
+  - {name: xfam_cost_on_size_down,        kind: depth, treatment: size_down_xfam,   control: size_down_samefam}
+  - {name: xfam_cost_on_size_alt,         kind: depth, treatment: size_alt_xfam,    control: size_alt_samefam}
+  # 7. recovery and bottleneck: change AFTER the tier switches, vs a chain
+  #    that never switched. size_up switches small->large after stage 3;
+  #    size_down switches large->small after stage 3.
+  - {name: recovery_by_larger_downstream, kind: did, treatment: size_up_samefam,   control: homog_small_matched, from_depth: 3}
+  - {name: bottleneck_from_smaller_downstream, kind: did, treatment: size_down_samefam, control: homog_large_matched, from_depth: 3}
+
+# Paired per-edge contrasts. Each compares two kinds of handoff edge *within*
+# the same pair, so a difference is not read off two independent intervals.
+# `_size_same` isolates the family change with size held; the two `_at_size_*`
+# rows check that the family effect is not specific to one size direction.
+transition_contrasts:
+  - {name: cross_vs_same_family_at_matched_size, treatment: cross_family_size_same,    control: same_family_size_same}
+  - {name: cross_vs_same_family_when_growing,    treatment: cross_family_size_larger,  control: same_family_size_larger}
+  - {name: cross_vs_same_family_when_shrinking,  treatment: cross_family_size_smaller, control: same_family_size_smaller}
+  - {name: growing_vs_flat_within_family,        treatment: same_family_size_larger,   control: same_family_size_same}
+  - {name: shrinking_vs_flat_within_family,      treatment: same_family_size_smaller,  control: same_family_size_same}
+  # Same question, cross-family side: does a growing/shrinking edge cost more
+  # than a flat one when the family is ALSO changing, not held constant.
+  - {name: growing_vs_flat_cross_family,         treatment: cross_family_size_larger,  control: cross_family_size_same}
+  - {name: shrinking_vs_flat_cross_family,       treatment: cross_family_size_smaller, control: cross_family_size_same}
+
+# ---------------------------------------------------------------- analysis
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  primary_metric: judge_correct
+  primary_answerer: primary
+  primary_query: target
+  # Marker area on the trajectory figure is proportional to parameter count
+  # (area, not radius). `linear_area` is correct while the pool spans one
+  # order of magnitude; switch to `sqrt_area` if a much wider pool is added.
+  size_scale:
+    mode: linear_area
+    min_area: 90.0
+    max_area: 900.0
+  # Family ordering shown in the trajectory figure. Cross-family arms rotate
+  # their start per pair; the figure draws this canonical rotation and says so.
+  trajectory_reference_family: llama
+
+outputs:
+  run_root: runs/model_heterogeneity
+  result_root: results/model_heterogeneity
+
+judge:
+  enabled: true
+  # Same judge as every other experiment, and a family that is deliberately
+  # absent from the pool under test, so no chain model ever grades its own
+  # family's output.
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 3.0
+  concurrency: 16

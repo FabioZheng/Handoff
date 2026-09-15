@@ -1,0 +1,78 @@
+# Targeted model-family controls for Experiment 11.  This is deliberately a
+# small invocation of the unchanged Experiment-10 runner, not a new prompt.
+
+model:
+  id: "mistralai/ministral-8b-2512"
+  provider_order: null
+  require_parameters: false
+
+answerer:
+  id: "mistralai/ministral-8b-2512"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  sender_temperature: 0.0
+  answer_temperature: 0.0
+  closed_book_temperature: 0.7
+  answer_max_tokens: 32
+
+cost:
+  cap_usd: 4.0
+  api_call_cap: 25000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 12
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  retry_after_max_s: 300.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+budget:
+  words: [40, 80]
+  tokens_per_word: 1.35
+  api_max_tokens_headroom: 2.2
+  api_max_tokens_floor: 128
+  fill_floor_ratio: 0.85
+  max_length_corrections: 3
+  trim_sensitivity_words: []
+  match_tolerance_words: 6
+
+policies: [generic, conditioned, reusable, oracle]
+
+dataset:
+  active: relation_dossiers
+  relation_dossiers:
+    contexts_jsonl: data/communication_regret/relation_dossiers.jsonl
+    n_contexts: 16
+  squad_groups:
+    contexts_jsonl: data/communication_regret/squad_groups.jsonl
+    n_contexts: 24
+
+baselines:
+  direct_context: true
+  # This must be remeasured: the original leakage gate used Llama, not Mistral.
+  closed_book_samples: 3
+
+analysis:
+  bootstrap_resamples: 5000
+  ci_level: 0.95
+  cluster: context
+  primary_metric: judge_correct
+  min_ceiling_for_ratio: 0.25
+  pareto_epsilon: 0.0
+
+outputs:
+  run_root: runs/bounded_communication_frontier/mistral_controls
+  result_root: results/bounded_communication_frontier/mistral_controls
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 2.0
+  concurrency: 16

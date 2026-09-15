@@ -1,0 +1,107 @@
+# Experiment 13: efficient and reusable non-language handoffs.
+#
+# Panel A only: selection is fixed *before* encoding, so every channel receives
+# the same K=4 evidence packet and the difference between arms is the encoding,
+# not what was chosen. Panel B (every sender sees the full source) is a separate
+# config, added only after Panel A's gates pass.
+#
+# This experiment does NOT use src/llm.py or OpenRouter. It runs one pinned
+# open-weight checkpoint locally through src/latent_backend.py, because a text
+# API cannot expose hidden states or accept input embeddings. The $15 cost cap
+# in config.yaml meters API dollars and does not meter GPU-hours -- the compute
+# envelope below is the control that applies here.
+
+backend:
+  model_id: "Qwen/Qwen3-4B"
+  # Pin an exact commit before any run whose numbers will be reported. An empty
+  # revision resolves to whatever the hub serves today, which is not a fixed
+  # experiment.
+  revision: "1cfa9a7208912126459214e8b04321603b3df60c"
+  dtype: "bfloat16"
+  device: "cuda"
+  # Explicit, not inherited: Qwen3 defaults to thinking mode, which would make
+  # every measured position count a mixture of reasoning and message.
+  enable_thinking: false
+  answer_max_tokens: 48
+  transcript_max_tokens: 256
+  temperature: 0.0
+  seed: 0
+  hidden_layer: -1
+
+codec:
+  # bfloat16 keeps the payload at the model's own precision. Quantization is a
+  # second treatment and stays out of the first baseline.
+  dtype: "bfloat16"
+  alignment: "statebridge-whiten-procrustes-anchor-v1"
+  regularization: 0.001
+  eigen_floor: 0.000001
+  snap_ratio: 0.3
+  vocab_chunk: 8192
+
+budget:
+  # Nominal receiver positions for the payload plus its schema block.
+  positions: 32
+  # A one-sided cap does not equalize a channel (Experiment 10). The two-sided
+  # band is what makes "the latent arm lost future utility" mean something other
+  # than "the latent arm sent less".
+  fill_floor_ratio: 0.85
+  max_attempts: 3
+  # Swept on development data only, after the gates pass. One primary rate
+  # contrast is then frozen before the confirmation set exists.
+  sweep: [32, 64, 128]
+
+data:
+  corpus: "data/size_adaptation/fictional_items.jsonl"
+  # Experiment 5b's logged selections. Provenance is inherited unchanged: this
+  # panel tests encoding, not the new model's selection policy.
+  selections: "runs/fictional_summary_generalization/n20/selections.jsonl"
+  k: 4
+  relation_corpus: "data/communication_regret/relation_dossiers.jsonl"
+
+channels:
+  - text_prose      # natural-language reference
+  - text_record     # strong non-prose, text-compatible reference
+  - latent_sb       # frozen latent candidate
+
+controls:
+  - direct_packet     # ceiling: can this reader answer from the selected cards
+  - closed_book       # floor: leakage for THIS reader, not the old Llama runs
+  - token_replay      # text path for exactly the tokens embed_replay delivers
+  - embed_replay      # same tokens as embeddings; validates the wrapper
+  - transcript_text   # all of H as text
+  - transcript_tail   # final k tokens of H as text
+  - shuffled_prefix   # another packet's vectors, under an opaque reader id
+  - zero_prefix       # an ablation, not a neutral prompt
+  - source_free       # H re-encoded without source access
+  - fixed_fact_swap   # fixed H, change one source fact absent from visible H
+  - fixed_fact_sham   # fixed H, change an unrelated fact at matched positions
+
+gates:
+  # Engineering thresholds, frozen before the grid runs. Failing one triggers a
+  # bounded implementation investigation -- not a different dataset.
+  direct_source_em_min: 0.90
+  closed_book_em_max: 0.05
+  latent_gap_max: 0.10        # vs direct selected-packet accuracy
+  shuffle_sensitivity_min: 0.10   # latent must beat a shuffled payload
+  replay_gap_max: 0.05        # token ids vs their own embeddings
+
+analysis:
+  bootstrap_resamples: 10000
+  ci: 0.95
+  # Source-clustered: six questions about one dossier are not six independent
+  # observations.
+  cluster_on: "dossier_id"
+  noninferiority_margin: 0.03
+  min_position_reduction: 0.25
+  amortization_horizons: [1, 4, 16]
+
+compute:
+  # Proposed run limits, not runtime predictions and not an authorized
+  # reservation. Refine from measured batch throughput; stop at the limit.
+  smoke_gpu_hours_max: 2
+  diagnostic_gpu_hours_max: 8
+  gpu_memory_gb: 80
+
+output:
+  dir: "runs/latent_reusability"
+  results_dir: "results/latent_reusability"

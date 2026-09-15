@@ -1,0 +1,7 @@
+baseline,metric,n_dossiers,n_fact_sample_rows,mean,lo,hi
+direct_source,em,1,6,1.0,1.0,1.0
+direct_source,f1,1,6,1.0,1.0,1.0
+direct_cards,em,1,6,1.0,1.0,1.0
+direct_cards,f1,1,6,1.0,1.0,1.0
+closed_book,em,1,18,0.0,0.0,0.0
+closed_book,f1,1,18,0.0,0.0,0.0

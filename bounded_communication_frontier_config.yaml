@@ -1,0 +1,260 @@
+# Experiment 11: preference-controlled frontier of bounded agent communication.
+#
+# This extends Experiment 10 without changing its utility matrix, word-band
+# channel, source corpora, answer isolation, scoring, or judge.  The new
+# treatment has two complementary sweeps.  The scalar arm states the
+# objective preference directly; the structured arm varies an allocation
+# share alpha on the same five-point grid.  Alpha=lambda/(1+lambda) is a
+# convenient indexing convention, not a mathematical implication that an
+# objective weight must equal a word-allocation share.
+#
+#     max U_now + lambda U_future   subject to C <= B.
+#
+# A free-form family tells the writer the preference.  A structured family
+# additionally reserves known fractions of the delivered word budget for
+# current-query evidence and reusable evidence.  Both are evaluated on every
+# question, so alternative future-query distributions are analysis-time
+# reweightings of the same sealed messages rather than extra model calls.
+
+model:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+answerer:
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  sender_temperature: 0.0
+  answer_temperature: 0.0
+  closed_book_temperature: 0.7
+  answer_max_tokens: 32
+
+cost:
+  cap_usd: 8.0
+  api_call_cap: 90000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 12
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  retry_after_max_s: 300.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+budget:
+  words: [20, 40, 80, 160]
+  tokens_per_word: 1.35
+  api_max_tokens_headroom: 2.2
+  api_max_tokens_floor: 128
+  fill_floor_ratio: 0.85
+  max_length_corrections: 3
+
+baselines:
+  direct_context: true
+  closed_book_samples: 3
+
+dataset:
+  active: relation_dossiers
+  squad_groups:
+    contexts_jsonl: data/communication_regret/squad_groups.jsonl
+    n_contexts: 24
+  relation_dossiers:
+    contexts_jsonl: data/communication_regret/relation_dossiers.jsonl
+    n_contexts: 16
+
+frontier:
+  # For the scalar family, lambda is the stated objective weight.  For the
+  # split family, future_share is the enforced reusable-evidence allocation
+  # alpha.  The normalized mapping merely puts both interventions on a common
+  # ordered five-point grid; it does not assert optimization equivalence.
+  preferences:
+    - {id: l0,      lambda: 0.0,                 future_share: 0.0}
+    - {id: l0p333,  lambda: 0.3333333333333333,  future_share: 0.25}
+    - {id: l1,      lambda: 1.0,                 future_share: 0.50}
+    - {id: l3,      lambda: 3.0,                 future_share: 0.75}
+    - {id: linf,    lambda: inf,                 future_share: 1.0}
+  families: [scalar, split]
+
+  # Relation weights sum to one over relation CATEGORIES, not over cells.
+  # The empirical-cell profile reflects the actual 1:1:1:12 matrix.  The
+  # other profiles are prespecified deployment shifts and use the same answers.
+  future_distributions:
+    empirical_cells:
+      paraphrase: 0.06666666666666667
+      same_entity: 0.06666666666666667
+      same_topic: 0.06666666666666667
+      orthogonal: 0.80
+    relation_balanced:
+      paraphrase: 0.25
+      same_entity: 0.25
+      same_topic: 0.25
+      orthogonal: 0.25
+    novel_near:
+      # Excludes the paraphrase whose gold answer is identical to the current
+      # query; this is genuine nearby generalization, not answer reuse.
+      paraphrase: 0.0
+      same_entity: 0.50
+      same_topic: 0.50
+      orthogonal: 0.0
+    rho25:
+      paraphrase: 0.0
+      same_entity: 0.375
+      same_topic: 0.375
+      orthogonal: 0.25
+    rho50:
+      paraphrase: 0.0
+      same_entity: 0.25
+      same_topic: 0.25
+      orthogonal: 0.50
+    rho75:
+      paraphrase: 0.0
+      same_entity: 0.125
+      same_topic: 0.125
+      orthogonal: 0.75
+    far:
+      paraphrase: 0.0
+      same_entity: 0.0
+      same_topic: 0.0
+      orthogonal: 1.0
+    paraphrase_sanity:
+      paraphrase: 1.0
+      same_entity: 0.0
+      same_topic: 0.0
+      orthogonal: 0.0
+
+  # Regimes are intentionally separate.  Cross-regime domination is invalid.
+  # Each model replication has model-matched Experiment 10 controls, so its
+  # legacy and preference-sweep policies share one writer/reader stack.
+  replications:
+    primary:
+      label: "Llama-8B writer / Llama-8B reader"
+      sender_model: "meta-llama/llama-3.1-8b-instruct"
+      answerer_model: "meta-llama/llama-3.1-8b-instruct"
+      datasets: [squad_groups, relation_dossiers]
+      # 20 words remains in Experiment 10 as the scarcity endpoint.  It is not
+      # used for allocation because a 25% section would contain only four
+      # evidence words after headings.
+      budgets_words: [40, 80, 160]
+      budgets_by_dataset:
+        squad_groups: [40, 80]
+        relation_dossiers: [40, 80, 160]
+      preference_ids: [l0, l0p333, l1, l3, linf]
+      families: [split]
+      limits: {squad_groups: 24, relation_dossiers: 16}
+    scalar_probe:
+      label: "Llama-8B free-form preference probe"
+      sender_model: "meta-llama/llama-3.1-8b-instruct"
+      answerer_model: "meta-llama/llama-3.1-8b-instruct"
+      datasets: [relation_dossiers]
+      budgets_words: [80]
+      preference_ids: [l0, l0p333, l1, l3, linf]
+      families: [scalar]
+      limits: {relation_dossiers: 16}
+    mistral_stack:
+      # The earlier `mistralai/ministral-8b` slug lost all OpenRouter endpoints
+      # before this run (HTTP 404 on 2026-09-04). The provider's live registry
+      # lists this same-tier successor; the exact dated id is frozen here.
+      label: "Ministral-3-8B-2512 writer / reader"
+      sender_model: "mistralai/ministral-8b-2512"
+      answerer_model: "mistralai/ministral-8b-2512"
+      datasets: [relation_dossiers]
+      budgets_words: [40, 80]
+      preference_ids: [l0, l1, linf]
+      families: [split]
+      limits: {relation_dossiers: 16}
+    seed17:
+      label: "Llama-8B temperature-0.2 seed 17"
+      sender_model: "meta-llama/llama-3.1-8b-instruct"
+      answerer_model: "meta-llama/llama-3.1-8b-instruct"
+      sender_temperature: 0.2
+      sender_seed: 17
+      datasets: [squad_groups]
+      budgets_words: [80]
+      preference_ids: [l0, l1, linf]
+      families: [split]
+      limits: {squad_groups: 24}
+    seed29:
+      label: "Llama-8B temperature-0.2 seed 29"
+      sender_model: "meta-llama/llama-3.1-8b-instruct"
+      answerer_model: "meta-llama/llama-3.1-8b-instruct"
+      sender_temperature: 0.2
+      sender_seed: 29
+      datasets: [squad_groups]
+      budgets_words: [80]
+      preference_ids: [l0, l1, linf]
+      families: [split]
+      limits: {squad_groups: 24}
+    seed43:
+      label: "Llama-8B temperature-0.2 seed 43"
+      sender_model: "meta-llama/llama-3.1-8b-instruct"
+      answerer_model: "meta-llama/llama-3.1-8b-instruct"
+      sender_temperature: 0.2
+      sender_seed: 43
+      datasets: [squad_groups]
+      budgets_words: [80]
+      preference_ids: [l0, l1, linf]
+      families: [split]
+      limits: {squad_groups: 24}
+
+  # Model-matched Experiment 10 baselines embedded under the frontier result
+  # root.  Discovery fails closed unless every expected policy, budget, and
+  # context is present, preventing a partial control run from making a new
+  # policy family look artificially strong.
+  control_replications:
+    mistral_controls:
+      matched_replication: mistral_stack
+      datasets: [relation_dossiers]
+      policies: [generic, conditioned, reusable, oracle]
+      budgets_words: [40, 80]
+      limits: {relation_dossiers: 16}
+
+  source_experiment10_requirements:
+    squad_groups:
+      policies: [generic, conditioned, reusable, oracle,
+                 extractive_generic, extractive_conditioned]
+      budgets_words: [20, 40, 80, 160]
+      contexts: 24
+    relation_dossiers:
+      policies: [generic, conditioned, reusable, oracle]
+      budgets_words: [20, 40, 80, 160]
+      contexts: 16
+
+analysis:
+  primary_metric: judge_correct
+  metrics: [judge_correct, em, f1]
+  bootstrap_resamples: 5000
+  ci_level: 0.95
+  cluster: context
+  dominance_epsilon: 0.0
+  hypervolume_reference_2d: [0.0, 0.0]
+  # Cost is converted to 1-C/Cmax for the raw three-objective hypervolume.
+  hypervolume_cost_max_words: 160
+  bootstrap_seed: 11100
+  # Confirmatory interpretation.  The split prompt deliberately asks its
+  # reusable component not to repeat the current answer.  A dossier
+  # paraphrase has that same answer, so relation_balanced is retained as a
+  # prompt-estimand stress test rather than the primary future estimand.
+  primary_future_distributions:
+    squad_groups: empirical_questions
+    relation_dossiers: far
+  sensitivity_future_distributions:
+    relation_dossiers: [novel_near, relation_balanced]
+  sensitivity_metrics: [em, f1]
+  hypervolume_zero_tolerance: 1.0e-12
+
+outputs:
+  run_root: runs/bounded_communication_frontier
+  result_root: results/bounded_communication_frontier
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 4.0
+  concurrency: 16

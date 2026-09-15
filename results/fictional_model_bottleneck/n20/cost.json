@@ -1,0 +1,61 @@
+{
+  "initial_full_run": {
+    "generation": {
+      "api_call_cap": 30000,
+      "api_calls_attempted": 1761,
+      "cache_hit_rate": 0.02220988339811216,
+      "calls_cached": 40,
+      "calls_live": 1761,
+      "calls_total": 1801,
+      "completion_tokens": 19128,
+      "completion_tokens_live": 18611,
+      "cost_usd": 0.056421,
+      "prompt_tokens": 464908,
+      "prompt_tokens_live": 453920
+    },
+    "judge": {
+      "api_call_cap": null,
+      "api_calls_attempted": 160,
+      "cache_hit_rate": 0.627039627039627,
+      "calls_cached": 269,
+      "calls_live": 160,
+      "calls_total": 429,
+      "completion_tokens": 1381,
+      "completion_tokens_live": 558,
+      "cost_usd": 0.004605,
+      "prompt_tokens": 76269,
+      "prompt_tokens_live": 28469
+    },
+    "total_cost_usd": 0.061026,
+    "provenance": "Captured from the initial n=20 full-run report and stdout before cache-only audit reruns."
+  },
+  "latest_execution": {
+    "generation": {
+      "calls_total": 1801,
+      "calls_live": 0,
+      "calls_cached": 1801,
+      "cache_hit_rate": 1.0,
+      "prompt_tokens": 464908,
+      "completion_tokens": 19128,
+      "prompt_tokens_live": 0,
+      "completion_tokens_live": 0,
+      "cost_usd": 0.0,
+      "api_calls_attempted": 0,
+      "api_call_cap": 30000
+    },
+    "judge": {
+      "calls_total": 429,
+      "calls_live": 0,
+      "calls_cached": 429,
+      "cache_hit_rate": 1.0,
+      "prompt_tokens": 76269,
+      "completion_tokens": 1381,
+      "prompt_tokens_live": 0,
+      "completion_tokens_live": 0,
+      "cost_usd": 0.0,
+      "api_calls_attempted": 0,
+      "api_call_cap": null
+    },
+    "total_cost_usd": 0.0
+  }
+}

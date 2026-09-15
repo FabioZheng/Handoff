@@ -1,0 +1,12 @@
+messages.jsonl and answers.jsonl were seeded on 2026-09-09 by copying
+runs/communication_regret/relation_dossiers/n16/ (Experiment 10, relation corpus).
+
+Nothing under runs/communication_regret/ was modified. The copy is a warm start:
+Experiment 14 inherits Experiment 10's model, decoding, word band, rotation
+design, reader prompt and judge byte-identically, so every stored `generic`,
+`conditioned`, `reusable` and `oracle` message and every stored answer matches
+this run's request hashes and is reused instead of regenerated.
+
+Reused on import: 640 messages, 11,264 answers.
+Everything this run adds (paraphrase, the four elimination arms, the random
+control, and their answers) is written here and nowhere else.

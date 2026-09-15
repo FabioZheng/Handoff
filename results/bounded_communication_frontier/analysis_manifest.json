@@ -1,0 +1,24 @@
+{
+  "schema_version": "bounded-communication-frontier-report-v1",
+  "report": "results\\bounded_communication_frontier\\REPORT.md",
+  "artifacts_selected": 10,
+  "matrix_rows": 69248,
+  "baseline_rows": 18,
+  "rotation_distribution_rows": 90336,
+  "context_rows": 22584,
+  "point_rows": 2502,
+  "constrained_rows": 9330,
+  "scalar_selection_rows": 690,
+  "replication_robustness_rows": 14,
+  "figures": [
+    "fig1_distribution_frontiers",
+    "fig2_budget_frontiers",
+    "fig3_raw_three_objective",
+    "fig4_preference_response",
+    "fig5_hypervolume",
+    "fig6_replication_endpoint_deltas"
+  ],
+  "bootstrap_resamples": 5000,
+  "ci_level": 0.95,
+  "include_partial": false
+}

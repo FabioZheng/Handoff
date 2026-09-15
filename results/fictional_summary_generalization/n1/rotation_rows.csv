@@ -1,0 +1,13 @@
+dossier_id,rotation_id,announced_fact_id,mode,slots,selection_valid,selected_count,announced_card_selected,hidden_card_selection_rate,handoff_characters,handoff_words,handoff_estimated_tokens,immediate_em,reusable_em,immediate_f1,reusable_f1
+fic:1,fic:1:A=side2:6f2007a4fb50,fic:1:side2,generic,4,1.0,4,1.0,0.6,412,76,111,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=side2:6f2007a4fb50,fic:1:side2,conditioned,4,1.0,4,1.0,0.6,412,76,111,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=target:ee65761b98e2,fic:1:target,generic,4,1.0,4,1.0,0.6,412,76,111,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=target:ee65761b98e2,fic:1:target,conditioned,4,1.0,4,1.0,0.6,433,78,117,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=side4:6ea2e31e623a,fic:1:side4,generic,4,1.0,4,1.0,0.6,412,76,111,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=side4:6ea2e31e623a,fic:1:side4,conditioned,4,1.0,4,1.0,0.6,412,76,111,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=side3:e69e95079417,fic:1:side3,generic,4,1.0,4,1.0,0.6,412,76,111,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=side3:e69e95079417,fic:1:side3,conditioned,4,1.0,4,1.0,0.6,412,76,111,1.0,0.6,1.0,0.6
+fic:1,fic:1:A=side1:bdccb9b79612,fic:1:side1,generic,4,1.0,4,0.0,0.8,412,76,111,0.0,0.8,0.0,0.8
+fic:1,fic:1:A=side1:bdccb9b79612,fic:1:side1,conditioned,4,1.0,4,1.0,0.6,416,76,112,1.0,0.6,1.0,0.7
+fic:1,fic:1:A=side5:a68e28446b54,fic:1:side5,generic,4,1.0,4,0.0,0.8,412,76,111,0.0,0.8,0.0,0.8
+fic:1,fic:1:A=side5:a68e28446b54,fic:1:side5,conditioned,4,1.0,4,1.0,0.6,403,74,108,1.0,0.6,1.0,0.6

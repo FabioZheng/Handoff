@@ -1,0 +1,78 @@
+{
+  "fetched": true,
+  "missing": [],
+  "models": {
+    "google/gemma-3-12b-it": {
+      "completion_usd_per_mtok": 0.15,
+      "context_length": 131072,
+      "created": 1741902625,
+      "modality": "text+image->text",
+      "openrouter_name": "Google: Gemma 3 12B",
+      "prompt_usd_per_mtok": 0.05,
+      "tokenizer": "Gemini"
+    },
+    "google/gemma-3-27b-it": {
+      "completion_usd_per_mtok": 0.45,
+      "context_length": 262144,
+      "created": 1741756359,
+      "modality": "text+image->text",
+      "openrouter_name": "Google: Gemma 3 27B",
+      "prompt_usd_per_mtok": 0.08,
+      "tokenizer": "Gemini"
+    },
+    "meta-llama/llama-3.1-8b-instruct": {
+      "completion_usd_per_mtok": 0.08,
+      "context_length": 131072,
+      "created": 1721692800,
+      "modality": "text->text",
+      "openrouter_name": "Meta: Llama 3.1 8B Instruct",
+      "prompt_usd_per_mtok": 0.05,
+      "tokenizer": "Llama3"
+    },
+    "meta-llama/llama-3.3-70b-instruct": {
+      "completion_usd_per_mtok": 0.71,
+      "context_length": 131072,
+      "created": 1733506137,
+      "modality": "text->text",
+      "openrouter_name": "Meta: Llama 3.3 70B Instruct",
+      "prompt_usd_per_mtok": 0.71,
+      "tokenizer": "Llama3"
+    },
+    "mistralai/ministral-8b": {
+      "completion_usd_per_mtok": 0.11,
+      "context_length": 128000,
+      "created": 1729123200,
+      "modality": "text->text",
+      "openrouter_name": "Mistral: Ministral 8B",
+      "prompt_usd_per_mtok": 0.11,
+      "tokenizer": "Mistral"
+    },
+    "mistralai/mistral-small-3.2-24b-instruct": {
+      "completion_usd_per_mtok": 0.2,
+      "context_length": 131072,
+      "created": 1750443016,
+      "modality": "text+image->text",
+      "openrouter_name": "Mistral: Mistral Small 3.2 24B",
+      "prompt_usd_per_mtok": 0.075,
+      "tokenizer": "Mistral"
+    },
+    "qwen/qwen3-32b": {
+      "completion_usd_per_mtok": 0.28,
+      "context_length": 131072,
+      "created": 1745875945,
+      "modality": "text->text",
+      "openrouter_name": "Qwen: Qwen3 32B",
+      "prompt_usd_per_mtok": 0.08,
+      "tokenizer": "Qwen3"
+    },
+    "qwen/qwen3-8b": {
+      "completion_usd_per_mtok": 0.455,
+      "context_length": 131072,
+      "created": 1745876632,
+      "modality": "text->text",
+      "openrouter_name": "Qwen: Qwen3 8B",
+      "prompt_usd_per_mtok": 0.117,
+      "tokenizer": "Qwen3"
+    }
+  }
+}

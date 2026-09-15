@@ -1,0 +1,27 @@
+{
+  "schema_version": "fictional-summary-generalization-v1",
+  "source_manifest": {
+    "dataset": "size_adaptation_fictional",
+    "writer_model": "openai/gpt-5.2",
+    "probe_model": "meta-llama/llama-3.3-70b-instruct",
+    "judge_model": "openai/gpt-4o-mini",
+    "pages_requested": 24,
+    "pages_built": 24,
+    "kept": 20,
+    "rejected": 0,
+    "side_facts_per_item": 5
+  },
+  "source_file": "data/size_adaptation/fictional_items.jsonl",
+  "source_file_hash": "95e559c3da4c79fc803f380f90cea03508c274ababa7922e290e7c6f3a5a8545",
+  "selector_model": "meta-llama/llama-3.1-8b-instruct",
+  "answerer_model": "meta-llama/llama-3.1-8b-instruct",
+  "judge_model": "openai/gpt-4o-mini",
+  "n_dossiers": 20,
+  "slots": [
+    2,
+    4,
+    6
+  ],
+  "rotations_per_dossier": 6,
+  "cluster": "dossier"
+}

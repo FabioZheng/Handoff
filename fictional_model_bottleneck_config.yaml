@@ -1,0 +1,172 @@
+# Experiment 8b: fictional-QA source-selector bottleneck.
+#
+# A source-aware selector sees an invented dossier and the currently announced
+# Question A.  Only after its K1-card handoff is sealed is a different Question
+# B announced to a relay.  Normal factorial arms give the relay only that
+# sealed packet.  Two matched interventions add either B's exact source card or
+# another source card without changing the number of packet slots; a positive
+# control explicitly reopens the full source.  A fixed third-family model
+# answers B from the relay's K2-card packet.
+#
+# This is deliberately a new experiment rather than another arm in Experiment
+# 8.  Experiment 8 repeatedly rewrites for the already-known A; this design asks
+# the sharper recovery question: once B becomes known, can downstream capacity
+# reconstruct evidence that the first selector did not transmit?
+
+experiment: fictional_model_bottleneck
+
+# Required by LLMClient before ModelPool replaces the id per client.
+model:
+  id: "mistralai/mistral-small-3.2-24b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  selector_temperature: 0.0
+  relay_temperature: 0.0
+  answer_temperature: 0.0
+  # Alias used by the project's sealed orchestrator helper.
+  orchestrator_temperature: 0.0
+  selection_max_tokens: 128
+  answer_max_tokens: 32
+  response_format_json: true
+
+cost:
+  # One shared ledger covers every selector, relay, and final answerer client.
+  cap_usd: 8.0
+  api_call_cap: 30000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 8
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  retry_after_max_s: 300.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+dataset:
+  items_jsonl: data/size_adaptation/fictional_items.jsonl
+  n_dossiers: 20
+  rotations_per_dossier: 4
+  seed: 20260828
+
+channel:
+  # Capacity is enforced as a number of atomic evidence-card slots, not a soft
+  # token target.  Every delivered packet is rendered from exactly this many
+  # selected ids.  Restore and sham replace one id rather than appending text.
+  selector_slots: 3
+  relay_slots: 1
+
+selection:
+  # Retry only schema/compliance failures, with the same correction for every
+  # model. Content is never repaired or supplemented by the runner.
+  max_parse_attempts: 3
+
+baselines:
+  # One deterministic read of all six cards and one no-evidence check for every
+  # scored B fact. These gate answerer failure and parametric guessing.
+  enabled: true
+
+families:
+  llama:   {label: "Llama (Meta)", color: "#1b9e77"}
+  qwen:    {label: "Qwen (Alibaba)", color: "#d95f02"}
+  mistral: {label: "Mistral (fixed reader)", color: "#7570b3"}
+
+tiers:
+  small: {label: "small"}
+  large: {label: "large"}
+
+# ModelPool requires both tiers for every family in family_cycle.  Mistral is
+# outside that cycle because it is the held-constant reader, not a treatment.
+family_cycle: [llama, qwen]
+
+models:
+  llama_small:
+    id: "meta-llama/llama-3.1-8b-instruct"
+    family: llama
+    tier: small
+    short_code: "L8"
+    parameters_b: 8.0
+    parameters_basis: "vendor headline count (8B), dense"
+    parameters_source: "https://huggingface.co/meta-llama/Llama-3.1-8B-Instruct"
+    released: "2024-07-23"
+    architecture: dense
+  llama_large:
+    id: "meta-llama/llama-3.3-70b-instruct"
+    family: llama
+    tier: large
+    short_code: "L70"
+    parameters_b: 70.6
+    parameters_basis: "reported total 70.6B (vendor headline 70B), dense"
+    parameters_source: "https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct"
+    released: "2024-12-06"
+    architecture: dense
+  qwen_small:
+    id: "qwen/qwen3-8b"
+    family: qwen
+    tier: small
+    short_code: "Q8"
+    parameters_b: 8.2
+    parameters_basis: "reported total 8.2B (6.95B non-embedding), dense"
+    parameters_source: "https://huggingface.co/Qwen/Qwen3-8B"
+    released: "2025-04-29"
+    architecture: dense
+    reasoning: {effort: none}
+    system_suffix: "/no_think"
+  qwen_large:
+    id: "qwen/qwen3-32b"
+    family: qwen
+    tier: large
+    short_code: "Q32"
+    parameters_b: 32.8
+    parameters_basis: "reported total 32.8B (31.2B non-embedding), dense"
+    parameters_source: "https://huggingface.co/Qwen/Qwen3-32B"
+    released: "2025-04-29"
+    architecture: dense
+    reasoning: {effort: none}
+    system_suffix: "/no_think"
+  mistral_reader:
+    id: "mistralai/mistral-small-3.2-24b-instruct"
+    family: mistral
+    tier: large
+    short_code: "M24R"
+    parameters_b: 24.0
+    parameters_basis: "vendor headline count (24B), dense"
+    parameters_source: "https://huggingface.co/mistralai/Mistral-Small-3.2-24B-Instruct-2506"
+    released: "2025-06-20"
+    architecture: dense
+
+test_families:
+  llama: {small: llama_small, large: llama_large}
+  qwen:  {small: qwen_small,  large: qwen_large}
+
+answerer:
+  role: fixed_third_family
+  model: mistral_reader
+
+interventions:
+  # Applied only to small-selector -> large-relay.  `restore` and `sham` both
+  # replace the same removable slot; `reopen` is an intentionally unsealed
+  # positive control and is never pooled into the 2x2 factorial.
+  enabled: [restore, sham, reopen]
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  primary_metric: judge_correct
+  equivalence_margin: 0.05
+  seed: 20260828
+
+outputs:
+  run_root: runs/fictional_model_bottleneck
+  result_root: results/fictional_model_bottleneck
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 3.0
+  concurrency: 12

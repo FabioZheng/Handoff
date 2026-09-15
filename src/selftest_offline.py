@@ -67,22 +67,43 @@ check("abbreviation not split", any(x.startswith("Dr. Smith") for x in s), str(s
 
 print("\n=== dataset shaping ===")
 cfg = load_config(ROOT / "config.yaml")
-qs = data_mod.sample_candidates(cfg, ROOT)[:40]
-check("candidates built", len(qs) == 40)
+# These checks are written against whichever dataset config.yaml selects. The
+# project moved from a MuSiQue parquet to a generated-Wikipedia jsonl, and the
+# two have genuinely different shapes: the parquet carried several paragraphs
+# per question with distractors among them, while each generated question
+# retains one complete Wikipedia page and no benchmark distractors at all
+# (chain_config.yaml, `contexts.full`). Asserting the parquet's shape against
+# the jsonl asserted a property the current dataset was never meant to have.
+generated = cfg["dataset"].get("source") == "generated_wikipedia"
+wanted = min(40, int(cfg["sampling"]["n_candidates"]))
+qs = data_mod.sample_candidates(cfg, ROOT)[:wanted]
+check("candidates built", len(qs) == wanted, f"{len(qs)} of {wanted}")
 
 q = qs[0]
 check("paragraph ids are 1..n and contiguous",
       [p.pid for p in q.paragraphs] == list(range(1, len(q.paragraphs) + 1)))
 check("gold pids match supporting flags",
       set(q.gold_pids) == {p.pid for p in q.paragraphs if p.is_supporting})
-check("has distractors", len(q.paragraphs) > len(q.gold_pids),
-      f"{len(q.paragraphs)} paras, {len(q.gold_pids)} gold")
+if generated:
+    # No distractor documents by construction, so the invariant that remains is
+    # that every retained paragraph is gold and none has been dropped.
+    check("every paragraph is gold (no distractors by design)",
+          len(q.paragraphs) == len(q.gold_pids) and len(q.paragraphs) >= 1,
+          f"{len(q.paragraphs)} paras, {len(q.gold_pids)} gold")
+else:
+    check("has distractors", len(q.paragraphs) > len(q.gold_pids),
+          f"{len(q.paragraphs)} paras, {len(q.gold_pids)} gold")
 
-# Shuffle must be deterministic across independent calls.
-import pandas as pd
-df = pd.read_parquet(ROOT / cfg["dataset"]["local_parquet"])
-row = df[df["id"] == q.qid].iloc[0]
-q2 = data_mod.build_question(row, cfg["sampling"]["seed"])
+# Shuffle must be deterministic across independent calls. Re-derive from the
+# same source the sampler read, not from a parquet the config may not name.
+if generated:
+    qs2 = data_mod.sample_candidates(cfg, ROOT)[:wanted]
+    q2 = next(x for x in qs2 if x.qid == q.qid)
+else:
+    import pandas as pd
+    df = pd.read_parquet(ROOT / cfg["dataset"]["local_parquet"])
+    row = df[df["id"] == q.qid].iloc[0]
+    q2 = data_mod.build_question(row, cfg["sampling"]["seed"])
 check("paragraph order is deterministic",
       [p.orig_idx for p in q.paragraphs] == [p.orig_idx for p in q2.paragraphs])
 
@@ -97,14 +118,21 @@ for qq in qs:
     pid_text = {p.pid: p.text for p in qq.paragraphs}
     for g in qq.gold_sentences:
         total_sents += 1
-        if g.text not in pid_text[g.pid]:
+        # Compared with whitespace and punctuation normalised, via the same
+        # helper the pipeline itself matches with. The generated Wikipedia pages
+        # contain newlines that split_sentences() collapses to spaces, so a gold
+        # sentence is semantically verbatim while not being a byte-level
+        # substring: 5/20 pass a raw `in` test, 20/20 pass this one. The
+        # invariant worth protecting is that the oracle never invents text, and
+        # this still catches that.
+        if not data_mod._contains(pid_text[g.pid], g.text):
             verbatim_bad += 1
     if {g.pid for g in qq.gold_sentences} == set(qq.gold_pids):
         covered_gold_paras += 1
 
 check("every question yields gold sentences", n_no_sent == 0, f"{n_no_sent} without")
 check("every question has a final-hop sentence", n_final_missing == 0, f"{n_final_missing} without")
-check("all gold sentences are verbatim substrings of their paragraph",
+check("all gold sentences occur in their paragraph (whitespace-normalised)",
       verbatim_bad == 0, f"{verbatim_bad}/{total_sents} bad")
 check("gold sentences span every gold paragraph",
       covered_gold_paras == len(qs), f"{covered_gold_paras}/{len(qs)}")

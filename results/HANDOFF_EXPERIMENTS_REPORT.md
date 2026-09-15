@@ -69,6 +69,7 @@ bootstrap intervals are still exploratory rather than multiplicity-corrected.
 | 10 | Communication regret under a hard budget *(complete)* | 24 SQuAD paragraphs x 4 questions; relation dossiers | Llama 3.1 8B sender and answerer | Generic vs conditioned vs reusable vs oracle at 20/40/80/160 delivered words; full per-context utility matrix |
 | 10a | Relation-labelled replication *(complete)* | 16 invented dossiers x 4 aspects x 4 roles; 64 rotations | Llama 3.1 8B sender and answerer | Same four policies and budgets; future-query regret by designed distance from the conditioning query |
 | 12 | Anticipatory context management *(complete)* | Same 16 relation dossiers; 64 rotations x 16 policies x 2 budgets | Llama 3.1 8B sender and answerer; BM25 store | True future-use distribution `P` vs harness estimate `P-hat`; six-action space with retrieval against static compression |
+| 14 | Compression mechanism: rewriting vs selection *(complete)* | Same 16 relation dossiers; 64 rotations x 9 arms x 4 budgets | Llama 3.1 8B sender and answerer; pinned local GPT-2 scorer | Paraphrase vs abstractive summary vs LM elimination vs non-LLM elimination, each generic and query-conditioned, at 20/40/80/160 delivered words |
 
 ## 1. Single-handoff mechanism pilot
 
@@ -1165,6 +1166,31 @@ between two labels for one behaviour. The zero selection regret is what proves
 that reading, and it is why stability alone would have been a misleading
 statistic here.
 
+Both this result and the mismatch sweep below are statements about the same
+plane, and `figures/fig6_lambda_noise_pareto.png` draws it. Its x axis is
+`U_now` net of normalised cost, which turns the scalarised objective into
+`x + lambda*U_future`, so an iso-preference line is straight with slope
+`-1/lambda` and the tangent point is genuinely the argmax -- the winners it
+marks are the ones tabulated above, not an illustration of them. Each winner
+is drawn as a preference *cone* spanning the lambdas it wins over, which is
+what makes the single breakpoint visible as geometry: two cones partition the
+whole 0-8 range.
+
+**One reading convention.** Four groups of arms share a single position in
+each panel, so their markers are fanned onto a small ring around the true
+point, which is drawn as a faint grey circle annotated with the group size
+(`x2`, `x3`, `x4`). The offsets are in typographic points, not data units, so
+a fanned marker never implies a coordinate difference that does not exist --
+and a ring is itself a result: the `x4` ring at the top of both panels is the
+whole `pointer` sweep, perfect estimate through worst, landing on one spot.
+
+The figure is labelled in plain language rather than in the vocabulary used
+here -- `static_conditioned` appears as "writes for now only",
+`TV(P-hat, P)` as "how wrong the guess about future questions was", and lambda
+as "how much a future question is worth". The policy ids are preserved in
+`lambda_noise_pareto_points.csv` and `pareto_manifest.json`, so every drawn
+point remains traceable to the arm that produced it.
+
 ### Does regret degrade smoothly, or hit a threshold?
 
 Slope of `V_anticipation` against mismatch, context-clustered bootstrap:
@@ -1184,6 +1210,15 @@ four distinct mismatch levels per family, a breakpoint model cannot be
 separated from a steep slope. Claiming smoothness on this evidence would be as
 unfounded as claiming a threshold. A denser sweep would settle it and needs new
 generation.
+
+The same figure shows why the slopes differ so sharply. Each family is drawn as
+a trajectory over its noise sweep -- solid for dilution, dashed for
+displacement, both starting from the clean `tau0` estimate -- and the `preserve`
+trajectory walks steeply down the plane as the estimate degrades while the
+`pointer` trajectory stays flat near `U_future = 0.91`. The two knobs are drawn
+as separate lines on purpose: they are different failure modes of the same
+estimate, and joining them through their shared TV would draw a slope between
+two arms that were never on one sweep.
 
 ### Is any of this an artefact of total variation?
 
@@ -1326,6 +1361,140 @@ hits). Figures and tables in
 preference-frontier results live separately in
 [`bounded_communication_frontier/REPORT.md`](bounded_communication_frontier/REPORT.md).
 
+## 14. Compression mechanism: rewriting versus selection
+
+**Question.** Experiment 10 measured what a bounded, query-conditioned handoff
+costs future questions. Every arm it used was abstractive: an LLM read the
+source and wrote new prose, so *selecting* what to keep and *rewriting* it
+varied together. Which of the two produces the specialisation, and does it need
+a language model at all?
+
+**Design.** The same 16 relation dossiers, the same rotation of four anchors,
+the same 20/40/80/160-word delivered-word band, the same reader and the same
+judge as Experiment 10a. Ten arms (plus Experiment 10a's `reusable` and
+`oracle`, imported unchanged):
+
+| paper name | rewrites? | selects? | selector |
+|---|---|---|---|
+| `passthrough` | no | no - positional prefix | - |
+| `paraphrase` | yes | no - instructed not to choose | - |
+| `summary_generic` / `summary_conditioned` | yes | yes | the LLM itself |
+| `lm_elimination_generic` / `_conditioned` | no | yes | pinned GPT-2, self-information / LongLLMLingua-style question-likelihood gain |
+| `nonllm_elimination_generic` / `_conditioned` | no | yes | TF-IDF centrality / BM25 against `q_now` |
+| `random_selection` | no | yes | seeded shuffle |
+
+Elimination arms are executed in code, not requested in a prompt: sentences are
+scored, taken in score order while they fit the cap, rendered in source order,
+and re-derived from the source units before delivery. Experiment 10's
+`extractive_*` arms are *not* reused - they are an LLM asked to copy sentences
+and were 0-29% actually verbatim. The hidden questions never reach a selector,
+and the LM score artefact is written only for the four rotating anchors.
+
+`summary_generic`, `summary_conditioned`, `summary_reusable` and
+`summary_oracle` are Experiment 10a's own stored rows, imported unchanged: this
+run inherits its channel byte-identically, so 640 messages and 11,264 answers
+reproduce their request hashes exactly.
+
+**Result, part 1 - the gradient does not need an LLM.** The paired
+difference-in-differences on the near/far gradient (the conditioned arm's
+`U_orthogonal - U_paraphrase` minus its own generic control's, clustered on the
+source, judged utility):
+
+| family | 40 words | 80 words | 160 words |
+|---|---|---|---|
+| abstractive summary | -0.875 [-0.923, -0.823] | -0.807 [-0.874, -0.729] | -0.835 [-0.921, -0.746] |
+| LM elimination | -0.595 [-0.721, -0.473] | -0.600 [-0.741, -0.462] | -0.559 [-0.665, -0.441] |
+| non-LLM elimination | -0.792 [-0.876, -0.708] | -0.792 [-0.888, -0.686] | -0.630 [-0.727, -0.513] |
+
+BM25 over the source's own sentences - no neural model anywhere in the
+compressor - reproduces 70-95% of the abstractive magnitude. Bounded task-aware
+selection is sufficient to shape a handoff around the present query.
+
+**Result, part 2 - but only rewriting pays for it.** Against the same controls:
+
+| family | `dU_now` (40/80/160w) | `dU_future` (40/80/160w) |
+|---|---|---|
+| abstractive summary | +0.641 / +0.516 / +0.359 | **-0.110 / -0.198 / -0.342**, all excluding 0 |
+| LM elimination | +0.531 / +0.516 / +0.516 | -0.005 / -0.011 / -0.019, all covering 0 |
+| non-LLM elimination | +0.734 / +0.750 / +0.609 | +0.008 / +0.009 / +0.011, all covering 0 |
+
+In the elimination families the gradient comes from *lifting the near
+questions*, not from depressing the far ones; conditioning there is close to
+free. Only abstractive rewriting takes absolute future utility away from its own
+control, and it takes more as the budget grows. Reporting part 1 without part 2
+would overstate the finding.
+
+The evidence-level diagnostic makes the difference concrete. At 160 words the
+orthogonal question's answer string survives in 0.039 of `summary_conditioned`'s
+messages, against 0.286-0.293 for the conditioned elimination arms - about what
+their own generic controls (0.312) and the random floor (0.387) deliver.
+Conditioned rewriting erases the distant evidence; conditioned selection does not
+go out of its way to include it and keeps roughly what an unconditioned selector
+would have kept.
+
+The reader-free allocation measure agrees. At 160 words
+`nonllm_elimination_conditioned` keeps 0.513 of the conditioning aspect's
+sentences against 0.266 of the other aspects (delta +0.247 [0.182, 0.306]),
+while its generic control keeps 0.302 of everything uniformly: the conditioned
+selector adds to the near aspect roughly what it removes from material that was
+not serving those questions well anyway. A conditioned summary instead rewrites
+the whole message around `q_now`.
+
+**Result, part 3 - the mechanisms are not equal in size.** The triple difference
+puts abstractive summary's gradient above LM elimination's at every working
+budget (-0.280 / -0.207 / -0.276) and above non-LLM elimination's at 160 words
+(-0.204 [-0.361, -0.062]); at 40 and 80 words abstractive and non-LLM are
+statistically indistinguishable, and non-LLM exceeds LM (+0.197, +0.191).
+Abstractive generation amplifies task commitment beyond selective deletion, and
+a small LM relevance scorer is the *weakest* of the three task-aware selectors -
+GPT-2 ranks the answer-bearing sentence first for some anchors and sixth for
+others.
+
+**The mechanism split is measured, not assumed.** At the 160-word budget
+`passthrough` and the four elimination arms deliver 5.19-5.88 source sentences
+verbatim per message; `paraphrase`, `summary_generic` and `summary_conditioned`
+deliver 0.06-0.11. Per-message accounting for all 1,472 messages
+(`target_words`, `delivered_words`, `fill_ratio`, `source_words`,
+`retention_fraction`, `selected_unit_count`) is in
+`mechanism/budget_accounting.csv`; zero messages exceed their cap.
+
+**Diagnostic - deletion, not misreading.** Conditional on the gold answer string
+being present in the delivered message, judged accuracy is 0.93-1.00 for every
+arm at every budget. Practically every failure in this experiment happens at the
+compressor. That is what makes the utility differences attributable to the
+mechanism rather than to reader variance.
+
+**Two unpredicted secondary results.** Query-free lexical importance is worse
+than chance and no better than reading from the top:
+`nonllm_elimination_generic` (TF-IDF centrality) reaches 0.344 `U_now` at 160
+words against `random_selection`'s 0.469 and `passthrough`'s 0.453, because
+centrality
+rewards the sentence sharing the most vocabulary with the rest of the dossier,
+which is the least fact-dense one. And a query-free *LLM* summary beats both
+(0.609), because it can pack several facts into one sentence where selection
+must spend a whole sentence per fact - the abstractive channel is denser, which
+is a separate advantage from specialisation.
+
+**Boundary.** The 20-word rung is reported but excluded from every claim above:
+the corpus's shortest sentence is 10 words and the median is 27, so
+whole-sentence elimination delivers one sentence or none there, five of sixteen
+dossiers deliver nothing, and fill ratios run 0.58-0.64 against 0.91-0.94 for
+the abstractive arms. At 80 and 160 words the channel is closely matched
+(0.91-0.96 fill in every arm, elimination actually delivering slightly *more*
+words than abstractive), so the headline contrasts are not length artefacts.
+Token-level elimination was not run: deleting inside a sentence introduces a
+readability confound that this design cannot separate from information loss.
+
+**Audit:** sender and answerer **$0.0434**, judge **$0.0332**, total **$0.077**
+across 8,911 sender/answerer calls and 11,840 judged answers - low because
+Experiment 10a's rows were imported rather than regenerated and the 768
+elimination messages cost nothing to produce. Observed wall-clock: 106 s of CPU
+GPT-2 scoring, ~20 min for the main run at concurrency 12, ~1 min for the
+`passthrough` top-up; the pipeline is API-latency bound. Figures and tables in
+[`compression_mechanism/relation_dossiers/n16/`](compression_mechanism/relation_dossiers/n16/),
+mechanism-specific report and figures in
+[`compression_mechanism/relation_dossiers/n16/mechanism/`](compression_mechanism/relation_dossiers/n16/mechanism/).
+
 ## Cross-experiment interpretation
 
 | Mechanism | Supported conclusion | Boundary |
@@ -1335,6 +1504,7 @@ preference-frontier results live separately in
 | Retrieval quality | Missing relevant evidence remains harmful through later handoffs. | BM25 rank is not a relevance label. |
 | Task conditioning | A known question guides filtering but can remove facts needed later. | Target benefit may be brief; held-out harm depends on context. |
 | Rewriting vs selection | Large held-out loss appears when question-conditioned selection is added; equal-capacity fictional cards reproduce the immediate/reusable trade-off. | Natural-prose ladder has ten pairs; controlled replication has 20 synthetic dossiers. |
+| Mechanism of specialisation | The near/far gradient appears under abstractive summary, LM elimination and purely lexical BM25 elimination alike, so task-aware selection is sufficient and no language model is required; only abstractive rewriting also lowers absolute future utility. | One synthetic corpus, one sender/reader model, sentence-level units; the 20-word rung is degenerate for sentence selection. |
 | Evidence availability | When a sealed fictional packet contains no annotated B answer or alias, increasing relay tier adds nothing; exact same-width restoration restores accuracy. | Literal text-absence criterion; does not imply semantic impossibility or rule out world-knowledge recall. |
 | Language | Switching among six languages has no detected effect. | Wide intervals do not establish equivalence. |
 | Anticipation vs recall | Making discarded evidence retrievable absorbs ~90% of the cost of predicting future demand badly, and shifts the achievable frontier outward rather than along it. Confidently wrong anticipation is reliably worse than none once the budget is large enough to misallocate. | One corpus and one true-demand shape; the retrieval query is the live question, which makes recall strong. |

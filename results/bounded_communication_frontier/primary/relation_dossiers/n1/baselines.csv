@@ -1,0 +1,7 @@
+baseline,metric,mean,lo,hi,n_contexts,n_answers
+direct_context,em,0.9375,0.9375,0.9375,1,16
+direct_context,f1,0.9875,0.9875,0.9875,1,16
+direct_context,judge_correct,1.0,1.0,1.0,1,16
+closed_book,em,0.0,0.0,0.0,1,48
+closed_book,f1,0.006944444444444444,0.006944444444444444,0.006944444444444444,1,48
+closed_book,judge_correct,0.0,0.0,0.0,1,48

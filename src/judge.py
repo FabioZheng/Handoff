@@ -246,3 +246,120 @@ def backfill_field(rows: list[dict], field: str, lookup: dict, key_of) -> None:
             value = lookup.get(key_of(row))
             if value is not None:
                 row[field] = value
+
+
+# ---------- claim support against a source document ----------
+#
+# The third judge in this module, and the only one that reads the *source*.
+# The answer judge grades a span against a gold; the preservation judge grades
+# one message against the message before it. Neither can answer "is anything in
+# this handoff not in the document at all", which is the question an expansion
+# instruction makes urgent: a longer message has more room to assert things
+# nobody supplied. Deliberately scored against the SOURCE DOCUMENT at every
+# depth rather than against the immediately preceding note, because no stage of
+# a chain is ever licensed to introduce material the document did not contain,
+# and grading stage 3 against stage 2 would silently bless a fabrication that
+# entered at stage 2 and was faithfully copied afterwards.
+#
+# The deterministic term scan in ``size_metrics.py`` remains primary; this
+# recovers the unsupported claims that reuse only supported vocabulary.
+
+SUPPORT_SYSTEM = (
+    "You check whether research notes stay within their source document. "
+    "You are given a source document and notes written from it. "
+    "You report only claims the document does not support."
+)
+
+SUPPORT_INSTRUCTION = """Count the factual claims in the notes that the document does not support.
+
+A claim is UNSUPPORTED if the document does not state it and it does not follow directly
+from what the document states. Rewording, summarising, reordering, and omitting are all
+fine and are never unsupported. A claim that merely adds a name, number, date, place, or
+relationship the document never gives IS unsupported.
+
+Reply with exactly one line:
+UNSUPPORTED: <count> | <short quote of each unsupported claim, separated by ' ;; '>
+
+Use a count of 0 and an empty list when every claim is supported."""
+
+
+def support_user_prompt(document: str, notes: str) -> str:
+    body = notes.strip() if notes and notes.strip() else "(empty)"
+    return (
+        f"Source document:\n{document}\n\n"
+        f"Notes written from it:\n{body}\n\n"
+        f"{SUPPORT_INSTRUCTION}"
+    )
+
+
+def parse_support(text: str) -> tuple[float, list[str], bool]:
+    """Return (unsupported_count, quoted claims, parse_ok)."""
+    import re
+
+    raw = (text or "").strip()
+    match = re.search(r"UNSUPPORTED\s*:\s*(\d+)", raw, flags=re.I)
+    if not match:
+        # No parseable count is not evidence of support; leave it unscored so a
+        # judge failure cannot be averaged in as a clean handoff.
+        return float("nan"), [], False
+    count = float(int(match.group(1)))
+    claims = []
+    if "|" in raw:
+        tail = raw.split("|", 1)[1]
+        claims = [c.strip() for c in tail.split(";;") if c.strip()]
+    return count, claims, True
+
+
+def support_config(cfg: dict) -> dict:
+    spec = dict(cfg.get("support_judge") or {})
+    spec.setdefault("enabled", False)
+    spec.setdefault("model_id", "openai/gpt-4o-mini")
+    spec.setdefault("max_tokens", 256)
+    spec.setdefault("cap_usd", 3.0)
+    spec.setdefault("concurrency", 12)
+    return spec
+
+
+def add_support_judge(rows: list[dict], cfg: dict, dry_run: bool = False,
+                      tag: str = "support_judge") -> LLMClient | None:
+    """Add ``unsupported_claims`` to every row lacking it.
+
+    Each row must carry ``document`` and ``current_text``. Rows already holding
+    a verdict are untouched, so reruns are free.
+    """
+    spec = support_config(cfg)
+    if not spec["enabled"] or dry_run:
+        return None
+    missing = [r for r in rows if "unsupported_claims" not in r]
+    if not missing:
+        print(f"[support] reusing {len(rows)} verdicts")
+        return None
+
+    judge_cfg = copy.deepcopy(cfg)
+    judge_cfg["model"]["id"] = spec["model_id"]
+    judge_cfg["model"]["reasoning"] = None
+    judge_cfg["model"].pop("system_suffix", None)
+    judge_cfg["cost"] = {"cap_usd": float(spec["cap_usd"]),
+                         "warn_at_fraction": cfg.get("cost", {}).get("warn_at_fraction", 0.8)}
+    client = LLMClient(judge_cfg, dry_run=dry_run)
+
+    def score(row: dict) -> dict:
+        result = client.chat(
+            [{"role": "system", "content": SUPPORT_SYSTEM},
+             {"role": "user", "content": support_user_prompt(
+                 str(row.get("document", "")), str(row.get("current_text", "")))}],
+            temperature=0.0, max_tokens=int(spec["max_tokens"]), seed=None, tag=tag,
+        )
+        count, claims, parse_ok = parse_support(result.text)
+        return {"unsupported_claims": count, "unsupported_claim_quotes": claims,
+                "support_parse_ok": parse_ok, "support_raw": result.text.strip()[:800]}
+
+    with ThreadPoolExecutor(max_workers=int(spec["concurrency"])) as pool:
+        futures = {pool.submit(score, row): row for row in missing}
+        for future, row in futures.items():
+            row.update(future.result())
+
+    unparsed = sum(1 for r in missing if not r.get("support_parse_ok", True))
+    print(f"[support] scored {len(missing)} notes with {spec['model_id']}"
+          + (f" ({unparsed} unparsed verdicts left unscored)" if unparsed else ""))
+    return client

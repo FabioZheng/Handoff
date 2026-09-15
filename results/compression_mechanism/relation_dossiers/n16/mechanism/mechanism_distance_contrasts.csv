@@ -1,0 +1,25 @@
+family,treatment,control,budget_words,metric,quantity,n_contexts,delta,lo,hi,p_value,n
+abstractive summary,conditioned,generic,20,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.9401041666666667,-0.9856770833333333,-0.8971354166666667,0.0,16
+abstractive summary,conditioned,generic,20,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.6328125,-0.74609375,-0.50390625,0.0,16
+abstractive summary,conditioned,generic,40,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.875,-0.9231770833333333,-0.8229166666666666,0.0,16
+abstractive summary,conditioned,generic,40,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.6588541666666667,-0.7395833333333334,-0.5703125,0.0,16
+abstractive summary,conditioned,generic,80,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.8072916666666666,-0.8736979166666667,-0.7291666666666667,0.0,16
+abstractive summary,conditioned,generic,80,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.6666666666666666,-0.7447916666666666,-0.5807291666666666,0.0,16
+abstractive summary,conditioned,generic,160,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.8346354166666666,-0.9206054687499998,-0.74609375,0.0,16
+abstractive summary,conditioned,generic,160,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.6744791666666666,-0.7669270833333333,-0.5833333333333333,0.0,16
+LM elimination,lm_conditioned,lm_generic,20,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.033854166666666664,-0.09114583333333334,0.005208333333333333,0.2426,16
+LM elimination,lm_conditioned,lm_generic,20,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.03515625,-0.09244791666666667,0.0039062499999999996,0.1955,16
+LM elimination,lm_conditioned,lm_generic,40,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.5950520833333333,-0.7213541666666667,-0.47265625,0.0,16
+LM elimination,lm_conditioned,lm_generic,40,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.4283854166666667,-0.5638020833333334,-0.31119791666666663,0.0,16
+LM elimination,lm_conditioned,lm_generic,80,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.6002604166666667,-0.7408854166666667,-0.4622395833333333,0.0,16
+LM elimination,lm_conditioned,lm_generic,80,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.44010416666666663,-0.5833333333333333,-0.30078125,0.0,16
+LM elimination,lm_conditioned,lm_generic,160,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.55859375,-0.6653645833333333,-0.44140625,0.0,16
+LM elimination,lm_conditioned,lm_generic,160,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.45052083333333337,-0.5520833333333334,-0.34505208333333337,0.0,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,20,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.022135416666666668,-0.07682291666666667,0.009114583333333332,0.6087,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,20,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.0234375,-0.078125,0.0078125,0.6079,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,40,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.7916666666666666,-0.8763020833333333,-0.7083333333333333,0.0,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,40,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.5807291666666667,-0.7187825520833331,-0.43880208333333337,0.0,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,80,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.7916666666666666,-0.8880208333333334,-0.6861979166666667,0.0,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,80,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.578125,-0.7044270833333333,-0.44791666666666663,0.0,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,160,judge_correct,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.6302083333333334,-0.7265625,-0.5130208333333334,0.0,16
+non-LLM elimination,nonllm_conditioned,nonllm_generic,160,em,utility_orthogonal_minus_paraphrase__conditioned_minus_generic,16,-0.4205729166666667,-0.5416666666666666,-0.30338541666666663,0.0,16

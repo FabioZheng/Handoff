@@ -106,6 +106,66 @@ Full experimental design: [README.md](README.md).
   and `oracle` to 0.160 while `conditioned` stays at 0.952: extra bandwidth
   deepens the chosen aspect rather than spreading the message.
   `src/selftest_communication_regret_offline.py` passes.
+- **Compression-mechanism experiment built and run (Experiment 14):**
+  `src/elimination.py`, `src/lm_unit_scores.py`, `src/render_mechanism_report.py`
+  and `compression_mechanism_config.yaml` separate the two things every earlier
+  conditioning arm varied together -- *selecting* what to keep and *rewriting*
+  it. Ten arms on Experiment 10's relation dossiers, channel and reader,
+  plus its two inherited `reusable`/`oracle` arms:
+  `passthrough` (neither mechanism -- the prefix that fits, since sources are
+  3x the top budget), `paraphrase` (rewriting, told not to choose),
+  `generic`/`conditioned` (reused), LM elimination (pinned local GPT-2,
+  LongLLMLingua-style question-likelihood gain), non-LLM elimination (BM25 vs
+  `q_now`; TF-IDF centrality for the generic arm) and a seeded
+  `random_selection` floor.
+  `src/selftest_compression_mechanism_offline.py` passes (43 checks).
+  **Result, in two parts that must not be merged.** (1) The near/far *gradient*
+  appears in all three families: the paired DiD (conditioned minus its own
+  generic control on `U_orthogonal - U_paraphrase`) excludes zero at 40/80/160
+  words everywhere -- abstractive -0.875/-0.807/-0.835, LM -0.595/-0.600/-0.559,
+  non-LLM -0.792/-0.792/-0.630 -- so bounded task-aware *selection* is
+  sufficient to shape a handoff around the present query, and BM25 delivering
+  verbatim sentences reproduces 70-95% of the abstractive magnitude. (2) But
+  only rewriting *costs* future questions: `dU_future` against the same control
+  is -0.110/-0.198/-0.342 (intervals exclude zero) for abstractive summary and
+  covers zero for both elimination families at every budget. In the elimination
+  arms the gradient comes from lifting the near questions, not depressing the
+  far ones -- conditioning there is close to free. Do not report part 1 without
+  part 2; on its own it overstates the result. The triple difference adds that
+  abstractive > LM at every budget and > non-LLM at 160w, so rewriting also
+  amplifies what selection does. Conditional on the gold string being in the
+  delivered message, judged accuracy is 0.93-1.00 for every arm: the failures
+  are deletion at the compressor, not misreading at the reader. Total cost
+  $0.077, because 640 messages and 11,264 answers were imported from
+  Experiment 10 rather than regenerated. The mechanism split is measured, not
+  assumed: at 160 words the elimination arms deliver 5.19-5.88 verbatim source
+  sentences per message against 0.06-0.11 for the abstractive arms.
+- **Non-language handoff pivot scaffolded (Experiment 13):** design and
+  literature review by a prior agent are in `EXPERIMENT_13_DESIGN.md` and
+  `results/LATENT_COMMUNICATION_PIVOT_REPORT.md`; the *implementation* is
+  `src/latent_handoff.py`, `src/latent_backend.py`, `src/latent_metrics.py`,
+  `src/run_latent_reusability.py`, `src/selftest_latent_offline.py`,
+  `src/selftest_latent_gpu.py`, `latent_reusability_config.yaml`,
+  `requirements-latent.txt` and `hpc/latent_smoke.slurm`.
+  `src/selftest_latent_offline.py` passes (102 checks, no API key, no GPU, no
+  weights). Panel A is wired end-to-end on the deterministic backend: 140 K=4
+  packets x 3 channels x 6 questions = 2,520 core evaluations, matching the
+  design, plus 4,200 behavioural and 672 infrastructure control rows.
+  **No GPU run, no model download and no real inference result yet** -- local
+  torch is a CPU-only build and no Bunya GPU entitlement has been verified.
+  Three conventions worth not re-deriving. (1) `SealedHandoff` is untouched;
+  Experiment 13 adds a separate `SealedLatentPayload` holding **immutable
+  serialized bytes**, because a frozen dataclass wrapping a live tensor still
+  references the sender's process and would make "the reader only saw the
+  message" unverifiable. (2) A payload's `positions` is the payload's own
+  receiver cost -- one delivered vector is exactly one position -- and the
+  schema block it travels with is charged separately as `added_positions`;
+  folding the schema into `positions` makes the vector case
+  self-contradictory. (3) The three resource axes (receiver positions,
+  transferred bytes, end-to-end seconds) never collapse into one number: 8 bf16
+  hidden vectors are 40 KiB against 512 bytes for 128 token ids, so a 16x
+  position win is an 80x byte loss, and the selftest asserts that arithmetic.
+
 - **Not yet run:** the repeated-handoff experiment or full 150-question
   baseline run on Bunya. Only the 15-minute smoke test (`hpc/test.slurm`) has executed there,
   and it passed — venv builds, offline selftest passes, compute node reaches
@@ -138,6 +198,14 @@ Full experimental design: [README.md](README.md).
 | Communication regret, relation corpus | `python src/run_communication_regret.py --dataset relation_dossiers --policies generic,conditioned,reusable,oracle --no-trim` |
 | Communication regret offline checks | `python src/selftest_communication_regret_offline.py` |
 | Regenerate the Exp. 10 cross-corpus report | `python src/render_regret_summary.py` |
+| Build Exp. 14 LM selector scores | `python src/lm_unit_scores.py --revision 607a30d783dfa663caf39e06633721c8d4cfcd7e` |
+| Compression mechanism (Exp. 14) | `python src/run_communication_regret.py --config compression_mechanism_config.yaml` |
+| Exp. 14 figures and mechanism report | `python src/render_mechanism_report.py` |
+| Compression mechanism offline checks | `python src/selftest_compression_mechanism_offline.py` |
+| Latent handoff offline checks (Exp. 13) | `python src/selftest_latent_offline.py` |
+| Latent handoff dry run (Exp. 13) | `python src/run_latent_reusability.py --dry-run` |
+| Latent handoff plumbing run, no GPU | `python src/run_latent_reusability.py --fake --limit 14 --out runs/latent_smoke` |
+| Latent handoff GPU checks (needs weights) | `python src/selftest_latent_gpu.py --items 4` |
 
 `OPENROUTER_API_KEY` is read from the environment only — never from a file or
 argument. Cost is hard-capped at `$15.0` in `config.yaml` (`cost.cap_usd`).
@@ -212,6 +280,22 @@ argument. Cost is hard-capped at `$15.0` in `config.yaml` (`cost.cap_usd`).
   exactly once. A separate arm appends "Keep your handoff concise", measuring an
   explicit unquantified concision cue rather than restoring the deleted word in
   place. Do not "fix" the neutral base back to the shared constant.
+- **Experiment 14 reuses Experiment 10's arm NAMES, and none of its extractive
+  results.** The two reused arms stay `generic`/`conditioned` in code (the paper
+  calls them `summary_*`): the message key contains the policy name, so renaming
+  them would turn 640 free rows and 11,264 free answers into paid ones. The
+  `extractive_generic`/`extractive_conditioned` arms are *not* reused for the
+  opposite reason -- they are a prompt asking an LLM to copy sentences, they were
+  0-29% actually verbatim on the SQuAD run, and they never ran on the relation
+  corpus. `src/elimination.py` renders from source units in code and verifies the
+  result against them, which is what makes it a mechanism rather than a request.
+- **The Experiment 14 LM scorer is an input file, not a runtime import.**
+  `src/lm_unit_scores.py` writes `data/compression_mechanism/lm_unit_scores.jsonl`
+  with a manifest (model id, resolved commit, torch/transformers versions, both
+  formulas, prompt templates, corpus hash); the runner reads it and refuses a
+  corpus-hash mismatch. That keeps `torch` out of the experiment's run path and
+  `requirements.txt` unchanged, and it makes the ranking auditable without a GPU
+  or a rerun.
 - **The counterfactual dataset needs the model to KNOW the original.** The
   existing `data/wikipedia_random_counterfactual/` was built from *random*
   Wikipedia pages under the opposite requirement (the model must not know the
@@ -246,6 +330,43 @@ in README.md is the first and current approach. The rest is infrastructure:
   1-6 word standard deviation and zero measured repetition. Do not simplify it
   back to a cap: `max_tokens` alone is not a length control, and neither is a
   cap alone.
+- **`src/llm.py` cannot carry Experiment 13's payload, and neither can a JSON
+  encoding of one.** OpenRouter is a text API: it cannot return hidden states
+  and cannot accept `inputs_embeds`. Serializing vectors into a JSON string and
+  posting them to a text endpoint does not reproduce any of the reviewed
+  methods -- the receiver still tokenizes the digits, so nothing about the
+  receiver's context or computation changes. Experiment 13 therefore runs a
+  local checkpoint through `src/latent_backend.py`, in `.venv-latent` built
+  from `requirements-latent.txt`. Do not add `torch` to `requirements.txt`:
+  every other experiment here has already been run and reported against that
+  dependency set.
+- **The fake latent backend must compress, not copy.** `FakeBackend` originally
+  wrote its transcript H by echoing its input, which made H byte-identical to
+  the source -- so the `source_free` control (re-encode H with no source
+  access) compared a state against itself and could never detect a difference.
+  It now drops stopwords plus a fixed hash-selected minority of tokens. If that
+  is ever simplified back to a copy, the source-conditioning control silently
+  becomes vacuous while still reporting PASS.
+- **TF-IDF centrality is a worse query-free selector than a coin flip.** In
+  Experiment 14 `nonllm_generic` (LexRank-style degree centrality) reaches 0.344
+  `U_now` at a 160-word budget against `random_selection`'s 0.469 and the
+  positional `passthrough` prefix's 0.453: centrality
+  rewards the sentence that shares vocabulary with the rest of the dossier, which
+  on these sources is the least fact-dense one. It is kept as the reported
+  generic non-LLM arm because it is the classical unsupervised extractive
+  summariser and the fair counterpart to BM25, but do not read it as "the best
+  query-free lexical baseline", and do not conclude from it that query-free
+  selection is hopeless -- the query-free *LLM* summary reaches 0.609 on the same
+  budget by packing several facts into one sentence.
+- **Sentence-level elimination cannot use a 20-word budget on this corpus, and
+  that is data, not a bug.** The relation dossiers' shortest sentence is 10 words
+  and the median is 27, so at a 20-word cap the elimination arms deliver one
+  sentence or none, and five of sixteen dossiers deliver nothing at all. Their
+  fill ratio is 0.58-0.64 against 0.91-0.94 for the abstractive arms, and their
+  conditioning intervals cover zero there. Do not "fix" it by truncating a
+  sentence to fit: that turns verbatim elimination into positional truncation,
+  which is a different mechanism. The 20-word rung is reported as a granularity
+  stress test and excluded from the headline claims.
 - Windows OpenSSH does not support `ControlMaster`/SSH multiplexing, which is
   why the Bunya SSH config lives in WSL Ubuntu rather than PowerShell or Git
   Bash — don't move it back.

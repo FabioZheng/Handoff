@@ -1,0 +1,19 @@
+baseline,metric,mean,lo,hi,n_contexts,n_answers,stack_id,stack_label,dataset
+closed_book,em,0.0,0.0,0.0,16,768,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,relation_dossiers
+closed_book,f1,0.011613343253968254,0.005493551587301587,0.018446180555555552,16,768,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,relation_dossiers
+closed_book,judge_correct,0.0,0.0,0.0,16,768,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,relation_dossiers
+direct_context,em,0.84375,0.796875,0.88671875,16,256,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,relation_dossiers
+direct_context,f1,0.9255208333333333,0.9036458333333333,0.9464843749999999,16,256,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,relation_dossiers
+direct_context,judge_correct,0.9921875,0.9765625,1.0,16,256,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,relation_dossiers
+closed_book,em,0.006944444444444444,0.0,0.01736111111111111,24,288,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,squad_groups
+closed_book,f1,0.025635921699034447,0.009105781201369454,0.045853489029806425,24,288,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,squad_groups
+closed_book,judge_correct,0.03125,0.010416666666666666,0.05902777777777777,24,288,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,squad_groups
+direct_context,em,0.6354166666666666,0.5416666666666666,0.7291666666666666,24,96,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,squad_groups
+direct_context,f1,0.7848214353914217,0.7157785292319094,0.8514718584028645,24,96,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,squad_groups
+direct_context,judge_correct,0.875,0.8125,0.9375,24,96,reader=meta-llama/llama-3.1-8b-instruct,Llama-3.1-8B reader,squad_groups
+closed_book,em,0.0,0.0,0.0,16,768,reader=mistralai/ministral-8b-2512,Ministral-3-8B-2512 reader,relation_dossiers
+closed_book,f1,0.025067170965608464,0.015143074156746032,0.036210498305224846,16,768,reader=mistralai/ministral-8b-2512,Ministral-3-8B-2512 reader,relation_dossiers
+closed_book,judge_correct,0.00390625,0.0,0.010416666666666666,16,768,reader=mistralai/ministral-8b-2512,Ministral-3-8B-2512 reader,relation_dossiers
+direct_context,em,0.8515625,0.80078125,0.89453125,16,256,reader=mistralai/ministral-8b-2512,Ministral-3-8B-2512 reader,relation_dossiers
+direct_context,f1,0.8903645833333333,0.8591145833333333,0.9220084635416667,16,256,reader=mistralai/ministral-8b-2512,Ministral-3-8B-2512 reader,relation_dossiers
+direct_context,judge_correct,0.99609375,0.98828125,1.0,16,256,reader=mistralai/ministral-8b-2512,Ministral-3-8B-2512 reader,relation_dossiers

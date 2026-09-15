@@ -1,0 +1,4 @@
+policy,budget_words,floor_words,n_messages,delivered_words_mean,delivered_words_sd,delivered_words_min,delivered_words_max,fill_ratio_mean,under_floor_rate,over_budget_rate,truncated_rate,correction_rate,shrink_corrections_mean,expand_corrections_mean,repetition_rate_mean,budget_tokens,api_max_tokens,completion_tokens_mean,delivered_estimated_tokens_mean,any_over_budget_delivered,replication,family,preference_id,lambda,lambda_infinite,future_share
+split__l0,40,34,4,34.75,4.716990566028302,28.0,38.0,0.8687499999999999,0.25,0.0,0.0,1.0,0.25,2.0,0.0,54,128,124.25,62.0,False,primary,split,l0,0.0,False,0.0
+split__l1,40,34,4,35.0,1.4142135623730951,34.0,37.0,0.875,0.0,0.0,0.0,1.0,0.25,0.5,0.016129,54,256,64.75,62.75,False,primary,split,l1,1.0,False,0.5
+split__linf,40,34,4,37.0,2.160246899469287,35.0,40.0,0.9249999999999999,0.0,0.0,0.0,0.25,0.25,0.25,0.0,54,128,75.5,65.5,False,primary,split,linf,,True,1.0

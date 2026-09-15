@@ -1,0 +1,17 @@
+# Experiment 13 only: the local latent backend.
+#
+# Kept separate from requirements.txt on purpose. Every other experiment in this
+# repository runs against a text API and has already been run and reported;
+# adding torch to their dependency set would change the environment underneath
+# results that are finished. `hpc/latent_smoke.slurm` builds `.venv-latent` from
+# this file, leaving `.venv-bunya` alone.
+#
+# Pin exact versions before any run whose numbers will be reported -- a
+# tokenizer or kernel change moves logits, and the wrapper-parity check is
+# stated in logit tolerances.
+
+-r requirements.txt
+
+torch==2.13.0
+transformers==5.15.0
+safetensors==0.8.0

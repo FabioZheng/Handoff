@@ -1124,3 +1124,189 @@ Offline checks, no API key:
 ```bash
 .venv/Scripts/python src/selftest_anticipatory_offline.py
 ```
+
+## Experiment 14: which compression mechanism specialises a handoff?
+
+Experiment 10's result — a bounded handoff written for the currently known query buys
+present-query utility and loses future-query utility, and loses more the further the future
+query sits from the conditioning one — was measured entirely on **abstractive** arms. An LLM
+read the source and wrote new prose. Two things therefore varied together in every one of
+those arms:
+
+    the sender SELECTED what to keep,
+    and it REWROTE what it kept.
+
+Either could be what commits the message to the present task. Experiment 14 separates them
+on the same corpus, the same channel, the same reader and the same judge, by adding arms
+that select without rewriting:
+
+| paper name | code arm | rewrites? | selects? | selector |
+|---|---|---|---|---|
+| `paraphrase` | `paraphrase` | yes | no — told not to choose | — |
+| `summary_generic` | `generic` | yes | yes, query-agnostic | the LLM itself |
+| `summary_conditioned` | `conditioned` | yes | yes, query-aware | the LLM itself |
+| `lm_elimination_generic` | `lm_generic` | no | yes, query-agnostic | GPT-2 self-information |
+| `lm_elimination_conditioned` | `lm_conditioned` | no | yes, query-aware | GPT-2 question-likelihood gain |
+| `nonllm_elimination_generic` | `nonllm_generic` | no | yes, query-agnostic | TF-IDF centrality |
+| `nonllm_elimination_conditioned` | `nonllm_conditioned` | no | yes, query-aware | BM25 against `q_now` |
+| `random_selection` | `random_selection` | no | yes, seeded shuffle | — |
+
+The progression is deliberate: passthrough is neither, paraphrase is rewriting alone,
+summary is rewriting plus selection, LM elimination is selection without rewriting, and
+non-LLM elimination is selection without rewriting **or a neural model of any kind**.
+
+`passthrough` needs a word about what it can be here. The dossiers run 389–517 words against
+a 160-word top budget, so no *budgeted* arm can carry the source intact; the only honest
+budgeted pass-through is the prefix, cut at the last sentence boundary that fits, which is
+positional elimination at the same granularity as the scored arms. It is therefore the floor
+that asks whether a selector beats simply reading from the top. The **unbounded**
+pass-through is the separate `direct_context` baseline, where the reader sees the whole
+source and scores 0.992. If the specialisation
+survives to the last row, it is a property of bounded task-aware selection, not of language
+models.
+
+### Elimination is a mechanism here, not a prompt
+
+Experiment 10 already had `extractive_generic` / `extractive_conditioned` arms. They are an
+LLM *asked* to copy sentences verbatim, and on the SQuAD run only 0–29% of their messages
+actually were verbatim (they never ran on the relation corpus at all). A prompt is not a
+mechanism, so those arms are not reused.
+
+`src/elimination.py` selects instead: score every sentence, take sentences in score order
+while they fit the cap, render the chosen ones **in source order, joined by one space**, and
+re-derive the message from the units before delivering it (`verify_verbatim`). A unit that
+does not fit is skipped, never truncated, so the cap binds by construction and the sender
+cannot pad. The offline selftest checks all of this on all 768 selection messages.
+
+### The LM scorer is pinned, local, and not the system under test
+
+`src/lm_unit_scores.py` writes a manifest-carrying artefact with GPT-2 small — the
+compressor LM of LLMLingua/LongLLMLingua's small configuration — pinned at commit
+`607a30d7`, teacher-forced on CPU, never generating. Two scores from one model:
+
+```
+lm_generic      -(1/T) * sum_t log p(x_t | x_<t)                        # self-information
+lm_conditioned  (1/|q|) * [ sum_i log p(q_i | unit, q_<i)
+                          - sum_i log p(q_i | q_<i) ]                   # LongLLMLingua-style
+```
+
+Conditioned scores are computed **only** for the four anchor questions that rotate into the
+conditioning role, so the hidden questions never reach the scorer; the writer enforces that
+and the reader re-checks it. The runner refuses a score table whose corpus hash does not
+match the dossiers it is about to compress.
+
+Keeping the scorer out of the run path is why `requirements.txt` still has no `torch`: the
+scores are an input file, and `python src/run_communication_regret.py` never imports a model.
+
+### What was reused rather than rerun
+
+The run inherits Experiment 10's model, decoding, word band, rotation design, reader prompt
+and judge byte-identically, so its 640 stored relation messages and 11,264 stored answers
+match this run's request hashes exactly and are imported instead of regenerated
+(`runs/compression_mechanism/relation_dossiers/n16/IMPORTED_FROM.txt` records the copy;
+nothing under `runs/communication_regret/` is modified). The offline selftest asserts the
+hash equality, which is also the proof that adding these arms perturbed no published prompt.
+
+The whole experiment therefore cost **$0.077** — 64 new sender calls for `paraphrase`, zero
+for the 768 selection messages, and 8,896 unique answer calls after single-flighting. Observed
+wall-clock: 106 s to score all 16 dossiers with GPT-2 on CPU, ~20 min for the main run at
+concurrency 12 (judge 16), ~1 min for the `passthrough` top-up. The pipeline is bound by API
+latency, not local compute.
+
+That the two mechanism families really differ is measurable rather than assumed: at the
+160-word budget, `passthrough` and the four elimination arms deliver 5.19–5.88 source
+sentences *verbatim* per message, against 0.06–0.11 for `paraphrase`, `summary_generic` and
+`summary_conditioned`. Every message's accounting — `target_words`, `delivered_words`,
+`fill_ratio`, `source_words`, `retention_fraction`, `selected_unit_count` — is in
+`mechanism/budget_accounting.csv`, with zero messages over cap.
+
+### Result
+
+All three mechanisms specialise. At every working budget (40/80/160 words) the paired
+difference-in-differences — the conditioned arm's near/far gradient minus its own generic
+control's, clustered on the source — excludes zero in all three families:
+
+| family | 40w | 80w | 160w |
+|---|---:|---:|---:|
+| abstractive summary | −0.875 [−0.923, −0.823] | −0.807 [−0.874, −0.729] | −0.835 [−0.921, −0.746] |
+| LM elimination | −0.595 [−0.721, −0.473] | −0.600 [−0.741, −0.462] | −0.559 [−0.665, −0.441] |
+| non-LLM elimination | −0.792 [−0.876, −0.708] | −0.792 [−0.888, −0.686] | −0.630 [−0.727, −0.513] |
+
+BM25 over the source's own sentences, delivered verbatim, with no neural model anywhere in
+the compressor, reproduces the gradient at 70–95% of the abstractive magnitude. **Bounded
+task-aware selection is sufficient to shape a handoff around the present query; neither
+abstractive rewriting nor an LLM selector is necessary for that.**
+
+The gradient is not the whole story, though, and the two halves of the Experiment 10 result
+come apart here. Against its own generic control, only the abstractive family also *loses*
+absolute future utility:
+
+| family | dU_now (40/80/160w) | dU_future (40/80/160w) |
+|---|---|---|
+| abstractive summary | +0.641 / +0.516 / +0.359 | **−0.110 / −0.198 / −0.342** (all exclude 0) |
+| LM elimination | +0.531 / +0.516 / +0.516 | −0.005 / −0.011 / −0.019 (all cover 0) |
+| non-LLM elimination | +0.734 / +0.750 / +0.609 | +0.008 / +0.009 / +0.011 (all cover 0) |
+
+In the elimination families conditioning buys present utility essentially for free: the
+gradient is produced by *lifting the near questions*, not by depressing the far ones. Only
+rewriting depresses them, and it depresses them more as the budget grows — at 160 words the
+conditioned summary gives up 0.342 of future utility that its own generic control had.
+
+The evidence-level diagnostic says why, concretely. At 160 words the orthogonal question's
+answer string survives in **0.039** of `summary_conditioned`'s messages, against **0.286-0.293**
+for the conditioned elimination arms — which is about what their own generic controls (0.312)
+and even the random floor (0.387) deliver. Conditioned rewriting *erases* the distant
+evidence; conditioned selection simply does not go out of its way to include it, and keeps
+roughly what an unconditioned selector would have kept.
+
+The aspect-retention table (measured on delivered units alone, with no reader in the path)
+agrees. At 160 words `nonllm_elimination_conditioned` keeps 0.513 of the conditioning
+aspect's sentences against 0.266 of the others, while its generic control keeps 0.302 of
+everything uniformly: the conditioned selector adds to the near aspect roughly what it takes
+from the rest, and what it takes was not worth much to begin with. A conditioned summary
+instead rewrites the entire message around `q_now`, so the other aspects lose their
+representation in prose that no longer mentions them.
+
+The mechanisms are also not equal in size, and the triple difference says so: abstractive
+summary's gradient exceeds LM elimination's at every working budget (−0.28/−0.21/−0.28) and
+non-LLM elimination's at 160 words (−0.204 [−0.361, −0.062]), while at 40 and 80 words
+abstractive and non-LLM are statistically indistinguishable. The honest reading is
+**selection is sufficient for the shape; rewriting is stronger, and is the only mechanism
+that pays for it in absolute future utility**.
+
+Two secondary results are worth recording because they were not predicted:
+
+* **The reader is almost never the problem.** Conditional on the gold answer string being
+  present in the delivered message, judged accuracy is 0.93–1.00 for every arm at every
+  budget. Practically every failure in this experiment is deletion at the compressor, not
+  misreading at the receiver — which is what makes the utility differences attributable to
+  the mechanism at all.
+* **Query-free lexical importance is worse than chance, and no better than the prefix.**
+  `nonllm_generic` (TF-IDF centrality) reaches 0.344 `U_now` at 160 words against
+  `random_selection`'s 0.469 and `passthrough`'s 0.453:
+  centrality prefers the sentence that shares vocabulary with the rest of the dossier, which
+  is the least fact-dense one. A query-free *LLM* summary (`generic`, 0.609) beats both,
+  because it can pack several facts into one sentence where selection must spend a whole
+  sentence per fact.
+
+The 20-word rung is reported everywhere and excluded from those claims: the corpus's
+shortest sentence is 10 words and its median 27, so whole-sentence selection delivers one
+sentence or none there (five of sixteen dossiers own no sentence that fits at all, and their
+message is empty). That is a granularity property of sentence-level elimination, and it is
+recorded rather than patched — truncating a sentence to fit would silently turn the arm into
+a different mechanism.
+
+### Running it
+
+```bash
+.venv/Scripts/python src/lm_unit_scores.py --revision 607a30d783dfa663caf39e06633721c8d4cfcd7e
+.venv/Scripts/python src/run_communication_regret.py --config compression_mechanism_config.yaml --dry-run
+.venv/Scripts/python src/run_communication_regret.py --config compression_mechanism_config.yaml
+.venv/Scripts/python src/render_mechanism_report.py
+```
+
+Offline checks, no API key, no model, no network:
+
+```bash
+.venv/Scripts/python src/selftest_compression_mechanism_offline.py
+```

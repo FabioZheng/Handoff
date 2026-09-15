@@ -1,0 +1,78 @@
+# Experiment 5b: fixed-capacity task conditioning on fictional multi-query dossiers.
+#
+# Each dossier contains six independently answerable facts about an invented
+# subject.  Every selected fact is rotated through the announced Question-A
+# role; all other facts are unannounced evaluation queries.  The generic arm
+# sees no question.  Both arms must select exactly K evidence cards, which are
+# rendered verbatim into a sealed handoff.  Thus capacity is structural (K
+# atomic slots), not a non-binding maximum-token request.
+
+model:
+  # Selector.  Kept equal to the published Experiment-5 model for continuity.
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+answerer:
+  # Fixed across both arms and every capacity.  This is also the model checked
+  # by the direct-source, direct-card, and closed-book baselines.
+  id: "meta-llama/llama-3.1-8b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  selector_temperature: 0.0
+  answer_temperature: 0.0
+  closed_book_temperature: 0.7
+  selection_max_tokens: 160
+  answer_max_tokens: 32
+
+cost:
+  cap_usd: 5.0
+  api_call_cap: 12000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 10
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  retry_after_max_s: 300.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+dataset:
+  source: "size_adaptation_fictional"
+  items_jsonl: data/size_adaptation/fictional_items.jsonl
+  n_items: 20
+  rotations_per_dossier: 6
+  card_seed: 20260828
+  rotation_seed: 20260828
+
+selection:
+  slots: [2, 4, 6]
+  primary_slots: 4
+  max_parse_attempts: 3
+  seed: 1
+
+baselines:
+  # One deterministic answer from the full source and the complete evidence-card
+  # representation; repeated stochastic closed-book samples test leakage.
+  closed_book_samples: 3
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  cluster: dossier
+
+outputs:
+  run_root: runs/fictional_summary_generalization
+  result_root: results/fictional_summary_generalization
+
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 3.0
+

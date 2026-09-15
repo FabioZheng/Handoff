@@ -1,0 +1,360 @@
+# Experiment 9: handoff size adaptation.
+#
+# Does an agent change what it writes when it is told how much room the *next*
+# agent has -- and is merely knowing the receiver's capacity different from
+# being asked to use it?
+#
+# Directives are appended to a SIZE-NEUTRAL base prompt:
+#
+#   none          nothing appended -- the neutral control
+#   concise       "Keep your handoff concise."          (unquantified shrink)
+#   inform_small  "the next model has a 2,000-token context window."
+#   resize_small  the same sentence + "Make your handoff fit within it."
+#   inform_large  "the next model has a 10,000-token context window."
+#   resize_large  the same sentence + "Expand your handoff to use the space."
+#
+# resize_X is inform_X plus one clause and nothing else, so inform-vs-resize
+# isolates *being asked to act* from *being told the number*. That property is
+# asserted at startup rather than trusted (see directive_selftest).
+#
+# THE BASE PROMPT IS NOT EXPERIMENT 5's. Every other experiment here inherits
+# Experiment 5's `conditioned` instruction, which opens "Write concise prose
+# research notes ...". That word is itself a shrink instruction, so using it as
+# the control would have made `resize_large` vs control a comparison between
+# "expand" and "shrink" rather than between "expand" and "no size instruction",
+# and `resize_small` vs control would have understated the cost of shrinking by
+# measuring it against an already-shrunk baseline. The base instruction here is
+# therefore the published Experiment 5 string with the single word "concise"
+# deleted and nothing else touched -- a property the selftest asserts by
+# reconstructing the published string from the neutral one. A separate
+# `concise` directive appends "Keep your handoff concise", so an explicit
+# unquantified shrink cue is measured instead of hiding in the baseline. It is
+# not an exact restoration of the deleted word in its original position.
+#
+# Two datasets, chosen so that new material appearing in a handoff can be
+# attributed rather than merely noticed:
+#
+#   counterfactual  real Wikipedia pages rewritten so the answer differs from
+#                   the one the model memorised (document says Lisbon, the
+#                   model believes Rome). Every item is verified BOTH ways
+#                   closed-book: the model must know the original and must not
+#                   know the replacement. A handoff that says "Rome" is then
+#                   parametric reconstruction, not a lucky guess.
+#   fictional       entities that do not exist, so the model cannot know them.
+#                   Anything unsupported that appears here is pure fabrication
+#                   with no pretrained source to attribute it to.
+
+model:
+  # Same model as config.yaml. This matters: the counterfactual dataset's
+  # closed-book verification is model-specific, so the model that writes the
+  # handoffs must be the model the knowledge checks were run against.
+  id: "meta-llama/llama-3.3-70b-instruct"
+  provider_order: null
+  require_parameters: false
+
+decoding:
+  top_p: 1.0
+  orchestrator_temperature: 0.0
+  subagent_temperature: 0.0
+  answer_max_tokens: 32
+  # NON-BINDING and IDENTICAL across every arm. The experiment manipulates the
+  # size the model is *told about*, never the size it is *allowed*: capping
+  # `resize_large` lower than it asks for would make the API the cause of any
+  # null result. Truncation (finish_reason == "length") is measured and
+  # reported per stage so a budget that did bind cannot pass unnoticed.
+  # Must exceed the largest window any directive ADVERTISES (10,000), or the
+  # experiment contradicts its own prompt: `resize_large` tells the model it has
+  # a 10k-token reader and asks it to use the space, and a smaller cap then
+  # makes the API, not the model, the thing that ends the handoff. At 4096 this
+  # bound 50.9% of `resize_large` calls -- see results/size_adaptation/
+  # capped_4096/. Identical across every arm, as before: a per-arm budget would
+  # make "how much it was told to write" and "how much it was allowed to write"
+  # the same variable. The provider ceiling is 115,200, so this is well within
+  # what the platform allows. In the completed run, repetition loops still hit
+  # this common safety ceiling; that is an observed failure mode, not an
+  # arm-specific cap.
+  handoff_max_tokens: 12000
+
+cost:
+  # Raised from 8.0 with handoff_max_tokens: the expand arms may now write ~3x
+  # what the capped run allowed, and every downstream stage, answer and judge
+  # reads those longer notes as input.
+  cap_usd: 15.0
+  api_call_cap: 30000
+  warn_at_fraction: 0.8
+
+runtime:
+  concurrency: 8
+  max_retries: 6
+  backoff_base_s: 1.5
+  backoff_max_s: 60.0
+  # Separate, larger ceiling for an explicit Retry-After header. OpenRouter asks
+  # for 120s when the in-flight credit ceiling is hit; clamping that to
+  # backoff_max_s retried early and exhausted the retries inside the window the
+  # server had already said to wait out.
+  retry_after_max_s: 300.0
+  request_timeout_s: 180
+  cache_dir: cache
+
+# ---------------------------------------------------------------- directives
+#
+# `advertised_tokens` is the number written into the prompt. It is deliberately
+# NOT wired to decoding.handoff_max_tokens -- the claim made to the model and
+# the budget enforced by the API are different variables and are kept that way.
+
+directives:
+  none:
+    label: "control (no size instruction)"
+    advertised_tokens: null
+    kind: control
+    direction: none
+  concise:
+    # Experiment 5's implicit instruction, made explicit and measurable: a
+    # shrink cue with no capacity information attached to it.
+    label: "concise (unquantified shrink)"
+    advertised_tokens: null
+    kind: resize
+    direction: shrink
+  inform_small:
+    label: "informed: 2k window"
+    advertised_tokens: 2000
+    kind: inform
+    direction: shrink
+  resize_small:
+    label: "asked to fit 2k window"
+    advertised_tokens: 2000
+    kind: resize
+    direction: shrink
+  inform_large:
+    label: "informed: 10k window"
+    advertised_tokens: 10000
+    kind: inform
+    direction: expand
+  resize_large:
+    label: "asked to fill 10k window"
+    advertised_tokens: 10000
+    kind: resize
+    direction: expand
+
+# ---------------------------------------------------------------- arms
+#
+# Each arm is a per-stage directive schedule over `max_depth` handoffs. Arms
+# that agree on their first s directives share that stage-s message *exactly*
+# (generation is memoised on the directive prefix), so every contrast below is
+# a comparison between chains with a byte-identical common history.
+
+arms:
+  control:
+    schedule: [none, none, none]
+    label: "control (no size instruction)"
+    group: baseline
+  concise_shrink:
+    schedule: [concise, concise, concise]
+    label: "explicit unquantified concision cue"
+    group: baseline
+  inform_shrink:
+    schedule: [inform_small, inform_small, inform_small]
+    label: "informed small"
+    group: shrink
+  resize_shrink:
+    schedule: [resize_small, resize_small, resize_small]
+    label: "asked to shrink"
+    group: shrink
+  inform_expand:
+    schedule: [inform_large, inform_large, inform_large]
+    label: "informed large"
+    group: expand
+  resize_expand:
+    schedule: [resize_large, resize_large, resize_large]
+    label: "asked to expand"
+    group: expand
+  resize_lsl:
+    schedule: [resize_large, resize_small, resize_large]
+    label: "asked: large -> small -> large"
+    group: trajectory
+  inform_lsl:
+    schedule: [inform_large, inform_small, inform_large]
+    label: "informed: large -> small -> large"
+    group: trajectory
+  resize_sse:
+    schedule: [resize_small, resize_small, resize_large]
+    label: "asked: shrink, shrink, expand"
+    group: trajectory
+
+# Contrasts computed as paired per-item deltas. `pair` is (arm_a, arm_b) and
+# the reported delta is a - b.
+contrasts:
+  - {name: "inform_shrink_vs_control", pair: [inform_shrink, control],
+     asks: "does merely knowing the receiver is small change the handoff?"}
+  - {name: "inform_expand_vs_control", pair: [inform_expand, control],
+     asks: "does merely knowing the receiver is large change the handoff?"}
+  - {name: "resize_vs_inform_shrink", pair: [resize_shrink, inform_shrink],
+     asks: "does asking add anything over informing, when shrinking?"}
+  - {name: "resize_vs_inform_expand", pair: [resize_expand, inform_expand],
+     asks: "does asking add anything over informing, when expanding?"}
+  - {name: "resize_shrink_vs_control", pair: [resize_shrink, control],
+     asks: "total cost of a requested shrink"}
+  - {name: "resize_expand_vs_control", pair: [resize_expand, control],
+     asks: "total effect of a requested expansion"}
+  - {name: "resize_lsl_vs_inform_lsl", pair: [resize_lsl, inform_lsl],
+     asks: "does the large->small->large trajectory need the request?"}
+  - {name: "resize_lsl_vs_resize_shrink", pair: [resize_lsl, resize_shrink],
+     asks: "does a final expansion recover what the small stage dropped?"}
+  - {name: "resize_sse_vs_resize_shrink", pair: [resize_sse, resize_shrink],
+     asks: "same question after two shrink stages rather than one"}
+  - {name: "concise_vs_control", pair: [concise_shrink, control],
+     asks: "how much shrinking did Experiment 5's baseline word already cause?"}
+  - {name: "resize_shrink_vs_concise", pair: [resize_shrink, concise_shrink],
+     asks: "does a stated token budget shrink more than an explicit concision cue?"}
+
+# The bottleneck stage of the large->small->large trajectories. Recovery is
+# scored across the edge that leaves it, so this must be a stage where the
+# schedule actually shrinks.
+trajectory:
+  arms: [resize_lsl, inform_lsl, resize_sse]
+  bottleneck_stage: 2
+
+max_depth: 3
+depths: [0, 1, 2, 3]
+
+dataset:
+  counterfactual:
+    enabled: true
+    items_jsonl: data/size_adaptation/counterfactual_items.jsonl
+    # Above the number actually built, so both sources are retained rather than
+    # the cap silently discarding one of them. They are never pooled blindly:
+    # every row carries `source` and metrics_by_source.csv splits them.
+    n_items: 40
+  fictional:
+    enabled: true
+    items_jsonl: data/size_adaptation/fictional_items.jsonl
+    n_items: 20
+
+# ------------------------------------------------------- dataset construction
+#
+# Used only by src/build_size_adaptation_data.py, never by the runner: the
+# runner reads the built items and refuses to run if their manifest does not
+# match this block.
+
+build:
+  # One strong model writes the fictional pages AND extracts the side-fact
+  # probes for both datasets. It is never the system under test, exactly as in
+  # build_wikipedia_dataset.py and build_wikipedia_counterfactual.py.
+  writer:
+    model_id: "openai/gpt-5.2"
+    reasoning: {effort: high}
+    cap_usd: 6.0
+    # Lower than runtime.concurrency on purpose. These are long high-effort
+    # reasoning calls, and enough of them in flight at once exceeds OpenRouter's
+    # momentary in-flight credit ceiling (HTTP 402 in_flight_budget_exhausted)
+    # even with credit available. The build is a one-off, so throughput here is
+    # worth nothing and a stalled build is worth less than nothing.
+    concurrency: 2
+  # Facts tracked per item: 1 target (the question's answer) + this many side
+  # facts that no question asks about. Side facts are what "reusable
+  # information" means operationally -- a shrink that keeps the answer but
+  # discards them has narrowed the handoff to the current task.
+  side_facts: 5
+  counterfactual:
+    source_counterfactual: data/wikipedia_random_counterfactual/questions.jsonl
+    source_original: data/wikipedia_random/questions.jsonl
+    # An item is usable only if the model reliably produces the ORIGINAL answer
+    # from memory (so a later "Rome" is attributable) and never produces the
+    # REPLACEMENT answer from memory (so a "Lisbon" came from the document).
+    require_knows_original: true
+    require_unknown_counterfactual: true
+    # Fraction of closed-book samples that must recover the original answer.
+    # Below 1.0 because sampling at temperature 0.7 makes an occasional miss on
+    # a fact the model plainly knows; 2 of 3 is the weakest majority.
+    knows_original_min_rate: 0.66
+    max_attempts: 3
+    # Second source for the same dataset. The rewritten-Wikipedia items above
+    # come from RANDOM pages, sampled for a different experiment whose
+    # requirement was that the model must NOT know the answer; most of them
+    # therefore fail this experiment's opposite requirement, that it MUST know
+    # the original. This source samples from the other end -- famous subjects
+    # first, verified known, then rewritten -- so the counterfactual arm is not
+    # left at n=6. Items carry a `source` field either way, so the two
+    # provenances can be separated in analysis instead of silently pooled.
+    known_entities:
+      enabled: true
+      pages: 26
+      max_attempts: 3
+  fictional:
+    pages: 24
+    # Wide enough to hold a target fact plus five independent side facts, and
+    # close enough to the counterfactual pages' length that the two datasets
+    # are not also a length comparison.
+    min_page_characters: 1800
+    max_page_characters: 4200
+    max_attempts: 3
+  # Closed-book probing, shared by both builders. Same shape as config.yaml's
+  # leakage_filter so the same code path and the same cache entries are reused.
+  leakage_filter:
+    samples: 3
+    temperature: 0.7
+    max_tokens: 32
+    f1_known_threshold: 0.6
+
+sampling:
+  seed: 20260828
+  n_target: 20
+
+# ---------------------------------------------------------------- measurement
+
+measurement:
+  # Deterministic scan for material that is in a handoff but not in its source
+  # document. Capitalised sequences and numeric literals only: those are the
+  # token classes where an invented value is unambiguous.
+  unsupported_scan:
+    min_term_characters: 4
+    # An unsupported term this similar to one of the item's TRACKED fact values
+    # is recorded as a CORRUPTION of it (Taren Vos -> Leran Vos) rather than as
+    # a brand-new invention. Deliberately measured against the item's handful of
+    # tracked values, not against every term in the document: nearest-neighbour
+    # similarity over a few hundred document terms grows with document length,
+    # so that version would report long articles as more corrupting than short
+    # ones for no reason but their length. Each term's raw similarity is written
+    # to the artifact, so this threshold can be re-applied after the fact.
+    corruption_similarity: 0.6
+  # Internal redundancy: the share of a handoff's n-grams that are repeats of
+  # an n-gram earlier in the same handoff. This is how "expanded by repeating
+  # itself" is separated from "expanded by adding detail".
+  repetition_ngram: 5
+
+analysis:
+  bootstrap_resamples: 10000
+  ci_level: 0.95
+  primary_metric: judge_correct
+
+# Answer-correctness judge and the preservation judge, both from a different
+# family than the system under test. Same settings as every other experiment.
+judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 8
+  cap_usd: 3.0
+  concurrency: 12
+
+# Claim-support judge: does the handoff assert anything the source document
+# does not? The deterministic unsupported-term scan is primary; this is the
+# semantic complement. Every stage is scored against the same source document,
+# which is the right reference at every depth because no stage of a chain is
+# ever allowed to introduce material the document did not contain.
+support_judge:
+  enabled: true
+  model_id: "openai/gpt-4o-mini"
+  max_tokens: 256
+  cap_usd: 3.0
+  concurrency: 12
+
+leakage_filter:
+  samples: 3
+  temperature: 0.7
+  max_tokens: 32
+  f1_known_threshold: 0.6
+
+outputs:
+  root: results/size_adaptation
+  run_root: runs/size_adaptation
+  data_root: data/size_adaptation

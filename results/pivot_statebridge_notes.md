@@ -1,0 +1,32 @@
+# StateBridge feasibility notes for the communication pivot
+
+Read-only source review, 7 September 2026. No models downloaded and no inference run. Official repository inspected at commit `3f6bf5442c6e8848555a6132516e6d36f35444fb`.
+
+## What the evidence establishes
+
+- **Training-free means no parameter learning**, not no computation: StateBridge fits a closed-form alignment for each message. It generates a message, keeps its final K hidden states, aligns against embeddings of the corresponding decoded tokens, calibrates norms, softly anchors toward vocabulary embeddings, then passes the resulting continuous prefix to the receiver. Its reference setup uses K=64, anchoring 0.3, regularization 0.001. Every agent within a run has the same weights; experiments spanning model families are separate homogeneous runs. Reported hardware is two A100 80 GB GPUs. This is input-context compression; the sender still decodes internally. [Paper, sections 3–4 and appendix B](https://arxiv.org/html/2608.13317v1).
+- The official README explicitly places heterogeneous sender–receiver transfer in future work. Its release supplies the core method and evaluator, but excludes paper baselines and one-off analyses. Thus do not describe it as zero-training compatibility between arbitrary model families. [Official repository scope](https://github.com/YanwenPneg/StateBridge#scope).
+- Dependencies are PyTorch with CUDA 12.4 wheel index, Transformers >=4.51.0, NumPy, tqdm, Accelerate and Datasets. The wrapper loads Hugging Face causal-LM weights in BF16 on CUDA and places the full model on one device; its multi-GPU runner parallelizes work rather than providing a general model-sharding interface. The published hardware is not a minimum requirement. [Requirements](https://github.com/YanwenPneg/StateBridge/blob/3f6bf5442c6e8848555a6132516e6d36f35444fb/requirements.txt), [model wrapper](https://github.com/YanwenPneg/StateBridge/blob/3f6bf5442c6e8848555a6132516e6d36f35444fb/models.py).
+
+## Boundary and implementation audit
+
+The released runner passes only `current_prefix` across consecutive inference calls, not the predecessor's KV cache. It does, however, send `item['question']` afresh to every role. For this project the receiver question must contain no source dossier. Create fresh receiver cache state and expose only the query plus serialized prefix. Source-dependent content in the permitted vector payload is the experimental channel, whereas an additional source cache is a second channel.
+
+Code details worth validating before a replication: hidden capture hooks the final transformer block; the prefix is inserted at a prompt marker when found, otherwise prepended. Generation uses `inputs_embeds`, adds input length to `max_new_tokens`, and infers/slices output length using a comparison to input length. These are version-sensitive choices requiring a smoke test of generated token/state alignment, prefix placement and exact output-budget enforcement. This review does **not** establish a numerical replication failure. [Pinned implementation](https://github.com/YanwenPneg/StateBridge/blob/3f6bf5442c6e8848555a6132516e6d36f35444fb/methods/state_bridge.py).
+
+In contrast, LatentMAS explicitly transfers layer-wise caches containing initial context **and** generated latent thoughts. Its reported reduction in decoded output tokens is not a measurement of bytes transferred. Unmodified full-cache transfer is therefore not an equally sealed, fixed-payload comparator for the present project. It can be included as a separately labelled unrestricted-state ceiling. [LatentMAS, sections 3.1–3.3](https://arxiv.org/html/2511.20639v1).
+
+## Minimal first implementation (proposal, not a paper result)
+
+1. Add a separate local Transformers backend using one frozen Qwen3-4B checkpoint and tokenizer for both agents. Reuse datasets, paired evaluation, hashes and utilities from the current project. Existing `src/llm.py` posts text chat-completions and extracts text; it neither returns hidden states nor accepts `inputs_embeds`. The existing requirements do not pin a suitable local inference stack. Preserve the current text-only `SealedHandoff`; introduce a separately validated latent payload type.
+2. Start with one source-reading writer and one fresh receiver. Generate one fixed writer transcript per source/conditioning query; make both text and latent arms from that identical transcript. Sweep K=16/32/64/128. Align with the published algorithm and mark this a **StateBridge-derived single-handoff adaptation**, not a replication of its four-role benchmark.
+3. Include token embeddings of exactly the same final K tokens as an injection sanity control, raw hidden states as a mismatch control, source-shuffled prefixes as a causal control, full-source and closed-book ceilings/floors, and a competently compressed K-token textual summary. The suffix-token baseline alone is weak because it often begins mid-sentence. Add a same-transcript/source-removed re-encoding ablation to test whether the latent advantage depends on information beyond its visible token sequence.
+4. Answer all existing rotated questions from each sealed message. Carry forward immediate and future utility; additionally count latent positions, serialized bytes and end-to-end inference cost. Success means useful information survives through a genuinely bounded payload, not merely that an API reports fewer text tokens.
+
+## Cost accounting implication
+
+Record source prefill, every sender decode step (including untransmitted reasoning), alignment time, transmitted bytes, receiver prefix positions/prefill, receiver decode steps, peak VRAM, total time and amortized setup/training costs. Compare both receiver-context savings and communication bytes; they answer different questions. Match local backends for runtime comparisons.
+
+For Qwen3-4B, d=2560. A 64-position BF16 prefix contains 64 × 2560 × 2 = **327,680 bytes (320 KiB)** before metadata. Sixty-four 32-bit token IDs occupy **256 bytes**. This calculation is illustrative, not a measured transfer result; actual text transport may use UTF-8 and must be measured. Dense vectors can save receiver positions while expanding network traffic. [Official model configuration](https://huggingface.co/Qwen/Qwen3-4B/blob/main/config.json).
+
+Do not promise that the laptop or Bunya allocation can run this until CUDA availability, GPU memory and allowed checkpoint access are checked. The previous Bunya API smoke test does not establish GPU inference readiness.

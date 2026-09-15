@@ -243,6 +243,11 @@ class LLMClient:
         self.max_retries = rt["max_retries"]
         self.backoff_base = rt["backoff_base_s"]
         self.backoff_max = rt["backoff_max_s"]
+        # Ceiling for an explicit Retry-After, kept separate from backoff_max:
+        # one bounds how long we guess, the other bounds how long we are willing
+        # to believe the server. Defaults high because a provider asking for two
+        # minutes is normal and clamping it just wastes the retry.
+        self.retry_after_max = float(rt.get("retry_after_max_s", 300.0))
         self.timeout = rt["request_timeout_s"]
         self._session_lock = threading.Lock()
         self._local = threading.local()
@@ -345,7 +350,14 @@ class LLMClient:
                 data["_latency_s"] = latency
                 return data
 
-            if resp.status_code == 429 or resp.status_code >= 500:
+            # A 402 normally means "no credits" and must not be retried. The one
+            # exception is OpenRouter's *in-flight* budget: concurrent requests
+            # can exceed the momentary ceiling while the account still has
+            # credit, and the response carries a Retry-After. Retrying only on
+            # that specific reason keeps a genuinely empty account failing fast.
+            transient_payment = (resp.status_code == 402
+                                 and "in_flight_budget_exhausted" in resp.text)
+            if resp.status_code == 429 or resp.status_code >= 500 or transient_payment:
                 last_exc = RuntimeError(f"HTTP {resp.status_code}: {resp.text[:300]}")
                 retry_after = resp.headers.get("Retry-After")
                 self._sleep_backoff(attempt, retry_after)
@@ -356,15 +368,36 @@ class LLMClient:
 
         raise RuntimeError(f"exhausted {self.max_retries} retries; last error: {last_exc}")
 
+    # A wait at least this long is reported. Below it, retries are routine
+    # noise; above it, silence is indistinguishable from a hung process -- and
+    # because a stage waits on every one of its calls, one long sleep stalls the
+    # whole stage with no output at all.
+    LOUD_WAIT_S = 20.0
+
+    def _announce_wait(self, seconds: float, attempt: int, reason: str) -> None:
+        if seconds >= self.LOUD_WAIT_S:
+            print(f"[llm] waiting {seconds:.0f}s before retry {attempt + 1}/{self.max_retries} "
+                  f"({reason}, model {self.model})", flush=True)
+
     def _sleep_backoff(self, attempt: int, retry_after: str | None = None) -> None:
         if retry_after:
             try:
-                time.sleep(min(float(retry_after), self.backoff_max))
+                # Honour the server's own timing. This used to be clamped to
+                # ``backoff_max``, which is the ceiling for *our* exponential
+                # guesswork and has nothing to do with when the server said it
+                # would be ready: a Retry-After of 120s against a 60s ceiling
+                # retried early every time, burned all the retries in half the
+                # advertised window, and failed the call. The separate ceiling
+                # only guards against an absurd header.
+                delay = min(float(retry_after), self.retry_after_max)
+                self._announce_wait(delay, attempt, f"server asked for {retry_after}s")
+                time.sleep(delay)
                 return
             except ValueError:
                 pass
-        delay = min(self.backoff_base * (2**attempt), self.backoff_max)
-        time.sleep(delay * (0.5 + random.random()))  # full-ish jitter
+        delay = min(self.backoff_base * (2**attempt), self.backoff_max) * (0.5 + random.random())
+        self._announce_wait(delay, attempt, "exponential backoff")
+        time.sleep(delay)  # full-ish jitter
 
     # ---------- public ----------
 

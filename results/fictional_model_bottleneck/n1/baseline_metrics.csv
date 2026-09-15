@@ -1,0 +1,5 @@
+kind,measure,n_dossiers,n_questions,mean,lo,hi
+direct_cards,em,1,2,1.0,1.0,1.0
+direct_cards,f1,1,2,1.0,1.0,1.0
+closed_book,em,1,2,0.0,0.0,0.0
+closed_book,f1,1,2,0.0,0.0,0.0
