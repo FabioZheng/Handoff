@@ -946,9 +946,9 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Incremental-evidence MuSiQue chain with relay-only depth controls",
     )
-    parser.add_argument("--config", default=str(ROOT / "config.yaml"),
+    parser.add_argument("--config", default=str(ROOT / "configs/config.yaml"),
                         help="shared model, decoding, cache, cost, and judge config")
-    parser.add_argument("--experiment-config", default=str(ROOT / "incremental_chain_config.yaml"))
+    parser.add_argument("--experiment-config", default=str(ROOT / "configs/incremental_chain_config.yaml"))
     parser.add_argument("--relay-depths", help="comma-separated relay counts, e.g. 0,1,3,5")
     parser.add_argument("--conditions", help="comma-separated configured question-visibility conditions")
     parser.add_argument("--seeds", help="comma-separated handoff seeds")

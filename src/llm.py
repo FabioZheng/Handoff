@@ -108,7 +108,7 @@ class CostLedger:
             if self._spent >= self.cap_usd:
                 raise CostCapExceeded(
                     f"Hard cost cap reached: spent ${self._spent:.4f} of ${self.cap_usd:.2f}. "
-                    f"Aborting before issuing further calls. Raise cost.cap_usd in config.yaml "
+                    f"Aborting before issuing further calls. Raise cost.cap_usd in configs/config.yaml "
                     f"to continue; cached work is preserved and will not be re-paid for."
                 )
             if self.api_call_cap is not None and self._api_calls_attempted >= self.api_call_cap:

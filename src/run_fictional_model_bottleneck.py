@@ -49,7 +49,7 @@ from judge import add_judge  # noqa: E402
 from llm import LLMClient, load_config  # noqa: E402
 from score import score_against_golds  # noqa: E402
 
-CONFIG = ROOT / "fictional_model_bottleneck_config.yaml"
+CONFIG = ROOT / "configs/fictional_model_bottleneck_config.yaml"
 SCHEMA_VERSION = "fictional-model-bottleneck-v2"
 
 SELECTION_SYSTEM = (

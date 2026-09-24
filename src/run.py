@@ -402,7 +402,7 @@ def _write_report(rows, contrasts, ledger, cfg, questions, args) -> None:
 
 def main() -> int:
     ap = argparse.ArgumentParser(description="Agent handoff information-loss probe")
-    ap.add_argument("--config", default=str(ROOT / "config.yaml"))
+    ap.add_argument("--config", default=str(ROOT / "configs/config.yaml"))
     ap.add_argument("--stage", default="all",
                     choices=["all", "0", "1", "2", "4"],
                     help="stage 3 (injections) is not built yet")

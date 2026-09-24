@@ -525,7 +525,7 @@ def analyse_and_write(cfg: dict, replication: str, rep: dict, dataset: str, cont
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="bounded_communication_frontier_config.yaml")
+    parser.add_argument("--config", default="configs/bounded_communication_frontier_config.yaml")
     parser.add_argument("--replication", default="primary")
     parser.add_argument("--dataset", choices=["squad_groups", "relation_dossiers"])
     parser.add_argument("--limit", type=int)

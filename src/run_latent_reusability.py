@@ -48,7 +48,7 @@ from typing import Any, Sequence
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path[:0] = [str(Path(__file__).resolve().parent / d) for d in ('', 'analysis', 'latent', 'builders')]
 
 import fictional_qa as fqa  # noqa: E402
 import latent_backend as lb  # noqa: E402

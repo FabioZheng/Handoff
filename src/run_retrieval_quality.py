@@ -348,7 +348,7 @@ def analyse(rows,cfg,result_root):
     fig.tight_layout(); fig.savefig(result_root/'retrieval_quality.png',dpi=180, bbox_inches='tight'); plt.close(fig)
 
 def main():
-    ap=argparse.ArgumentParser(); ap.add_argument('--config',default=str(ROOT/'retrieval_quality_config.yaml')); ap.add_argument('--n',type=int); ap.add_argument('--construct-only',action='store_true'); ap.add_argument('--dry-run',action='store_true'); args=ap.parse_args()
+    ap=argparse.ArgumentParser(); ap.add_argument('--config',default=str(ROOT/'configs/retrieval_quality_config.yaml')); ap.add_argument('--n',type=int); ap.add_argument('--construct-only',action='store_true'); ap.add_argument('--dry-run',action='store_true'); args=ap.parse_args()
     cfg=load_config(args.config); n=args.n or cfg['dataset']['n_questions']; data_root=ROOT/cfg['outputs']['data_root']; run_root=ROOT/cfg['outputs']['run_root']/f'n{n}'; result_root=ROOT/cfg['outputs']['result_root']/f'n{n}'; result_root.mkdir(parents=True,exist_ok=True)
     packs,summary=construct(cfg,n,write=not args.dry_run)
     if args.construct_only: return 0

@@ -7,6 +7,24 @@ accuracy is lost in the handoff itself, and which kinds of loss cause the damage
 Retrieval is taken out of the picture by design: the subagent is *given* the gold evidence.
 Any drop in accuracy therefore comes from the handoff.
 
+
+## Repository layout
+
+| Path | What it holds |
+|---|---|
+| `configs/` | one YAML file per experiment and replication |
+| `src/` | the experiment runners and the modules they share |
+| `src/analysis/` | analysis, report and figure scripts |
+| `src/latent/` | the latent-communication experiment |
+| `src/builders/` | dataset builders |
+| `tests/` | offline selftests |
+| `data/` | the cohorts and question sets the experiments read |
+| `results/` | one folder per experiment, with its report and figures |
+| `docs/` | the prompt reference |
+
+Raw model outputs (`runs/`) and the tables behind each report are not tracked: the
+runners write them locally when an experiment is run.
+
 ---
 
 ## Status
@@ -53,13 +71,13 @@ Run Experiment 6 on the corrected 10-example SQuAD sample. Each input contains o
 passage and no distractors, and cached calls are reused automatically:
 
 ```bash
-python src/run_multilingual_handoffs.py --config multilingual_handoff_config.yaml --n 10
+python src/run_multilingual_handoffs.py --config configs/multilingual_handoff_config.yaml --n 10
 ```
 
 Offline checks that need no API key (data shaping, scoring and the isolation guarantee):
 
 ```bash
-python src/selftest_offline.py
+python tests/selftest_offline.py
 ```
 
 Every LLM call is cached under `cache/` by a hash of its content, so rerunning any stage costs
@@ -69,10 +87,10 @@ nothing. Reanalysis is free on purpose, because the analysis is meant to be iter
 
 ```
 handoff-probe/
-  config.yaml              model, dataset, sample size, seeds, cost cap
-  fictional_summary_generalization_config.yaml   Experiment 5b fixed-slot fictional QA
-  fictional_model_bottleneck_config.yaml         Experiment 8b selector/relay bottleneck
-  size_adaptation_config.yaml   Experiment 9 directives, arms and dataset construction
+  configs/config.yaml              model, dataset, sample size, seeds, cost cap
+  configs/fictional_summary_generalization_config.yaml   Experiment 5b fixed-slot fictional QA
+  configs/fictional_model_bottleneck_config.yaml         Experiment 8b selector/relay bottleneck
+  configs/size_adaptation_config.yaml   Experiment 9 directives, arms and dataset construction
   PROMPTS.md                every prompt string used anywhere, grouped by experiment
   results/HANDOFF_EXPERIMENTS_REPORT.md   the synthesized findings across all experiments
   src/
@@ -86,16 +104,16 @@ handoff-probe/
     run_chain.py             Experiment 2 -- repeated handoff degradation
                               (also drives the Qwen replications and the
                               question-conditioned/generic replication --
-                              see chain_config.yaml, qwen_chain_config.yaml,
-                              qwen32_chain_config.yaml,
-                              chain_generic_config.yaml)
+                              see configs/chain_config.yaml, configs/qwen_chain_config.yaml,
+                              configs/qwen32_chain_config.yaml,
+                              configs/chain_generic_config.yaml)
     run_retrieval_quality.py Experiment 3 -- retrieval quality through repeated handoffs
     run_redundant_signal_ratio.py  Experiment 4 -- fixed-context redundant-evidence signal ratio
     run_summary_generalization.py  Experiment 5 -- question conditioning and
                                     cross-question generalization
                                     (also drives the paraphrase-only /
                                     pass-through arms -- see
-                                    summary_generalization_paraphrase_config.yaml)
+                                    configs/summary_generalization_paraphrase_config.yaml)
     paraphrase_metrics.py    per-edge lexical measures for Experiment 5
                               (no API calls, no judge)
     fictional_qa.py          shared fictional-dossier cards, rotations, parsing,
@@ -204,7 +222,7 @@ to reach an answering call, and it uses a separate function that never touches t
 ## Data
 
 The active dataset is a small collection of **10 random English Wikipedia pages, each pinned to a
-revision, with exactly two unrelated questions per page**. `src/build_wikipedia_dataset.py` saves
+revision, with exactly two unrelated questions per page**. `src/builders/build_wikipedia_dataset.py` saves
 the full plain text of each page with its URL and revision metadata, and writes 20 `Question`
 records to `data/wikipedia_random/questions.jsonl`. Once that file exists, the runner no longer
 needs MuSiQue or HotpotQA.
@@ -235,14 +253,14 @@ accounting easy to interpret.
 
 The model identifiers were checked against OpenRouter's live `/api/v1/models` endpoint on
 2026-08-11 rather than assumed. Nothing in the pipeline is tied to one model: change `model.id` in
-`config.yaml` and rerun for a second-model robustness check. The C1 filter is specific to the
+`configs/config.yaml` and rerun for a second-model robustness check. The C1 filter is specific to the
 model, so a new model needs its own `stage0`. `stage0` notices when
 `data/filtered_questions.jsonl` no longer matches its recorded manifest and regenerates the file
 automatically.
 
 ## Cost control
 
-- `config.yaml` sets a hard cap (`cost.cap_usd`). When the cap is reached the run stops with a
+- `configs/config.yaml` sets a hard cap (`cost.cap_usd`). When the cap is reached the run stops with a
   clear message, and cached work is kept so nothing is paid for twice.
 - `--dry-run` estimates the number of calls and the cost, broken down by call type, without
   spending anything. It never writes to `data/`, `runs/` or `results/`, so a dry run cannot
@@ -298,7 +316,7 @@ the chain.
 Build the dataset (this needs `OPENROUTER_API_KEY`, which is read from the environment only):
 
 ```bash
-.venv/Scripts/python src/build_wikipedia_dataset.py
+.venv/Scripts/python src/builders/build_wikipedia_dataset.py
 ```
 
 Run the configured 20-question experiment:
@@ -318,14 +336,14 @@ Run the Qwen3 32B replication, which is similar in size and cheap to run. It use
 datasets, contexts, seeds and depths as the 70B run, and keeps its outputs separate:
 
 ```bash
-.venv/Scripts/python src/run_chain.py --config qwen32_chain_config.yaml --chain-config qwen32_chain_experiment.yaml
+.venv/Scripts/python src/run_chain.py --config configs/qwen32_chain_config.yaml --chain-config configs/qwen32_chain_experiment.yaml
 ```
 
 The Qwen configuration uses both Qwen3's own `/no_think` directive and OpenRouter's
 `reasoning.effort: none`, so the fixed handoff and answer budgets are spent on visible text
 rather than on hidden reasoning.
 
-The configuration is in `chain_config.yaml`. Outputs are written to:
+The configuration is in `configs/chain_config.yaml`. Outputs are written to:
 
 - `runs/chain/answers.jsonl`: the prediction, accuracy, context size, handoff size and cumulative
   token counts for each answer;
@@ -343,7 +361,7 @@ The configuration is in `chain_config.yaml`. Outputs are written to:
 Offline check of the generated-dataset adapter and of plot generation:
 
 ```bash
-.venv/Scripts/python src/selftest_chain_offline.py
+.venv/Scripts/python tests/selftest_chain_offline.py
 ```
 
 ## Incremental-evidence chain
@@ -357,8 +375,8 @@ Run the configured experiment:
 
 ```bash
 .venv/Scripts/python src/run_incremental_chain.py \
-  --config config.yaml \
-  --experiment-config incremental_chain_config.yaml
+  --config configs/config.yaml \
+  --experiment-config configs/incremental_chain_config.yaml
 ```
 
 Run a small smoke test or a selected condition:
@@ -389,7 +407,7 @@ main outputs are:
 Offline controls, and schema and plot checks:
 
 ```bash
-.venv/Scripts/python src/selftest_incremental_chain_offline.py
+.venv/Scripts/python tests/selftest_incremental_chain_offline.py
 ```
 
 ## Experiment 5: paraphrase-only arms and per-edge measurement
@@ -431,7 +449,7 @@ except the condition-specific instruction match the published gold-only run, and
 their own directories:
 
 ```bash
-.venv/Scripts/python src/run_summary_generalization.py --config summary_generalization_paraphrase_config.yaml
+.venv/Scripts/python src/run_summary_generalization.py --config configs/summary_generalization_paraphrase_config.yaml
 ```
 
 In addition to the existing `metrics.csv`, `deltas.csv` and `summary_generalization.png`, a run now
@@ -452,7 +470,7 @@ Offline checks for both additions, including that all four stored Experiment 5 r
 reproduce their published `metrics.csv` and `deltas.csv` exactly:
 
 ```bash
-.venv/Scripts/python src/selftest_summary_generalization_offline.py
+.venv/Scripts/python tests/selftest_summary_generalization_offline.py
 ```
 
 ### Experiment 5b: fictional multi-query, fixed-capacity replication
@@ -478,8 +496,8 @@ complied. Full-card accuracy is 1.000 and closed-book accuracy is 0.000. See
 [`results/fictional_summary_generalization/n20/report.md`](results/fictional_summary_generalization/n20/report.md).
 
 ```bash
-.venv/Scripts/python src/selftest_fictional_qa_offline.py
-.venv/Scripts/python src/selftest_fictional_summary_generalization_offline.py
+.venv/Scripts/python tests/selftest_fictional_qa_offline.py
+.venv/Scripts/python tests/selftest_fictional_summary_generalization_offline.py
 .venv/Scripts/python src/run_fictional_summary_generalization.py --dry-run
 .venv/Scripts/python src/run_fictional_summary_generalization.py --limit 1
 .venv/Scripts/python src/run_fictional_summary_generalization.py
@@ -590,7 +608,7 @@ Offline checks: schedules, unchanged prompts, seal enforcement, prefix memoisati
 by area rather than radius, handling of undisclosed sizes, and both figures:
 
 ```bash
-.venv/Scripts/python src/selftest_model_heterogeneity_offline.py
+.venv/Scripts/python tests/selftest_model_heterogeneity_offline.py
 ```
 
 ### Experiment 8b: where the size bottleneck occurs
@@ -627,7 +645,7 @@ not a claim that more parameters help. See
 [`results/fictional_model_bottleneck/n20/report.md`](results/fictional_model_bottleneck/n20/report.md).
 
 ```bash
-.venv/Scripts/python src/selftest_fictional_model_bottleneck_offline.py
+.venv/Scripts/python tests/selftest_fictional_model_bottleneck_offline.py
 .venv/Scripts/python src/run_fictional_model_bottleneck.py --dry-run
 .venv/Scripts/python src/run_fictional_model_bottleneck.py --limit 1
 .venv/Scripts/python src/run_fictional_model_bottleneck.py
@@ -702,7 +720,7 @@ shared history.
 ### Two datasets, so new material can be traced
 
 Noticing that a handoff gained a fact is easy; saying where the fact came from is the hard part.
-`src/build_size_adaptation_data.py` builds both datasets, together with the closed-book evidence
+`src/builders/build_size_adaptation_data.py` builds both datasets, together with the closed-book evidence
 needed to interpret them.
 
 - **`counterfactual`:** documents whose answer contradicts what the model has memorised (the page
@@ -756,7 +774,7 @@ stage 2 and was then copied faithfully.
 ### Running it
 
 ```bash
-.venv/Scripts/python src/build_size_adaptation_data.py --which both
+.venv/Scripts/python src/builders/build_size_adaptation_data.py --which both
 ```
 
 ```bash
@@ -803,7 +821,7 @@ memoisation, the split between corruption and invention, the fact life-history c
 figures:
 
 ```bash
-.venv/Scripts/python src/selftest_size_adaptation_offline.py
+.venv/Scripts/python tests/selftest_size_adaptation_offline.py
 ```
 
 ## Experiment 10: communication regret under a hard communication budget
@@ -931,7 +949,7 @@ are counted rather than silently dropped.
 | `squad_groups` | 24 SQuAD paragraphs, each with 4 human-written questions | natural questions written by people; nothing was written to make the effect appear |
 | `relation_dossiers` | invented dossiers with 4 aspects x {anchor, paraphrase, same-entity, same-topic} | the *distance* between the conditioning question and a hidden question is designed in, not estimated from embeddings |
 
-Both are built by `src/build_regret_data.py`. A SQuAD group is kept only if **all four** of its
+Both are built by `src/builders/build_regret_data.py`. A SQuAD group is kept only if **all four** of its
 questions pass the project's closed-book leakage filter against the answering model (a correct
 off-diagonal answer from memory would look exactly like a reusable handoff), and only if the group
 passes an independence audit by a model from a different family: every question must be answerable
@@ -948,7 +966,7 @@ and `orthogonal` (any anchor from a different aspect).
 ### Running it
 
 ```bash
-.venv/Scripts/python src/build_regret_data.py --which both
+.venv/Scripts/python src/builders/build_regret_data.py --which both
 ```
 
 ```bash
@@ -974,7 +992,7 @@ Smaller runs and reanalysis work as elsewhere (`--limit`, `--budgets`, `--polici
 - `communication_regret.png`: `R_now` and `R_future` for each policy and budget, with CIs;
 - `relation_distance.png`: future-question regret by designed distance (relation corpus only);
 - `REPORT.md` (in `results/communication_regret/`): the report covering both corpora.
-  `src/render_regret_summary.py` regenerates it from the CSVs, so it cannot drift away from them. It
+  `src/analysis/render_regret_summary.py` regenerates it from the CSVs, so it cannot drift away from them. It
   contains every headline table for both corpora and an appendix listing all 3,284 computed cells;
 - `utility_matrix.csv` (every M[a][b] cell with its relation label and ceiling),
   `rotation_rows.csv`, `metrics.csv`, `contrasts.csv` (paired bootstrap differences clustered by
@@ -1026,7 +1044,7 @@ trimming, Pareto domination, relation labelling, and the SQuAD builder against t
 schema:
 
 ```bash
-.venv/Scripts/python src/selftest_communication_regret_offline.py
+.venv/Scripts/python tests/selftest_communication_regret_offline.py
 ```
 
 ## Experiment 12: anticipatory context management under uncertain future demand
@@ -1104,13 +1122,13 @@ offline selftest tests it in both directions.
 ```bash
 .venv/Scripts/python src/run_anticipatory_context.py --dry-run
 .venv/Scripts/python src/run_anticipatory_context.py --budgets 40,80
-.venv/Scripts/python src/render_anticipatory_report.py
+.venv/Scripts/python src/analysis/render_anticipatory_report.py
 ```
 
 Offline checks, with no API key:
 
 ```bash
-.venv/Scripts/python src/selftest_anticipatory_offline.py
+.venv/Scripts/python tests/selftest_anticipatory_offline.py
 ```
 
 ## Experiment 14: which compression mechanism specialises a handoff?
@@ -1282,13 +1300,13 @@ cutting a sentence to fit would quietly turn the arm into a different mechanism.
 
 ```bash
 .venv/Scripts/python src/lm_unit_scores.py --revision 607a30d783dfa663caf39e06633721c8d4cfcd7e
-.venv/Scripts/python src/run_communication_regret.py --config compression_mechanism_config.yaml --dry-run
-.venv/Scripts/python src/run_communication_regret.py --config compression_mechanism_config.yaml
-.venv/Scripts/python src/render_mechanism_report.py
+.venv/Scripts/python src/run_communication_regret.py --config configs/compression_mechanism_config.yaml --dry-run
+.venv/Scripts/python src/run_communication_regret.py --config configs/compression_mechanism_config.yaml
+.venv/Scripts/python src/analysis/render_mechanism_report.py
 ```
 
 Offline checks, with no API key, no model and no network:
 
 ```bash
-.venv/Scripts/python src/selftest_compression_mechanism_offline.py
+.venv/Scripts/python tests/selftest_compression_mechanism_offline.py
 ```

@@ -1357,7 +1357,7 @@ worth much less than escaping it.
 **Audit:** sender and answerer **$0.2303** across 33,000 calls (37.7% cache
 hits). Figures and tables in
 [`anticipatory_context/`](anticipatory_context/), design in
-[`EXPERIMENT_12_DESIGN.md`](../EXPERIMENT_12_DESIGN.md). Experiment 11's
+[`EXPERIMENT_12_DESIGN.md`](../docs/EXPERIMENT_12_DESIGN.md). Experiment 11's
 preference-frontier results live separately in
 [`bounded_communication_frontier/REPORT.md`](bounded_communication_frontier/REPORT.md).
 

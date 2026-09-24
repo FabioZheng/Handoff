@@ -2118,7 +2118,7 @@ def dry_run_report(contexts, rotations, policies, budgets, cfg) -> dict:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="communication_regret_config.yaml")
+    parser.add_argument("--config", default="configs/communication_regret_config.yaml")
     parser.add_argument("--dataset", choices=["squad_groups", "relation_dossiers"],
                         help="override dataset.active")
     parser.add_argument("--limit", type=int, help="bounded pilot over the first N contexts")

@@ -49,8 +49,9 @@ Scores come from three sources, all deterministic:
     on their own.
 ``nonllm_*``
     Computed here in plain Python: Okapi BM25 against the current query for the
-    conditioned arm (``src/retrieval.py``), and TF-IDF graph centrality or
-    IDF informativeness for the query-agnostic arm.
+    conditioned arm (``src/retrieval.py``), and TF-IDF graph centrality, IDF
+    informativeness, or submodular facility-location coverage for a
+    query-agnostic arm.
 ``random_selection``
     A seeded permutation. The sanity floor: any effect an ordering-free
     selector reproduces is not evidence about relevance.
@@ -75,7 +76,7 @@ from retrieval import BM25Index, tokenize  # noqa: E402
 # The arms
 
 LM_POLICIES = ("lm_generic", "lm_conditioned")
-NONLLM_POLICIES = ("nonllm_generic", "nonllm_conditioned")
+NONLLM_POLICIES = ("nonllm_generic", "nonllm_coverage", "nonllm_conditioned")
 RANDOM_POLICY = "random_selection"
 
 # The null mechanism: neither rewriting nor scored selection, just the front of
@@ -95,12 +96,17 @@ SELECTION_POLICIES = LM_POLICIES + NONLLM_POLICIES + (RANDOM_POLICY, PASSTHROUGH
 # that were run per rotation would produce k identical messages and let bookkeeping
 # noise look like a rotation effect.
 QUERY_AWARE = ("lm_conditioned", "nonllm_conditioned")
-QUERY_AGNOSTIC = ("lm_generic", "nonllm_generic", RANDOM_POLICY, PASSTHROUGH_POLICY)
+QUERY_AGNOSTIC = (
+    "lm_generic", "nonllm_generic", "nonllm_coverage", RANDOM_POLICY,
+    PASSTHROUGH_POLICY,
+)
 
 # Generic non-LLM scorers. Centrality is the default because it is the classical
 # unsupervised extractive summariser (LexRank's degree centrality) and therefore
 # the fairest query-independent counterpart to BM25.
-NONLLM_GENERIC_SCORERS = ("centrality", "informativeness")
+NONLLM_GENERIC_SCORERS = (
+    "centrality", "tfidf_centrality", "informativeness", "submodular_coverage",
+)
 
 
 def is_selection(policy: str) -> bool:
@@ -178,6 +184,20 @@ def informativeness_scores(units: list[EvidenceUnit]) -> list[float]:
     return scores
 
 
+def _cosine_similarity_matrix(vectors: list[dict[str, float]]) -> list[list[float]]:
+    """Pairwise cosine similarities for already L2-normalised sparse vectors."""
+    matrix: list[list[float]] = [[0.0] * len(vectors) for _ in vectors]
+    for i, vi in enumerate(vectors):
+        for j in range(i, len(vectors)):
+            vj = vectors[j]
+            short, long_ = (vi, vj) if len(vi) <= len(vj) else (vj, vi)
+            similarity = sum(weight * long_.get(term, 0.0)
+                             for term, weight in short.items())
+            matrix[i][j] = similarity
+            matrix[j][i] = similarity
+    return matrix
+
+
 def bm25_scores(units: list[EvidenceUnit], query: str) -> list[float]:
     """Okapi BM25 of each unit against the current query.
 
@@ -250,11 +270,16 @@ def score_units(policy: str, units: list[EvidenceUnit], *,
         return [float(lm_scores[u.unit_id]) for u in units]
     if policy == "nonllm_conditioned":
         return bm25_scores(units, query or "")
+    if policy == "nonllm_coverage":
+        raise ValueError("nonllm_coverage is budget-aware; call build_message with a word cap")
     if policy == "nonllm_generic":
         if generic_scorer not in NONLLM_GENERIC_SCORERS:
             raise ValueError(f"unknown generic scorer {generic_scorer!r}")
-        return (centrality_scores(units) if generic_scorer == "centrality"
-                else informativeness_scores(units))
+        if generic_scorer in ("centrality", "tfidf_centrality"):
+            return centrality_scores(units)
+        if generic_scorer == "informativeness":
+            return informativeness_scores(units)
+        raise ValueError("submodular_coverage is budget-aware; call build_message with a word cap")
     if policy == PASSTHROUGH_POLICY:
         return positional_scores(units)
     return random_scores(units, seed_material or "random")
@@ -269,7 +294,8 @@ def word_count(text: str) -> int:
     return len(str(text or "").split())
 
 
-def pack(units: list[EvidenceUnit], scores: list[float], cap_words: int) -> tuple[int, ...]:
+def pack(units: list[EvidenceUnit], scores: list[float], cap_words: int, *,
+         eligible_indices: set[int] | None = None) -> tuple[int, ...]:
     """Take units in score order while they fit; return their indices in SOURCE order.
 
     Skipping a unit that does not fit -- rather than stopping at the first one --
@@ -284,7 +310,11 @@ def pack(units: list[EvidenceUnit], scores: list[float], cap_words: int) -> tupl
         raise ValueError("one score per unit")
     if cap_words < 1:
         raise ValueError("cap_words must be >= 1")
-    order = sorted(range(len(units)), key=lambda i: (-float(scores[i]), i))
+    eligible = (set(range(len(units))) if eligible_indices is None
+                else set(eligible_indices))
+    if any(i < 0 or i >= len(units) for i in eligible):
+        raise ValueError("eligible unit index out of range")
+    order = sorted(eligible, key=lambda i: (-float(scores[i]), i))
     chosen: list[int] = []
     used = 0
     for index in order:
@@ -293,6 +323,105 @@ def pack(units: list[EvidenceUnit], scores: list[float], cap_words: int) -> tupl
             chosen.append(index)
             used += cost
     return tuple(sorted(chosen))
+
+
+@dataclass(frozen=True)
+class CoverageStep:
+    """One greedy facility-location choice, recorded at selection time."""
+
+    unit_index: int
+    unit_id: str
+    cost_words: int
+    marginal_gain: float
+    gain_per_word: float
+    cumulative_objective: float
+    cumulative_words: int
+
+    def as_dict(self) -> dict:
+        return {
+            "unit_index": self.unit_index,
+            "unit_id": self.unit_id,
+            "cost_words": self.cost_words,
+            "marginal_gain": self.marginal_gain,
+            "gain_per_word": self.gain_per_word,
+            "cumulative_objective": self.cumulative_objective,
+            "cumulative_words": self.cumulative_words,
+        }
+
+
+@dataclass(frozen=True)
+class CoverageSelection:
+    """Greedy order and diagnostics for one budget-aware coverage selection."""
+
+    selection_order: tuple[int, ...]
+    objective: float
+    trace: tuple[CoverageStep, ...]
+
+
+def submodular_coverage_selection(units: list[EvidenceUnit],
+                                  cap_words: int) -> CoverageSelection:
+    """Greedily maximise TF-IDF facility-location coverage under a word cap.
+
+    For source sentences D and selected sentences S, the objective is
+    ``F(S) = sum_i max_{j in S} cosine(v_i, v_j)``. Candidates are ranked by
+    marginal gain per word because the experiment constrains words, not the
+    number of sentences. Only candidates that still fit are considered.
+
+    ``best_similarity[i]`` caches ``max_{j in S} sim(i, j)``. This makes each
+    marginal-gain calculation O(|D|), after one O(|D|^2) similarity pass,
+    instead of rebuilding the full objective for every candidate and step.
+    Exact score ties go to the earlier source sentence.
+    """
+    if not units:
+        raise ValueError("submodular_coverage_selection needs at least one unit")
+    if cap_words < 1:
+        raise ValueError("cap_words must be >= 1")
+
+    vectors, _ = _tf_idf_vectors(units)
+    similarities = _cosine_similarity_matrix(vectors)
+    costs = [word_count(unit.text) for unit in units]
+    best_similarity = [0.0] * len(units)
+    remaining = set(range(len(units)))
+    selected: list[int] = []
+    trace: list[CoverageStep] = []
+    used = 0
+    objective = 0.0
+
+    while remaining:
+        candidates: list[tuple[float, int, float]] = []
+        for candidate in remaining:
+            cost = costs[candidate]
+            if used + cost > cap_words:
+                continue
+            gain = sum(max(0.0, similarities[i][candidate] - best_similarity[i])
+                       for i in range(len(units)))
+            gain_per_word = gain / cost if cost else (math.inf if gain > 0.0 else 0.0)
+            candidates.append((gain_per_word, candidate, gain))
+        if not candidates:
+            break
+
+        gain_per_word, candidate, gain = max(
+            candidates, key=lambda row: (row[0], -row[1]))
+        if gain <= 0.0:
+            break
+
+        selected.append(candidate)
+        remaining.remove(candidate)
+        used += costs[candidate]
+        best_similarity = [max(current, similarities[i][candidate])
+                           for i, current in enumerate(best_similarity)]
+        objective = sum(best_similarity)
+        trace.append(CoverageStep(
+            unit_index=candidate,
+            unit_id=units[candidate].unit_id,
+            cost_words=costs[candidate],
+            marginal_gain=gain,
+            gain_per_word=gain_per_word,
+            cumulative_objective=objective,
+            cumulative_words=used,
+        ))
+
+    return CoverageSelection(tuple(selected), objective, tuple(trace))
 
 
 def render(units: list[EvidenceUnit], chosen: tuple[int, ...]) -> str:
@@ -338,11 +467,15 @@ class SelectionMessage:
     retention_fraction: float
     selected_unit_count: int
     selected_unit_ids: tuple[str, ...]
+    selected_unit_positions: tuple[int, ...]
+    selected_unit_costs: tuple[int, ...]
     total_unit_count: int
     units_skipped_for_fit: int
     shortest_unit_words: int
     empty_message: bool
     scorer: str
+    facility_location_objective: float | None = None
+    selection_trace: tuple[dict, ...] = ()
     aspect_retention: dict[str, float] = field(default_factory=dict)
     answer_bearing_survived_qids: tuple[str, ...] = ()
     gold_span_survived_qids: tuple[str, ...] = ()
@@ -358,11 +491,15 @@ class SelectionMessage:
             "retention_fraction": self.retention_fraction,
             "selected_unit_count": self.selected_unit_count,
             "selected_unit_ids": list(self.selected_unit_ids),
+            "selected_unit_positions": list(self.selected_unit_positions),
+            "selected_unit_costs": list(self.selected_unit_costs),
             "total_unit_count": self.total_unit_count,
             "units_skipped_for_fit": self.units_skipped_for_fit,
             "shortest_unit_words": self.shortest_unit_words,
             "empty_message": self.empty_message,
             "scorer": self.scorer,
+            "facility_location_objective": self.facility_location_objective,
+            "selection_trace": list(self.selection_trace),
             "aspect_retention": dict(self.aspect_retention),
             "answer_bearing_survived_qids": list(self.answer_bearing_survived_qids),
             "gold_span_survived_qids": list(self.gold_span_survived_qids),
@@ -391,11 +528,30 @@ def build_message(policy: str, units: list[EvidenceUnit], cap_words: int, *,
                   lm_scores: dict[str, float] | None = None,
                   seed_material: str = "",
                   generic_scorer: str = "centrality",
+                  coverage_scorer: str = "submodular_coverage",
                   scorer_label: str = "") -> SelectionMessage:
     """Score, pack, render, verify, and record what survived."""
-    scores = score_units(policy, units, query=query, lm_scores=lm_scores,
-                         seed_material=seed_material, generic_scorer=generic_scorer)
-    chosen = pack(units, scores, cap_words)
+    coverage_method = (policy == "nonllm_coverage"
+                       or (policy == "nonllm_generic"
+                           and generic_scorer == "submodular_coverage"))
+    coverage: CoverageSelection | None = None
+    if coverage_method:
+        if coverage_scorer != "submodular_coverage":
+            raise ValueError(f"unknown coverage scorer {coverage_scorer!r}")
+        if query is not None:
+            raise ValueError(f"policy {policy!r} must not be given a query")
+        coverage = submodular_coverage_selection(units, cap_words)
+        scores = [0.0] * len(units)
+        for rank, index in enumerate(coverage.selection_order):
+            scores[index] = float(len(units) - rank)
+        chosen = pack(units, scores, cap_words,
+                      eligible_indices=set(coverage.selection_order))
+        if set(chosen) != set(coverage.selection_order):
+            raise AssertionError("coverage selection and final packing disagree")
+    else:
+        scores = score_units(policy, units, query=query, lm_scores=lm_scores,
+                             seed_material=seed_material, generic_scorer=generic_scorer)
+        chosen = pack(units, scores, cap_words)
     text = render(units, chosen)
     verify_verbatim(text, units, chosen)
     delivered = word_count(text)
@@ -427,11 +583,16 @@ def build_message(policy: str, units: list[EvidenceUnit], cap_words: int, *,
         retention_fraction=delivered / float(source_words) if source_words else 0.0,
         selected_unit_count=len(chosen),
         selected_unit_ids=tuple(units[i].unit_id for i in chosen),
+        selected_unit_positions=tuple(units[i].index for i in chosen),
+        selected_unit_costs=tuple(unit_words[i] for i in chosen),
         total_unit_count=len(units),
         units_skipped_for_fit=skipped,
         shortest_unit_words=min(unit_words) if unit_words else 0,
         empty_message=not text.strip(),
-        scorer=scorer_label or policy,
+        scorer=scorer_label or ("submodular_coverage" if coverage_method else policy),
+        facility_location_objective=(coverage.objective if coverage else None),
+        selection_trace=(tuple(step.as_dict() for step in coverage.trace)
+                         if coverage else ()),
         aspect_retention=aspect_retention,
         answer_bearing_survived_qids=tuple(survived_qids),
         gold_span_survived_qids=gold_span_survivors(text, questions),

@@ -866,7 +866,7 @@ def analyse_and_write(dossiers, cards, rotations, selections, answers,
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="fictional_summary_generalization_config.yaml")
+    parser.add_argument("--config", default="configs/fictional_summary_generalization_config.yaml")
     parser.add_argument("--limit", type=int, help="bounded dossier pilot")
     parser.add_argument("--slots", help="comma-separated subset of configured K values")
     parser.add_argument("--concurrency", type=int)

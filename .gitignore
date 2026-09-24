@@ -28,3 +28,25 @@ runs/**/*.stderr.log
 runs/**/*.log
 runs/**/*.err.log
 logs/
+
+# Experiment 5 on Bunya: the job venv (a symlink in some checkouts, so no
+# trailing slash) and the run outputs. Analysed results live in results/exp5_*.
+.venv-*
+runs/exp5_cap_only/
+runs/exp5_uncapped/
+
+# Cluster launch scripts stay local; they carry scheduler and account details.
+hpc/
+
+# Machine outputs stay local: raw model outputs, and the tables behind each report.
+# results/ keeps each experiment's report and figures; the runners regenerate the rest.
+runs/
+results/**/*.csv
+results/**/*.json
+results/**/*.jsonl
+results/**/*.txt
+results/**/*.pdf
+!results/exp5_cap_only/calibration/mistral24/calibration.json
+
+# Internal audit notes stay local.
+results/exp5_prompt_family/JOB_AUDIT.md

@@ -130,13 +130,13 @@ def load_prebuilt_pairs(cfg: dict, n: int) -> list[dict]:
     Construction that needs LLM calls (independence/salience audit, C1 leakage
     filtering) belongs in the builder, not in the experiment runner, so the
     experiment never silently re-derives its own dataset. See
-    src/build_squad_same_passage.py.
+    src/builders/build_squad_same_passage.py.
     """
     path = ROOT / cfg["dataset"]["pairs_jsonl"]
     if not path.exists():
         raise FileNotFoundError(
             f"Prebuilt pair file missing: {path}. Build it with "
-            "python src/build_squad_same_passage.py")
+            "python src/builders/build_squad_same_passage.py")
     pairs = [json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x]
     if len(pairs) < n:
         raise RuntimeError(f"{path} holds {len(pairs)} pairs, need {n}")
@@ -658,7 +658,7 @@ def plot_summary_generalization(metrics: list[dict], modes: list[str], depths: l
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default=str(ROOT / "summary_generalization_squad_pairs_config.yaml"))
+    parser.add_argument("--config", default=str(ROOT / "configs/summary_generalization_squad_pairs_config.yaml"))
     parser.add_argument("--n", type=int)
     parser.add_argument("--construct-only", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

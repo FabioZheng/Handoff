@@ -1,0 +1,157 @@
+{
+  "schema": "reuse-cohort-v1",
+  "seed": 20260916,
+  "cohort_config": {
+    "development_per_corpus": 40,
+    "main_per_corpus": 200,
+    "min_words": 800,
+    "max_words": 8000,
+    "squad_questions": 4,
+    "qasper_max_questions": 6
+  },
+  "source_files": [
+    {
+      "dataset": "squad_v1.1",
+      "split": "train",
+      "url": "https://rajpurkar.github.io/SQuAD-explorer/dataset/train-v1.1.json",
+      "sha256": "3527663986b8295af4f7fcdff1ba1ff3f72d07d61a20f487cb238a6ef92fd955",
+      "documents": 442,
+      "questions": 87599,
+      "eligible_articles": 376,
+      "minimum_questions_per_eligible_article": 6,
+      "article_words_p10_p50_p90": [
+        2198,
+        4247,
+        8702
+      ]
+    },
+    {
+      "dataset": "qasper",
+      "split": "train",
+      "url": "https://huggingface.co/datasets/allenai/qasper/resolve/refs%2Fconvert%2Fparquet/qasper/train/0000.parquet",
+      "sha256": "9af08092ee26c4f700202c1f90d1592b662926f23f3a308a10ff0a53345e37fe",
+      "documents": 888,
+      "questions": 2593,
+      "eligible_at_least_3": 296,
+      "eligible_at_least_4": 129,
+      "eligible_question_count_histogram": {
+        "0": 82,
+        "1": 264,
+        "2": 205,
+        "3": 167,
+        "4": 77,
+        "5": 31,
+        "6": 11,
+        "7": 7,
+        "8": 1,
+        "9": 2
+      },
+      "words_p10_p50_p90": [
+        1888,
+        3663,
+        5689
+      ]
+    },
+    {
+      "dataset": "qasper",
+      "split": "validation",
+      "url": "https://huggingface.co/datasets/allenai/qasper/resolve/refs%2Fconvert%2Fparquet/qasper/validation/0000.parquet",
+      "sha256": "089781b91c337d348dd9e8b57cc8adc100ed2d9cab84a6127402bcccf1559222",
+      "documents": 281,
+      "questions": 1005,
+      "eligible_at_least_3": 130,
+      "eligible_at_least_4": 71,
+      "eligible_question_count_histogram": {
+        "0": 11,
+        "1": 56,
+        "2": 74,
+        "3": 59,
+        "4": 35,
+        "5": 20,
+        "6": 10,
+        "7": 3,
+        "8": 2,
+        "10": 1
+      },
+      "words_p10_p50_p90": [
+        1880,
+        3444,
+        4957
+      ]
+    },
+    {
+      "dataset": "qasper",
+      "split": "test",
+      "url": "https://huggingface.co/datasets/allenai/qasper/resolve/refs%2Fconvert%2Fparquet/qasper/test/0000.parquet",
+      "sha256": "206d05a86672dc330a47de4ff95eb0042d5ce0c74a84885bc3d15c36ae67b86e",
+      "documents": 416,
+      "questions": 1451,
+      "eligible_at_least_3": 217,
+      "eligible_at_least_4": 108,
+      "eligible_question_count_histogram": {
+        "0": 17,
+        "1": 61,
+        "2": 112,
+        "3": 109,
+        "4": 59,
+        "5": 25,
+        "6": 15,
+        "7": 7,
+        "8": 2
+      },
+      "words_p10_p50_p90": [
+        1861,
+        3336,
+        5360
+      ]
+    }
+  ],
+  "exclusions": {
+    "squad_length_or_question_count": 66,
+    "qasper_train_length_or_question_count": 593,
+    "qasper_validation_length_or_question_count": 151,
+    "qasper_test_length_or_question_count": 199
+  },
+  "cohorts": {
+    "development": {
+      "documents": 80,
+      "questions": 306,
+      "hash": "601cec0c7f1e1b5d13810451243b0a8c01b5c317ead5403a2568acb1312af154",
+      "corpora": {
+        "squad": 40,
+        "qasper": 40
+      }
+    },
+    "main": {
+      "documents": 400,
+      "questions": 1580,
+      "hash": "cf636103a9df69dac75978b2ae05a216ef86eae34d2be7c9489ea3e0c2457157",
+      "corpora": {
+        "squad": 200,
+        "qasper": 200
+      }
+    },
+    "reserve": {
+      "documents": 283,
+      "questions": 1109,
+      "hash": "88a01989c7370fd15d3c91755d5c3d6c361bfca9460a9c67c35aebd92128170e",
+      "corpora": {
+        "squad": 136,
+        "qasper": 147
+      }
+    }
+  },
+  "status": "Amended before inference; rerun tokenizer QA for the replacement",
+  "tokenizer_amendment": {
+    "parent_cohort_manifest_hash": "03f12926c2ec48e36370a941dba8122cd67a4a198bf5d4268e975c90759d6252",
+    "fit_report_hash": "b41ce307dbc83934798dca981ef346aab9802bb21cf2f33b3e9b47d2d9b10f80",
+    "changes": [
+      {
+        "removed": "qasper-1901.03438",
+        "replacement": "qasper-1910.11769",
+        "reason": "input plus full-source output allowance exceeds native context",
+        "outcomes_observed": false
+      }
+    ]
+  }
+}

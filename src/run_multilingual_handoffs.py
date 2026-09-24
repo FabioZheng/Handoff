@@ -421,7 +421,7 @@ def make_plot(metrics: list[dict], cfg: dict, output: Path, *, schedule: str | N
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default=str(ROOT / "multilingual_handoff_config.yaml"))
+    parser.add_argument("--config", default=str(ROOT / "configs/multilingual_handoff_config.yaml"))
     parser.add_argument("--n", type=int)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()

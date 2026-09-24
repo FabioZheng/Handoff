@@ -16,7 +16,7 @@ module builds one client per registry entry and then hands them all the same
 Nothing here changes ``llm.py``. Per-model controls that already exist there
 (``model.reasoning``, ``model.system_suffix``) are simply carried through from
 the registry, so Qwen3's ``/no_think`` directive is applied and hashed exactly
-as ``qwen32_chain_config.yaml`` already applies it.
+as ``configs/qwen32_chain_config.yaml`` already applies it.
 """
 
 from __future__ import annotations

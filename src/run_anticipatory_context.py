@@ -468,7 +468,7 @@ def write_jsonl(path: Path, rows: list[dict]) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="anticipatory_context_config.yaml")
+    parser.add_argument("--config", default="configs/anticipatory_context_config.yaml")
     parser.add_argument("--budgets", help="comma-separated subset of the configured budgets")
     parser.add_argument("--policies", help="comma-separated subset of the configured policies")
     parser.add_argument("--limit", type=int, help="use only the first N dossiers")

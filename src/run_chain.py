@@ -732,8 +732,8 @@ def parse_csv_arg(value: str, cast=str):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Repeated handoff degradation experiment")
-    parser.add_argument("--config", default=str(ROOT / "config.yaml"))
-    parser.add_argument("--chain-config", default=str(ROOT / "chain_config.yaml"))
+    parser.add_argument("--config", default=str(ROOT / "configs/config.yaml"))
+    parser.add_argument("--chain-config", default=str(ROOT / "configs/chain_config.yaml"))
     parser.add_argument("--datasets", default=None)
     parser.add_argument("--contexts", default=None)
     parser.add_argument("--depths", default=None)

@@ -306,7 +306,7 @@ def analyse(rows: list[dict], survival: list[dict], cfg: dict, root: Path) -> No
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default=str(ROOT / "slack_retrieval_config.yaml"))
+    parser.add_argument("--config", default=str(ROOT / "configs/slack_retrieval_config.yaml"))
     parser.add_argument("--n", type=int)
     parser.add_argument("--construct-only", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

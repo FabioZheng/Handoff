@@ -149,7 +149,7 @@ def load_contexts(path: str | Path) -> tuple[dict, tuple[RegretContext, ...]]:
     path = Path(path)
     if not path.exists():
         raise FileNotFoundError(
-            f"{path} does not exist. Build it first with src/build_regret_data.py.")
+            f"{path} does not exist. Build it first with src/builders/build_regret_data.py.")
     rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
             if line.strip()]
     if not rows:

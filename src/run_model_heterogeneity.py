@@ -1520,7 +1520,7 @@ def dry_run_report(pool: mp.ModelPool) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Model heterogeneity across sequential handoffs")
-    parser.add_argument("--config", default=str(ROOT / "model_heterogeneity_config.yaml"))
+    parser.add_argument("--config", default=str(ROOT / "configs/model_heterogeneity_config.yaml"))
     parser.add_argument("--n", type=int, help="number of A/B pairs (default: dataset.n_pairs)")
     parser.add_argument("--arms", help="comma-separated subset of arm names")
     parser.add_argument("--depths", help="comma-separated subset of depths")

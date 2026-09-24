@@ -1,0 +1,7 @@
+# Shell and Slurm scripts run under bash on Linux, which rejects CRLF line
+# endings. Keep them LF in every checkout, including Windows with autocrlf.
+*.sh    text eol=lf
+*.slurm text eol=lf
+
+# exp5_cap_only_frozen_config.yaml pins this file's SHA-256; check it out byte for byte.
+results/exp5_cap_only/calibration/mistral24/calibration.json -text

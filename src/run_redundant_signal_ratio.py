@@ -396,7 +396,7 @@ def analyse(rows: list[dict], cfg: dict, root: Path) -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", default=str(ROOT / "redundant_signal_ratio_config.yaml"))
+    parser.add_argument("--config", default=str(ROOT / "configs/redundant_signal_ratio_config.yaml"))
     parser.add_argument("--n", type=int)
     parser.add_argument("--construct-only", action="store_true")
     parser.add_argument("--dry-run", action="store_true")

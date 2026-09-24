@@ -1,0 +1,128 @@
+# exp5_cap_only: Experiment 5's writer prompt plus one hard maximum.
+#
+# Separate from reuse_config.yaml so the legacy runs keep their protocol
+# identity and their outputs stay readable as a forced-fill diagnostic. The
+# cohort, the models and the inference lock are deliberately identical, so the
+# only thing that differs between the two families is the prompt and the
+# length contract.
+#
+# There is no fill_floor and no corrections count here, because the contract is
+# one-sided: L_actual <= B. A message shorter than the cap is accepted and
+# recorded. Regeneration happens only for a genuine protocol violation, and the
+# count lives in run_exp5_capped.MAX_REGENERATIONS rather than in the config,
+# so it cannot be mistaken for a fill setting.
+schema: exp5-cap-only-v1
+seed: 20260916
+data_root: data/reuse_v2
+run_root: runs/exp5_cap_only
+cache_root: cache/reuse
+results_root: results/exp5_cap_only
+cohort:
+  development_per_corpus: 40
+  main_per_corpus: 200
+  min_words: 800
+  max_words: 8000
+  squad_questions: 4
+  qasper_max_questions: 6
+budgets:
+  # PROVISIONAL. Not to be reported. The six values are calibrated from the
+  # exp5_uncapped length distribution and from the range where a generic
+  # summary's normalized future retention sits off both floor and ceiling,
+  # then written here with frozen: true. Until then every run must pass
+  # --allow-unfrozen and is stamped budgets_frozen: false in its manifest.
+  absolute: [32, 64, 128, 256, 512, 1024]
+  frozen: false
+  calibrated_from: null
+  # Freeze rule, written 2026-09-21 before the calibration diagnostic
+  # (job 28712184) returned. Applied mechanically by
+  # src/analyse_exp5_calibration.py; the conditioned-minus-generic contrast is
+  # never computed on calibration data, so it cannot influence the grid.
+  #
+  # Per corpus, from development data only:
+  #   binding(B)  = share of documents whose uncapped generic message
+  #                 (exp5_uncapped) is longer than B words
+  #   R(B)        = (U_generic - U_closed_book) / (U_full_source - U_closed_book),
+  #                 mean over documents of per-document mean F1
+  #   B_max       = largest candidate with binding(B) >= 0.5
+  #   B_min       = smallest candidate with R(B) >= 0.2
+  #   granularity = B_min must be at least twice the median source sentence
+  #                 length, so the selection arms can place whole sentences
+  # A corpus has a useful region iff B_min < B_max. The six budgets are
+  # geometric between the headline region's endpoints, inclusive, rounded to
+  # the nearest multiple of 8. If both corpora have regions the grid spans
+  # their intersection; if the intersection is empty the choice is flagged for
+  # a human decision rather than made automatically. A corpus with no region is
+  # reported as a boundary condition, not forced into the headline study.
+  # R(B_max) > 0.8 is reported as a ceiling warning, not a disqualifier.
+  freeze_rule:
+    binding_share: 0.5
+    retention_floor: 0.2
+    retention_ceiling: 0.8
+    min_sentence_multiple: 2
+    round_to: 8
+    count: 6
+models:
+  qwen32:
+    id: Qwen/Qwen3-32B
+    revision: 9216db5781bf21249d130ec9da846c4624c16137
+    thinking: false
+    tensor_parallel: 2
+    max_model_len: 32768
+  mistral24:
+    id: mistralai/Mistral-Small-3.2-24B-Instruct-2506
+    revision: 95a6d26c4bfb886c58daf9d3f7332c857cb27b43
+    tensor_parallel: 1
+    max_model_len: 32768
+    vllm_kwargs:
+      tokenizer_mode: mistral
+      config_format: mistral
+      load_format: mistral
+      limit_mm_per_prompt: {image: 0}
+judge:
+  id: microsoft/phi-4
+  revision: 2db69c1c3e91a05d2c64a3185acfbaf36f744e25
+  tensor_parallel: 1
+  max_model_len: 16384
+# Identical to the legacy lock, so a cross-family comparison is not also a
+# comparison of decoding or library versions.
+inference:
+  dtype: bfloat16
+  temperature: 0.0
+  top_p: 1.0
+  answer_tokens: 512
+  judge_tokens: 64
+  writer_tokens_per_word: 2.0
+  writer_min_tokens: 512
+  max_output_tokens: 17000
+  vllm_version: 0.29.0
+  transformers_version: 5.10.4
+  tokenizers_version: 0.23.0rc0
+runtime:
+  max_num_seqs: 128
+  chunk_size: 1024
+  docs_per_group: 10
+  gpu_memory_utilization: 0.92
+analysis:
+  # Primary (TOTAL effect): the paired question-aware minus generic difference
+  # in future utility within generation, at the same nominal cap, on the
+  # headline corpus. It includes the writer's own choice to send fewer words,
+  # which is part of what question visibility does rather than a nuisance.
+  #
+  # Confirmatory: evidence survival by question distance. No reader, no judge.
+  #
+  # Secondary (CONTROLLED DIRECT effect): realized length is a mediator, not a
+  # confounder --
+  #     question visible -> shorter message -> lower future utility
+  # -- so matching on it or modelling it blocks that pathway and estimates only
+  # what remains. Report both; never let the direct effect stand in for the
+  # total one. A null direct effect would mean the loss runs mostly through
+  # length, not that there is no loss.
+  primary_metric: f1
+  secondary_metrics: [em, judge_correct]
+  primary_test: paired_delta_future_generation_same_cap
+  primary_estimand: total_effect
+  confirmatory: evidence_survival_by_distance
+  secondary: [matched_realized_length, realized_length_regression]
+  secondary_estimand: controlled_direct_effect
+  bootstrap_samples: 10000
+  retention_band: [0.2, 0.8]

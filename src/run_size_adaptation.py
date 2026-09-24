@@ -300,7 +300,7 @@ def load_items(cfg: dict, limit: int | None) -> list[dict]:
         if not rows:
             raise SystemExit(
                 f"{path} is missing or empty. Build it first:\n"
-                f"  .venv/Scripts/python src/build_size_adaptation_data.py --which {name}")
+                f"  .venv/Scripts/python src/builders/build_size_adaptation_data.py --which {name}")
         manifest = rows[0].get("_manifest") if rows else None
         body = [r for r in rows if "_manifest" not in r][:int(spec["n_items"])]
         for row in body:
@@ -1771,7 +1771,7 @@ def dry_run_report(items: list[dict], cfg: dict) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", default="size_adaptation_config.yaml")
+    parser.add_argument("--config", default="configs/size_adaptation_config.yaml")
     parser.add_argument("--dry-run", action="store_true", help="cost estimate only; writes nothing")
     parser.add_argument("--limit", type=int, default=None, help="cap the number of items")
     parser.add_argument("--arms", default=None, help="comma-separated subset of arms")

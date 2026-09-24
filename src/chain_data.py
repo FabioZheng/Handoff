@@ -19,7 +19,7 @@ def read_generated_questions(spec: dict, root: Path) -> list[Question]:
     if not path.exists():
         raise FileNotFoundError(
             f"Generated dataset is missing: {path}. Build it first with "
-            "python src/build_wikipedia_dataset.py"
+            "python src/builders/build_wikipedia_dataset.py"
         )
     with open(path, "r", encoding="utf-8") as fh:
         rows = [json.loads(line) for line in fh if line.strip()]

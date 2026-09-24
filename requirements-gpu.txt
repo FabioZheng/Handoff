@@ -1,0 +1,17 @@
+# Separate Linux GPU environment; leaves the existing experiments untouched.
+vllm==0.29.0
+# vLLM 0.29.0's native Pixtral loader imports PixtralRotaryEmbedding, which
+# Transformers 5.17 removed.  These pins keep Qwen and Mistral in one audited
+# runtime rather than allowing pip to select a different Transformers release.
+transformers==5.10.4
+# Transformers 5.10.4 permits <=0.23.0, and PyPI publishes that final version
+# only as 0.23.0rc0.  Pin the available compatible wheel explicitly.
+tokenizers==0.23.0rc0
+pyyaml>=6.0
+pyarrow>=14.0
+pandas>=2.0
+numpy>=1.26
+requests>=2.31
+matplotlib>=3.8
+langdetect>=1.0.9
+huggingface-hub>=1.5,<2
