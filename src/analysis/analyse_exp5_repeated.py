@@ -29,7 +29,7 @@ sys.path[:0] = [str(Path(__file__).resolve().parents[1] / d) for d in ('', 'anal
 
 import analyse_exp5_capped as base  # noqa: E402
 import analyse_exp5_followup as fu  # noqa: E402
-import run_exp5_capped as rc  # noqa: E402
+from exp5_runs import parent_signature  # noqa: E402
 from reuse_common import config, read_rows  # noqa: E402
 
 POLICIES = ("summary_generic", "summary_conditioned")
@@ -193,7 +193,7 @@ def main() -> int:
     if args.fake:  # mirror run_exp5_capped.py: both roots enter the protocol hash
         cfg["run_root"] = str(Path(cfg["run_root"]) / "fake")
         cfg["cache_root"] = str(Path(cfg["cache_root"]) / "fake")
-    parent = ROOT / cfg["run_root"] / args.split / rc.protocol_hash(cfg)[:12]
+    parent = ROOT / cfg["run_root"] / args.split / parent_signature(cfg)[:12]
     root = parent.with_name(f"{parent.name}-repeated")
     meta = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     doc_ids, caps = set(meta["document_ids"]), sorted(meta["caps"])

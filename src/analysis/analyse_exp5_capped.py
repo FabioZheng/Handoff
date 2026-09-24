@@ -56,7 +56,7 @@ sys.path[:0] = [str(Path(__file__).resolve().parents[1] / d) for d in ('', 'anal
 
 import size_metrics as sx  # noqa: E402
 from reuse_common import config, evidence_relationship, read_rows  # noqa: E402
-from run_exp5_capped import protocol_hash  # noqa: E402
+from exp5_runs import parent_signature  # noqa: E402
 from score import normalize_answer  # noqa: E402
 
 FAMILIES = {"generation": ("summary_conditioned", "summary_generic"),
@@ -76,7 +76,7 @@ UNSUPPORTED_SPEC = {"min_term_characters": 4}
 # ---------------------------------------------------------------------- load
 
 def run_directory(cfg: dict, split: str, tag: str) -> Path:
-    name = protocol_hash(cfg)[:12] + (f"-{tag}" if tag else "")
+    name = parent_signature(cfg)[:12] + (f"-{tag}" if tag else "")
     path = ROOT / cfg["run_root"] / split / name
     if not path.is_dir():
         raise SystemExit(f"run directory not found: {path}")

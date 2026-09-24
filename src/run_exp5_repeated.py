@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import run_exp5_capped as rc  # noqa: E402
+from exp5_runs import parent_signature  # noqa: E402
 from vllm_backend import FakeBackend, VLLMBackend  # noqa: E402
 from reuse_common import atomic_json, digest, read_rows, source_view, write_once  # noqa: E402
 
@@ -48,7 +49,7 @@ def roots(cfg: dict, args) -> tuple[Path, Path, str]:
     if args.fake:
         cfg["run_root"] = str(Path(cfg["run_root"]) / "fake")
         cfg["cache_root"] = str(Path(cfg["cache_root"]) / "fake")
-    signature = rc.protocol_hash(cfg)
+    signature = parent_signature(cfg)
     parent = ROOT / cfg["run_root"] / args.split / signature[:12]
     manifest = parent / "manifest.json"
     if not manifest.exists():

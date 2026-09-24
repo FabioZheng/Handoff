@@ -68,6 +68,7 @@ sys.path[:0] = [str(Path(__file__).resolve().parents[1] / d) for d in ('', 'anal
 import analyse_exp5_capped as base  # noqa: E402
 import analyse_exp5_followup as fu  # noqa: E402
 import run_exp5_capped as rc  # noqa: E402
+from exp5_runs import parent_signature  # noqa: E402
 from vllm_backend import FakeBackend, VLLMBackend  # noqa: E402
 from reuse_common import atomic_json, digest, read_rows, source_view, write_once  # noqa: E402
 
@@ -245,7 +246,7 @@ def roots(cfg: dict, args) -> tuple[Path, Path]:
     if args.fake:
         cfg["run_root"] = str(Path(cfg["run_root"]) / "fake")
         cfg["cache_root"] = str(Path(cfg["cache_root"]) / "fake")
-    parent = ROOT / cfg["run_root"] / args.split / rc.protocol_hash(cfg)[:12]
+    parent = ROOT / cfg["run_root"] / args.split / parent_signature(cfg)[:12]
     if not (parent / "manifest.json").exists():
         raise SystemExit(f"parent run not found: {parent}")
     suffix = ("-allocation" + ({"jury": "-v3", "cascade": "-v3c"}.get(getattr(args, "mode", ""), "")
