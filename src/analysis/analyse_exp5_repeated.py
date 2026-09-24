@@ -185,6 +185,8 @@ def main() -> int:
     parser.add_argument("--split", default="main")
     parser.add_argument("--writer", default="mistral24")
     parser.add_argument("--fake", action="store_true")
+    parser.add_argument("--run-dir", default="",
+                        help="parent main run; defaults to the one the current code's protocol hash names")
     parser.add_argument("--out", default="")
     args = parser.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
@@ -193,7 +195,8 @@ def main() -> int:
     if args.fake:  # mirror run_exp5_capped.py: both roots enter the protocol hash
         cfg["run_root"] = str(Path(cfg["run_root"]) / "fake")
         cfg["cache_root"] = str(Path(cfg["cache_root"]) / "fake")
-    parent = ROOT / cfg["run_root"] / args.split / parent_signature(cfg)[:12]
+    parent = (Path(args.run_dir) if args.run_dir
+              else ROOT / cfg["run_root"] / args.split / parent_signature(cfg)[:12])
     root = parent.with_name(f"{parent.name}-repeated")
     meta = json.loads((root / "manifest.json").read_text(encoding="utf-8"))
     doc_ids, caps = set(meta["document_ids"]), sorted(meta["caps"])

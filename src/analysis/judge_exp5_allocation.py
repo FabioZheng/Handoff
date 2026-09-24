@@ -246,7 +246,8 @@ def roots(cfg: dict, args) -> tuple[Path, Path]:
     if args.fake:
         cfg["run_root"] = str(Path(cfg["run_root"]) / "fake")
         cfg["cache_root"] = str(Path(cfg["cache_root"]) / "fake")
-    parent = ROOT / cfg["run_root"] / args.split / parent_signature(cfg)[:12]
+    parent = (Path(args.run_dir) if getattr(args, "run_dir", "")
+              else ROOT / cfg["run_root"] / args.split / parent_signature(cfg)[:12])
     if not (parent / "manifest.json").exists():
         raise SystemExit(f"parent run not found: {parent}")
     suffix = ("-allocation" + ({"jury": "-v3", "cascade": "-v3c"}.get(getattr(args, "mode", ""), "")
@@ -606,6 +607,8 @@ def main() -> int:
     parser.add_argument("--writer", default="mistral24")
     parser.add_argument("--fake", action="store_true")
     parser.add_argument("--pilot", type=int, default=0, help="judge only the first N documents, into a -pilot root")
+    parser.add_argument("--run-dir", default="",
+                        help="parent main run; defaults to the one the current code's protocol hash names")
     parser.add_argument("--out", default="")
     parser.add_argument("--version", type=int, choices=[2, 3], default=3,
                         help="2: phi-4 on vLLM, whole source (superseded); 3: OpenRouter jury on excerpts")

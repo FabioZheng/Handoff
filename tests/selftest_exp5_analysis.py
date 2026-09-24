@@ -166,13 +166,14 @@ def main() -> int:
     raw = [r["delta_future_p"] for r in prim
            if r["family"] == "generation" and r["metric"] == "f1" and r["cap"] != "mean"]
     assert all(h >= p for h, p in zip(holmed, raw)), (holmed, raw)
-    alloc = an.allocation(ix, ["qasper"])
+    import analyse_exp5_followup as fu  # the ratio-of-totals allocation the reports use
+    alloc = fu.allocation(ix, ["qasper"])
     assert {r["step"] for r in alloc} == {"64->128", "128->256"}
     assert len(alloc) == 2 * 2 * 2  # 2 families x 2 arms x 2 steps
     inter = an.interaction(ix, ["qasper"])
     audit = an.length_audit(ix, ["qasper"])
     meta = {"writer": "test", "run": "synthetic", "split": "dev", "caps": list(CAPS), "headline": ["qasper"]}
-    text = an.report(meta, prim, inter, surv, alloc, an.secondary(ix, ["qasper"]), audit)
+    text = an.report(meta, prim, inter, surv, an.secondary(ix, ["qasper"]), audit)
     for heading in ("## Primary", "## Confirmatory", "## Mechanism", "## Secondary", "## Channel audit"):
         assert heading in text, heading
     print("C. Holm monotone, allocation shape, report sections present")

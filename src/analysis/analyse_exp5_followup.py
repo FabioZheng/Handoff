@@ -22,7 +22,7 @@ Marginal allocation as a ratio of totals
     For each step between consecutive caps, the total change in each quantity over
     the total words added, per 100 words, with a document bootstrap. Evidence is
     measured on the highlighted evidence. Averaging per-message ratios, as the main
-    analysis does, lets a message that grows by one word dominate a step; a ratio
+    analysis once did, lets a message that grows by one word dominate a step; a ratio
     of totals weights each message by the words it actually added.
 
     python src/analysis/analyse_exp5_followup.py --config configs/exp5_cap_only_frozen_config.yaml --split main
@@ -50,7 +50,7 @@ REFERENCES = ("closed_book", "full_source", "annotated_evidence")
 POLICIES = [p for pair in base.FAMILIES.values() for p in pair]
 FAMILY_OF = {p: f for f, pair in base.FAMILIES.items() for p in pair}
 TIERS = ("now", "shared", "near", "far")
-ALLOCATION_KEYS = ("now", "shared", "near", "far", "repeated_5grams", "unsupported_terms")
+ALLOCATION_KEYS = ("now", "shared", "near", "far", "repeated_5grams")
 BOOTSTRAP = base.BOOTSTRAP
 
 # Reference palette (validated): categorical slots 1 and 2, light surface, ink.
@@ -228,7 +228,7 @@ def evidence_survival(ix, corpora: list[str]) -> list[dict]:
 # ---------------------------------------------------------------- allocation
 
 def evidence_profile(doc: dict, text: str, anchor: dict | None) -> dict:
-    """Highlighted-evidence recall summed by tier, plus repetition and unsupported terms."""
+    """Highlighted-evidence recall summed by tier, plus repeated 5-grams."""
     tokens = set(base.content_tokens(text))
     out = {"words": len(text.split()), "now": 0.0, "shared": 0.0, "near": 0.0, "far": 0.0}
     if anchor is not None:
@@ -239,7 +239,6 @@ def evidence_profile(doc: dict, text: str, anchor: dict | None) -> dict:
                 out[tier] += evidence_recall(tokens, sets)
     grams = base.sx.ngrams(text, 5)
     out["repeated_5grams"] = len(grams) - len(set(grams))
-    out["unsupported_terms"] = base.sx.unsupported_scan(text, doc["source"], base.UNSUPPORTED_SPEC)["unsupported_count"]
     return out
 
 
@@ -366,7 +365,7 @@ def figures(out: Path, corpus: str, levels, deltas, surv, alloc) -> list[str]:
     names.append("evidence_survival.png")
 
     panels = (("now", "current-question evidence"), ("far", "far evidence"),
-              ("repeated_5grams", "repeated 5-grams"), ("unsupported_terms", "unsupported terms"))
+              ("near", "near evidence"), ("repeated_5grams", "repeated 5-grams"))
     fig, axes = plt.subplots(1, 4, figsize=(15, 3.6), facecolor=SURFACE)
     for ax, (key, title) in zip(axes, panels):
         for policy in POLICIES:
@@ -432,14 +431,16 @@ def report(meta, levels, deltas, surv, alloc, figs) -> str:
                      f"[{fmt(r['lo'], signed=True)}, {fmt(r['hi'], signed=True)}] |")
     lines += ["", "## Marginal allocation (ratio of totals)", "",
               "Per 100 added words: change in summed evidence recall by tier (question-equivalents), repeated "
-              "5-grams and unsupported terms. `not longer` is the share of message pairs that did not grow.", "",
-              "| corpus | policy | step | added words | not longer | now | near | far | repeated 5-grams | unsupported |",
-              "|---|---|---|---:|---:|---|---|---|---|---|"]
+              "5-grams. `not longer` is the share of message pairs that did not grow. Whether added content is "
+              "supported by the source is judged in `../allocation_judge_v3c/report.md`; the lexical "
+              "unsupported-term count used before could not tell rewording from invention.", "",
+              "| corpus | policy | step | added words | not longer | now | near | far | repeated 5-grams |",
+              "|---|---|---|---:|---:|---|---|---|---|"]
     for r in alloc:
         cell = (lambda k: f"{fmt(r[f'{k}_per_100'], 2, True)} [{fmt(r[f'{k}_lo'], 2, True)}, {fmt(r[f'{k}_hi'], 2, True)}]")
         lines.append(f"| {r['corpus']} | {r['policy']} | {r['step']} | {fmt(r['mean_added_words'], 1)} | "
                      f"{fmt(r['share_pairs_not_longer'], 2)} | {cell('now')} | {cell('near')} | {cell('far')} | "
-                     f"{cell('repeated_5grams')} | {cell('unsupported_terms')} |")
+                     f"{cell('repeated_5grams')} |")
     lines += [""] + [f"![{f}]({f})" for f in figs] + [""]
     return "\n".join(lines)
 

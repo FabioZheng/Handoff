@@ -20,11 +20,10 @@ Confirmatory (no reader in the path)
     section", since paragraphs carry no section labels), or far.
 
 Mechanistic
-    Marginal allocation: for each step between consecutive caps, what the extra
-    words bought, per 100 added words - current-question evidence, shared,
-    near and far evidence, repeated five-word runs, and unsupported terms
-    (Experiment 9's deterministic scan, so the forced-expansion study and this
-    one use the same instrument).
+    Where added capacity goes is reported by analyse_exp5_followup.py (evidence
+    per 100 added words, ratio of totals) and judge_exp5_allocation.py (what the
+    added sentences carry). An earlier table here averaged per-message ratios,
+    which a message that grew by one word dominates; it was removed.
 
 Secondary (controlled direct effect)
     Realized length is a mediator, so these estimate what remains once the
@@ -328,62 +327,6 @@ def survival(ix: Index, corpora: list[str]) -> list[dict]:
     return rows
 
 
-# --------------------------------------------------------------- mechanism
-
-def profile(doc: dict, text: str, anchor: dict | None) -> dict:
-    """What one message carries: evidence by tier, repetition, unsupported terms."""
-    qs = [q for q in doc["questions"] if not is_yes_no(q)]
-    out = {"words": len(text.split()), "now": 0.0, "shared": 0.0, "near": 0.0, "far": 0.0}
-    for q in qs:
-        r = answer_recall(text, q["golds"]) or 0.0
-        if anchor is not None and q["qid"] == anchor["qid"]:
-            out["now"] += r
-        elif anchor is not None:
-            tier = distance(doc, anchor, q)
-            if tier:
-                out[tier] += r
-    grams = sx.ngrams(text, 5)
-    out["repeated_5grams"] = len(grams) - len(set(grams))
-    out["unsupported_terms"] = sx.unsupported_scan(text, doc["source"], UNSUPPORTED_SPEC)["unsupported_count"]
-    return out
-
-
-def allocation(ix: Index, corpora: list[str]) -> list[dict]:
-    """Per step between consecutive caps: what each 100 added words bought."""
-    keys = ("now", "shared", "near", "far", "repeated_5grams", "unsupported_terms")
-    caps = ix.caps()
-    rows = []
-    for corpus in corpora:
-        for family, pair in FAMILIES.items():
-            for policy in pair:
-                for lo, hi in zip(caps, caps[1:]):
-                    steps = defaultdict(list)
-                    for doc_id, doc in ix.docs.items():
-                        if doc["corpus"] != corpus:
-                            continue
-                        anchors = [m["anchor"] for m in ix.by_cell.get((doc_id, pair[0], hi), [])]
-                        for anchor_id in anchors:
-                            anchor = ix.questions[doc_id].get(anchor_id)
-                            pick = (lambda cap: [m for m in ix.by_cell.get((doc_id, policy, cap), [])
-                                                 if m["anchor"] in (anchor_id, None)])
-                            before, after = pick(lo), pick(hi)
-                            if not before or not after:
-                                continue
-                            a, b = profile(doc, before[0]["text"], anchor), profile(doc, after[0]["text"], anchor)
-                            added = b["words"] - a["words"]
-                            steps["added_words"].append(added)
-                            if added > 0:
-                                for k in keys:
-                                    steps[k].append(100 * (b[k] - a[k]) / added)
-                    row = {"corpus": corpus, "family": family, "policy": policy, "step": f"{lo}->{hi}",
-                           "pairs": len(steps["added_words"]),
-                           "mean_added_words": st.mean(steps["added_words"]) if steps["added_words"] else None}
-                    for k in keys:
-                        row[f"{k}_per_100_words"] = st.mean(steps[k]) if steps[k] else None
-                    rows.append(row)
-    return rows
-
-
 # --------------------------------------------------------------- secondary
 
 def message_level(ix: Index, corpus: str, family: str, metric: str = "f1") -> list[dict]:
@@ -571,7 +514,30 @@ def secondary(ix: Index, corpora: list[str]) -> list[dict]:
     return rows
 
 
-def length_audit(ix: Index, corpora: list[str]) -> list[dict]:
+def delivered_token_counter(spec: dict):
+    """Count tokens of delivered text with the writer's own tokenizer, from the local model cache only.
+
+    A message's `realized_tokens` is the writer's reply length. For summaries that is the message;
+    for selection it is the list of chosen sentence ids, not the packed message the reader gets.
+    Returns None when the tokenizer is not cached, so the audit shows no number rather than a wrong one.
+    """
+    try:
+        from huggingface_hub import hf_hub_download
+        from mistral_common.tokens.tokenizers.mistral import MistralTokenizer
+        path = hf_hub_download(spec["id"], "tekken.json", revision=spec.get("revision"), local_files_only=True)
+        raw = MistralTokenizer.from_file(path).instruct_tokenizer.tokenizer
+        return lambda text: len(raw.encode(text, bos=False, eos=False))
+    except Exception:
+        pass
+    try:
+        from transformers import AutoTokenizer
+        tok = AutoTokenizer.from_pretrained(spec["id"], revision=spec.get("revision"), local_files_only=True)
+        return lambda text: len(tok.encode(text, add_special_tokens=False))
+    except Exception:
+        return None
+
+
+def length_audit(ix: Index, corpora: list[str], count_tokens=None) -> list[dict]:
     rows = []
     for corpus in corpora:
         for policy in sorted({m["policy"] for m in ix.message.values()}):
@@ -585,7 +551,10 @@ def length_audit(ix: Index, corpora: list[str]) -> list[dict]:
                              "valid": len(valid) / len(ms),
                              "words_median": st.median(m["delivered_words"] for m in valid) if valid else None,
                              "fill_median": st.median(m["fill_ratio"] for m in valid) if valid else None,
-                             "tokens_median": st.median(m["realized_tokens"] for m in valid) if valid else None,
+                             "tokens_median": (st.median(count_tokens(m["text"]) for m in valid)
+                                               if valid and count_tokens else None),
+                             "writer_reply_tokens_median": (st.median(m["realized_tokens"] for m in valid)
+                                                            if valid else None),
                              "truncated": sum(m["truncated_words"] > 0 for m in valid),
                              "over_cap": sum(m["over_cap"] for m in valid)})
     return rows
@@ -649,7 +618,7 @@ def fmt(x, nd=3):
     return "—" if x is None else (f"{x:+.{nd}f}" if isinstance(x, float) else str(x))
 
 
-def report(meta, prim, inter, surv, alloc, sec, audit) -> str:
+def report(meta, prim, inter, surv, sec, audit) -> str:
     lines = [f"# exp5_cap_only main analysis — {meta['writer']}", "",
              f"Run `{meta['run']}`, split `{meta['split']}`, frozen caps {meta['caps']}. "
              f"Headline corpora from calibration: {', '.join(meta['headline']) or 'not recorded'}.", "",
@@ -683,13 +652,10 @@ def report(meta, prim, inter, surv, alloc, sec, audit) -> str:
     for (corpus, family, cap), t in sorted(cells.items(), key=lambda kv: (kv[0][0], kv[0][1], kv[0][2])):
         lines.append(f"| {corpus} | {family} | {cap} | " + " | ".join(fmt(t.get(k), 2) for k in
                                                                     ("now",) + TIERS) + " |")
-    lines += ["", "## Mechanism: what each 100 added words bought", "",
-              "| corpus | policy | step | now | shared | near | far | repeated 5-grams | unsupported |",
-              "|---|---|---|---:|---:|---:|---:|---:|---:|"]
-    for r in alloc:
-        lines.append(f"| {r['corpus']} | {r['policy']} | {r['step']} | " + " | ".join(
-            fmt(r.get(f"{k}_per_100_words"), 2) for k in
-            ("now", "shared", "near", "far", "repeated_5grams", "unsupported_terms")) + " |")
+    lines += ["", "## Mechanism: where added capacity goes", "",
+              "See `followup/report.md` (evidence per 100 added words, ratio of totals) and, for what the "
+              "added sentences carry, `allocation_judge_v3c/report.md` in the writer's main run (a cross-reader "
+              "run reads the same messages)."]
     lines += ["", "## Secondary: controlled direct effect (length pathway closed)", "",
               "Realized length is a mediator; these do not estimate the total effect, and the direct "
               "effect is identified only where the two arms' realized lengths overlap. "
@@ -716,11 +682,14 @@ def report(meta, prim, inter, surv, alloc, sec, audit) -> str:
                      f"{fmt(r['matched_delta'])} [{fmt(r['matched_lo'])}, {fmt(r['matched_hi'])}] | {rate} | "
                      f"{check(r, 'bins', support_text)} | {check(r, 'loglin', 'VIF ' + vif_text)} |")
     lines += ["", "## Channel audit", "",
+              "Tokens are counted on the delivered message with the writer's tokenizer (— when it is not cached "
+              "locally); a selection writer's own reply is only the list of sentence ids.", "",
               "| corpus | policy | cap | valid | median words | median fill | median tokens | truncated | over cap |",
               "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
     for r in audit:
         lines.append(f"| {r['corpus']} | {r['policy']} | {r['cap']} | {r['valid']:.3f} | {r['words_median']} | "
-                     f"{r['fill_median']} | {r['tokens_median']} | {r['truncated']} | {r['over_cap']} |")
+                     f"{r['fill_median']} | {'—' if r['tokens_median'] is None else r['tokens_median']} | "
+                     f"{r['truncated']} | {r['over_cap']} |")
     return "\n".join(lines) + "\n"
 
 
@@ -751,14 +720,15 @@ def main() -> int:
     meta = {"writer": args.writer, "run": run_dir.name, "split": args.split, "caps": ix.caps(),
             "headline": calib.get("headline", []), "budgets_frozen": manifest.get("budgets_frozen")}
     prim, inter = primary(ix, corpora), interaction(ix, corpora)
-    surv, alloc = survival(ix, corpora), allocation(ix, corpora)
-    sec, audit = secondary(ix, corpora), length_audit(ix, corpora)
+    surv = survival(ix, corpora)
+    counter = delivered_token_counter(cfg["models"][args.writer])
+    sec, audit = secondary(ix, corpora), length_audit(ix, corpora, counter)
     out = Path(args.out) if args.out else ROOT / cfg["results_root"] / args.split / run_dir.name
     out.mkdir(parents=True, exist_ok=True)
     for name, rows in (("primary", prim), ("interaction", inter), ("survival", surv),
-                       ("allocation", alloc), ("secondary", sec), ("length_audit", audit)):
+                       ("secondary", sec), ("length_audit", audit)):
         write_csv(out / f"{name}.csv", rows)
-    (out / "report.md").write_text(report(meta, prim, inter, surv, alloc, sec, audit), encoding="utf-8")
+    (out / "report.md").write_text(report(meta, prim, inter, surv, sec, audit), encoding="utf-8")
     (out / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     plot(out, prim, surv, corpora)
     print(f"analysis written to {out}")

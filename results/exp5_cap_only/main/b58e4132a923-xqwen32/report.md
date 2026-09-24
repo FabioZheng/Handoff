@@ -53,30 +53,9 @@ Answer-token recall; yes/no questions excluded. `near` is disjoint evidence with
 | qasper | selection | 208 | +0.50 | +0.13 | -0.07 | -0.13 |
 | qasper | selection | 256 | +0.46 | +0.10 | -0.12 | -0.17 |
 
-## Mechanism: what each 100 added words bought
+## Mechanism: where added capacity goes
 
-| corpus | policy | step | now | shared | near | far | repeated 5-grams | unsupported |
-|---|---|---|---:|---:|---:|---:|---:|---:|
-| qasper | summary_conditioned | 96->120 | +0.02 | +0.01 | +0.02 | +0.24 | +0.93 | +0.08 |
-| qasper | summary_conditioned | 120->144 | +0.07 | -0.06 | +0.08 | +0.29 | +1.97 | +0.00 |
-| qasper | summary_conditioned | 144->176 | +0.27 | +0.19 | +0.06 | +0.22 | +0.42 | +0.22 |
-| qasper | summary_conditioned | 176->208 | +0.05 | -0.00 | +0.00 | +0.02 | +1.24 | -0.02 |
-| qasper | summary_conditioned | 208->256 | +0.02 | +0.06 | +0.05 | -0.04 | +4.33 | +0.73 |
-| qasper | summary_generic | 96->120 | +0.26 | +0.13 | +0.18 | +0.59 | +0.09 | +1.90 |
-| qasper | summary_generic | 120->144 | +0.42 | +0.14 | +0.21 | +1.09 | +1.29 | +9.70 |
-| qasper | summary_generic | 144->176 | +0.18 | +0.11 | +0.11 | +0.28 | -0.29 | +7.32 |
-| qasper | summary_generic | 176->208 | +0.67 | +1.14 | +0.28 | +1.87 | +0.64 | +3.52 |
-| qasper | summary_generic | 208->256 | +0.07 | -0.02 | +0.04 | +0.19 | +0.85 | +2.11 |
-| qasper | selection_conditioned | 96->120 | -0.01 | +0.11 | -0.07 | +0.25 | +0.69 | +0.19 |
-| qasper | selection_conditioned | 120->144 | +0.09 | +0.07 | +0.08 | +0.12 | +0.26 | +1.30 |
-| qasper | selection_conditioned | 144->176 | +0.02 | +0.01 | +0.04 | +0.12 | +0.55 | +0.76 |
-| qasper | selection_conditioned | 176->208 | +0.04 | +0.04 | +0.08 | +0.15 | +1.00 | +1.21 |
-| qasper | selection_conditioned | 208->256 | +0.04 | +0.07 | +0.04 | +0.10 | +0.55 | +0.93 |
-| qasper | selection_generic | 96->120 | +0.13 | +0.11 | +0.08 | +0.23 | +0.97 | +0.11 |
-| qasper | selection_generic | 120->144 | +0.12 | +0.08 | +0.07 | +0.21 | +2.24 | +0.26 |
-| qasper | selection_generic | 144->176 | +0.06 | +0.05 | +0.03 | +0.10 | +2.43 | +0.49 |
-| qasper | selection_generic | 176->208 | +0.06 | +0.03 | +0.02 | +0.15 | +2.00 | +0.48 |
-| qasper | selection_generic | 208->256 | +0.07 | +0.05 | +0.05 | +0.12 | +1.79 | +0.67 |
+See `followup/report.md` (evidence per 100 added words, ratio of totals) and, for what the added sentences carry, `allocation_judge_v3c/report.md` in the writer's main run (a cross-reader run reads the same messages).
 
 ## Secondary: controlled direct effect (length pathway closed)
 
@@ -89,29 +68,31 @@ Realized length is a mediator; these do not estimate the total effect, and the d
 
 ## Channel audit
 
+Tokens are counted on the delivered message with the writer's tokenizer (— when it is not cached locally); a selection writer's own reply is only the list of sentence ids.
+
 | corpus | policy | cap | valid | median words | median fill | median tokens | truncated | over cap |
 |---|---|---:|---:|---:|---:|---:|---:|---:|
-| qasper | selection_conditioned | 96 | 0.999 | 87 | 0.9062 | 25 | 0 | 0 |
-| qasper | selection_conditioned | 120 | 1.000 | 102.0 | 0.85 | 25.0 | 0 | 0 |
-| qasper | selection_conditioned | 144 | 1.000 | 118.0 | 0.8194 | 26.0 | 0 | 0 |
-| qasper | selection_conditioned | 176 | 1.000 | 128.0 | 0.7273000000000001 | 28.5 | 0 | 0 |
-| qasper | selection_conditioned | 208 | 1.000 | 124.0 | 0.5962 | 26.0 | 0 | 0 |
-| qasper | selection_conditioned | 256 | 1.000 | 119.0 | 0.46485 | 26.0 | 0 | 0 |
-| qasper | selection_generic | 96 | 1.000 | 96.0 | 1.0 | 477.5 | 0 | 0 |
-| qasper | selection_generic | 120 | 1.000 | 120.0 | 1.0 | 468.5 | 0 | 0 |
-| qasper | selection_generic | 144 | 1.000 | 144.0 | 1.0 | 492.5 | 0 | 0 |
-| qasper | selection_generic | 176 | 1.000 | 176.0 | 1.0 | 571.0 | 0 | 0 |
-| qasper | selection_generic | 208 | 1.000 | 208.0 | 1.0 | 650.5 | 0 | 0 |
-| qasper | selection_generic | 256 | 1.000 | 256.0 | 1.0 | 602.5 | 0 | 0 |
-| qasper | summary_conditioned | 96 | 1.000 | 79.0 | 0.8229 | 111.0 | 22 | 0 |
-| qasper | summary_conditioned | 120 | 1.000 | 95.0 | 0.7917 | 131.0 | 33 | 0 |
-| qasper | summary_conditioned | 144 | 1.000 | 106.0 | 0.7361 | 148.0 | 24 | 0 |
-| qasper | summary_conditioned | 176 | 1.000 | 129.0 | 0.733 | 179.0 | 36 | 0 |
-| qasper | summary_conditioned | 208 | 1.000 | 148.0 | 0.7115 | 204.0 | 42 | 0 |
-| qasper | summary_conditioned | 256 | 1.000 | 173.0 | 0.6758 | 239.0 | 55 | 0 |
-| qasper | summary_generic | 96 | 1.000 | 87.0 | 0.9062 | 124.0 | 16 | 0 |
-| qasper | summary_generic | 120 | 1.000 | 107.0 | 0.8917 | 157.0 | 25 | 0 |
-| qasper | summary_generic | 144 | 1.000 | 122.0 | 0.8472 | 183.0 | 9 | 0 |
-| qasper | summary_generic | 176 | 1.000 | 147.5 | 0.83805 | 225.5 | 18 | 0 |
-| qasper | summary_generic | 208 | 1.000 | 167.0 | 0.8029 | 268.0 | 11 | 0 |
-| qasper | summary_generic | 256 | 1.000 | 196.5 | 0.76755 | 320.5 | 6 | 0 |
+| qasper | selection_conditioned | 96 | 0.999 | 87 | 0.9062 | 113 | 0 | 0 |
+| qasper | selection_conditioned | 120 | 1.000 | 102.0 | 0.85 | 136.0 | 0 | 0 |
+| qasper | selection_conditioned | 144 | 1.000 | 118.0 | 0.8194 | 161.5 | 0 | 0 |
+| qasper | selection_conditioned | 176 | 1.000 | 128.0 | 0.7273000000000001 | 184.0 | 0 | 0 |
+| qasper | selection_conditioned | 208 | 1.000 | 124.0 | 0.5962 | 174.5 | 0 | 0 |
+| qasper | selection_conditioned | 256 | 1.000 | 119.0 | 0.46485 | 171.0 | 0 | 0 |
+| qasper | selection_generic | 96 | 1.000 | 96.0 | 1.0 | 124.0 | 0 | 0 |
+| qasper | selection_generic | 120 | 1.000 | 120.0 | 1.0 | 155.0 | 0 | 0 |
+| qasper | selection_generic | 144 | 1.000 | 144.0 | 1.0 | 184.5 | 0 | 0 |
+| qasper | selection_generic | 176 | 1.000 | 176.0 | 1.0 | 229.0 | 0 | 0 |
+| qasper | selection_generic | 208 | 1.000 | 208.0 | 1.0 | 270.5 | 0 | 0 |
+| qasper | selection_generic | 256 | 1.000 | 256.0 | 1.0 | 334.0 | 0 | 0 |
+| qasper | summary_conditioned | 96 | 1.000 | 79.0 | 0.8229 | 110.0 | 22 | 0 |
+| qasper | summary_conditioned | 120 | 1.000 | 95.0 | 0.7917 | 129.0 | 33 | 0 |
+| qasper | summary_conditioned | 144 | 1.000 | 106.0 | 0.7361 | 147.0 | 24 | 0 |
+| qasper | summary_conditioned | 176 | 1.000 | 129.0 | 0.733 | 178.0 | 36 | 0 |
+| qasper | summary_conditioned | 208 | 1.000 | 148.0 | 0.7115 | 203.0 | 42 | 0 |
+| qasper | summary_conditioned | 256 | 1.000 | 173.0 | 0.6758 | 238.0 | 55 | 0 |
+| qasper | summary_generic | 96 | 1.000 | 87.0 | 0.9062 | 122.0 | 16 | 0 |
+| qasper | summary_generic | 120 | 1.000 | 107.0 | 0.8917 | 152.0 | 25 | 0 |
+| qasper | summary_generic | 144 | 1.000 | 122.0 | 0.8472 | 180.5 | 9 | 0 |
+| qasper | summary_generic | 176 | 1.000 | 147.5 | 0.83805 | 220.5 | 18 | 0 |
+| qasper | summary_generic | 208 | 1.000 | 167.0 | 0.8029 | 263.5 | 11 | 0 |
+| qasper | summary_generic | 256 | 1.000 | 196.5 | 0.76755 | 318.0 | 6 | 0 |
